@@ -14,19 +14,27 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266WiFiMulti.h>
 #include <PubSubClient.h>
-#include "Defy.h"
-#include "CKomora.h"
-#include "CWiatrak.h"
+#include <pcf8574_esp.h>
+#include <NTPClient.h>
 
-const char* nodeMCUid="Reku";
-const char* outTopic="Reku/OUT";
-const char* inTopic="Reku/IN";
-const char* debugTopic="DebugTopic/Reku";
+#include "Defy.h"
+
+////////////pcf
+PCF857x pcf8574(0b00111000, &Wire);
+////////////////
+
+const char* nodeMCUid="Podlewacz";
+const char* outTopic="Podlewacz/OUT";
+const char* inTopic="Podlewacz/IN";
+const char* debugTopic="DebugTopic/Podlewacz";
 const char* mqtt_server ="broker.hivemq.com"; //"m23.cloudmqtt.com";
 const char* mqtt_user="";//"aigejtoh";
 const char* mqtt_pass="";//"ZFlzjMm4T-XH";
 const uint16_t mqtt_port=1883;
 
+
+////////////// sprawdzic ntp
+////////// https://github.com/arduino-libraries/NTPClient
 
 #define CONN_STAT_NO 0
 #define CONN_STAT_WIFI_CONNECTING 1
@@ -37,26 +45,27 @@ const uint16_t mqtt_port=1883;
 int conStat=CONN_STAT_NO;
 unsigned long sLEDmillis=0;
 
-char trybPracy=T_OFF;
-char trybPracyPop=T_OFF;
-unsigned long kominekMillis=0;
+byte stanSekcji=0;
+bool czekaNaPublikacjeStanu=false;
+
 uint8_t publicID=0;
 unsigned long publicMillis=0;
 unsigned long WDmillis=0;
 
 void(* resetFunc) (void) = 0; //declare reset function @ address 0
 
-CKomora komory[KOMORA_SZT];
-CWiatrak wiatraki[WIATRAKI_SZT]=
-{
-  CWiatrak(PIN_WIATRAK_CZERPNIA,PIN_TACHO_WIATRAK_CZERPNIA),
-  CWiatrak(PIN_WIATRAK_WYWIEW,PIN_TACHO_WIATRAK_WYWIEW)
-};
-
-#define MAX_ROZKAZOW 10
-uint8_t ile_w_kolejce=0;
-uint16_t kolejkaRozkazow[MAX_ROZKAZOW][2];
-
+// Event Handler when an IP address has been assigned
+// Once connected to WiFi, start the NTP Client
+void onSTAGotIP(WiFiEventStationModeGotIP event) {
+  Serial.printf("Got IP: %s\n", event.ip.toString().c_str());
+  NTP.init((char *)"pool.ntp.org", UTC0900);
+  NTP.setPollingInterval(60); // Poll every minute
+}
+// Event Handler when WiFi is disconnected
+void onSTADisconnected(WiFiEventStationModeDisconnected event) {
+  Serial.printf("WiFi connection (%s) dropped.\n", event.ssid.c_str());
+  Serial.printf("Reason: %d\n", event.reason);
+}
 
 ESP8266WiFiMulti wifiMulti;
 WiFiClient espClient;
@@ -66,19 +75,7 @@ PubSubClient client(espClient);
 unsigned long lastMQTTReconnectAttempt = 0;
 unsigned long lastWIFIReconnectAttempt = 0;
 
-bool isNumber(char * tmp)
-{
-   int j=0;
-   while(j<strlen(tmp))
-  {
-    if(tmp[j] > '9' || tmp[j] < '0')
-    {
-      return false;
-    }     
-    j++;
-  }
- return true; 
-}
+
 
 void callback(char* topic, byte* payload, unsigned int length) 
 {
@@ -102,7 +99,7 @@ void callback(char* topic, byte* payload, unsigned int length)
  DPRINT(topic);
  DPRINT(" msg=");
  DPRINTLN(p);
- parsujIdodajDoKolejki(topic,p);
+ parsujRozkaz(topic,p);
   free(p);
 }
 
@@ -142,13 +139,6 @@ bool setup_wifi()
   }
 }
 
-//WiFiConnected
-//true - connected
-//false -not connected
-bool WiFiConnected() 
-{
-  return (WiFi.status() == WL_CONNECTED);
-}
 
 boolean reconnectMQTT()
 {
@@ -167,36 +157,28 @@ boolean reconnectMQTT()
   return client.connected();
 }
 
-void isrIN()
-{
-  wiatraki[WIATRAK_IN].obslugaTachoISR();
-}
-void isrOUT()
-{
-  wiatraki[WIATRAK_OUT].obslugaTachoISR();
-}
+
 /////////////////////////SETUP///////////////////////////
 void setup()
 {
- 
+ static WiFiEventHandler gotIpEventHandler, disconnectedEventHandler;
   Serial.begin(115200);
    
   DPRINTLN("");
   DPRINTLN("Setup Serial");
   pinMode(LED, OUTPUT);     // Initialize the BUILTIN_LED pin as an output
   digitalWrite(LED,ON);
-  for(uint8_t i=0;i<KOMORA_SZT;i++)
-   {
-    komory[i]=CKomora();
-     komory[i].begin(i);
-     delay(1000); //po to by kazda komora mierzyla w innym momencie
-   }
-   wiatraki[WIATRAK_IN].begin();
-   wiatraki[WIATRAK_OUT].begin();
+ 
+  //Setup PCF8574
+  Wire.pins(PIN_SDA, PIN_SCL);//SDA - D1, SCL - D2
+  Wire.begin();
   
-   attachInterrupt(digitalPinToInterrupt( wiatraki[WIATRAK_IN].dajISR()), isrIN, RISING );
-   attachInterrupt(digitalPinToInterrupt( wiatraki[WIATRAK_OUT].dajISR()), isrOUT, RISING );
-  
+  pinMode(PIN_WILGOC, INPUT_PULLUP); //czujnik wilgoci
+
+  pcf8574.begin( 0x00 ); //8 pin output
+  pcf8574.resetInterruptPin();
+  wylaczWszystko();
+  //
 
   wifiMulti.addAP("DOrangeFreeDom", "KZagaw01_ruter_key");
   wifiMulti.addAP("open.t-mobile.pl", "");
@@ -204,6 +186,25 @@ void setup()
   
   client.setServer(mqtt_server, mqtt_port);
   client.setCallback(callback);
+  delay(2000);
+  setup_wifi();
+  NTP.onSyncEvent([](NTPSyncEvent_t ntpEvent) {
+    switch (ntpEvent) {
+    case NTP_EVENT_INIT:
+      break;
+    case NTP_EVENT_STOP:
+      break;
+    case NTP_EVENT_NO_RESPONSE:
+      Serial.printf("NTP server not reachable.\n");
+      break;
+    case NTP_EVENT_SYNCHRONIZED:
+      Serial.printf("Got NTP time: %s\n", NTP.getTimeDate(NTP.getLastSync()));
+      break;
+    }
+  });
+
+  gotIpEventHandler = WiFi.onStationModeGotIP(onSTAGotIP);
+  disconnectedEventHandler = WiFi.onStationModeDisconnected(onSTADisconnected);
 }
 
 
@@ -223,29 +224,84 @@ char * TimeToString(unsigned long t)
  return str;
 }
 
+void wylaczWszystko()
+{
+  stanSekcji=0;
+  czekaNaPublikacjeStanu=true;
+}
+void zmienStanSekcji(uint8_t sekcjanr,uint8_t stan)
+{
+  if(stan==ON)
+  {
+    stanSekcji |= 1<<sekcjanr;
+  }else
+  {
+    stanSekcji &= ~(1<<sekcjanr);
+  }
+  czekaNaPublikacjeStanu=true;
+  
+}
+void publikujStanSekcji()
+{
+   if(conStat!=CONN_STAT_WIFIMQTT_OK)return;
+   
+   byte b = pcf8574.read8();
+   for(int i=SEKCJA_MIN;i<=SEKCJA_MAX;i++)
+   {
+      if(b&(1<<i))
+      {
+          sprintf(tmpTopic,"%s/SEKCJA%d/%d",outTopic,i,1);
+      }else
+      {
+          sprintf(tmpTopic,"%s/SEKCJA%d/%d",outTopic,i,1);
+      }
+      RSpisz(tmpTopic,tmpMsg);
+   }
+  czekaNaPublikacjeStanu=false;
+}
+
+ void parsujRozkaz(char *topic, char *msg)
+ {
+   char *ind=NULL;
+   ///////////////// SEKCJA  //////////////////////////
+   ind=strstr(topic,"SEKCJA");
+   if(ind!=NULL)
+   {
+     ind+=strlen("SEKCJA");
+
+     if(isIntChars(ind))
+     {
+        if(isIntChars(msg))
+        {
+          if(msg[0]=='0')
+          {
+            zmienStanSekcji(atoi(ind),OFF);
+          }else
+          {
+            zmienStanSekcji(atoi(ind),ON);
+          }
+        }else
+        {
+          DPRINT("ERR dla topic SEKCJAx msg ");DPRINT(msg);DPRINT(" nie int, linia:");DPRINTLN(__LINE__);
+        }
+     }else
+     {
+         DPRINT("ERR topic ");DPRINT(topic);DPRINT(" nie int, linia:");DPRINTLN(__LINE__);
+     }
+     return;
+    }
+    //////////////////////////////////////
+
+ }
+
+unsigned long d=0;
+unsigned long mmm=0;
+char tmpTopic[MAX_TOPIC_LENGHT];
+char tmpMsg[MAX_TOPIC_LENGHT];
 void loop()
 {
 
-  if(!WiFiConnected())
-  { 
-    conStat=CONN_STAT_WIFI_CONNECTING;
-    if (millis() - lastWIFIReconnectAttempt > 5000)
-    {
-      if(setup_wifi())
-      {
-        RSpisz(debugTopic,"WiFi=ok");
-        conStat=CONN_STAT_WIFI_OK;
-      }
-      else
-      {
-        RSpisz(debugTopic,"WiFi=Err");
-      
-      }
-      lastWIFIReconnectAttempt = millis();
-    }
-  }else
-  {
-    if (!client.connected()) 
+     if (!client.connected()) 
     {
      conStat=CONN_STAT_WIFIMQTT_CONNECTING;
       if (millis() - lastMQTTReconnectAttempt > 5000)
@@ -271,33 +327,32 @@ void loop()
     {
           client.loop();                
     }
-  }
-   
-     
-          ///// LED status blink
-          unsigned long d=millis()-sLEDmillis;
-          if(millis()%600000==0) //10 min
-          {
+    
+
+    if(millis()%600000==0) //10 min
+     {
             char m[MAX_MSG_LENGHT];
             sprintf(m,"%ld",millis());
             char m2[MAX_TOPIC_LENGHT];
             sprintf(m2,"%s/watchdog",inTopic);
             RSpisz(m2,m);
-          }
-          if(d>3000)// max 3 sek
-          {
-           
+   }
+   ///// LED status blink
+   d=millis()-sLEDmillis;
+   if(d>3000)// max 3 sek
+   {
+          Serial.printf("Current time: %s - First synchronized at: %s.\n",
+                  NTP.getTimeDate(now()), NTP.getTimeDate(NTP.getFirstSync()));  
            sLEDmillis=millis();
          
  //char mst[50];
   //   sprintf(mst,"nodeMCU millis od restartu %lu ms.",sLEDmillis);
     // serial.printRS(RS_DEBUG_INFO,"Z nodeMCU",mst);
    //  Serial.println(mst);
-          }
-           
-          if(millis()%600000==0)//10 min
-          {
-            unsigned long mmm=millis();
+   }
+  if(millis()%600000==0)//10 min
+  {
+           mmm=millis();
    
             String str="czas od restartu= "+(String) TimeToString(mmm/1000);
    
@@ -310,94 +365,31 @@ void loop()
               RSpisz(debugTopic,"Watchdog restart");
               delay(3000);
               //ESP.restart();
-			   ESP.reset();  // hard reset
-			   resetFunc();
+			         ESP.reset();  // hard reset
+			         resetFunc();
             }
-          }
+    }
 
           /////////////////// obsluga hardware //////////////////////
-            for(uint8_t i=0;i<KOMORA_SZT;i++)
-            {
-              komory[i].loop();
-            }
-            wiatraki[WIATRAK_IN].loop();
-            wiatraki[WIATRAK_OUT].loop();
-          ///////////////     obsługa kolejki     //////////////////////
-          
-          if(ile_w_kolejce>0)
-            {
-              
-                DPRINT("Jest w kolejce ");  DPRINT(ile_w_kolejce); DPRINT(" ");
-                DPRINT(kolejkaRozkazow[0][0]); DPRINT(", "); DPRINTLN(kolejkaRozkazow[0][1]);
-                realizujRozkaz(kolejkaRozkazow[0][0],kolejkaRozkazow[0][1]);
-              //usuniecie z kolejki pierwszego elementu
-              for(int i=0;i<ile_w_kolejce-1;i++)
-              {
-               kolejkaRozkazow[i][0]=kolejkaRozkazow[i+1][0];
-               kolejkaRozkazow[i][1]=kolejkaRozkazow[i+1][1];
-                
-              }
-              ile_w_kolejce--;
-            }
-          ///////////////////// wyznacz obroty wiatraka ////////////
-            // gdy manual to tylko sprawdz czy nie zamarza
-            //jesli temp wyrzutni < 2C ustaw rozmrazanie
-            if((trybPracy!=T_OFF)&&(komory[KOMORA_WYRZUTNIA].dajTemp()<1.0f))
-            {
-               setTrybPracy(T_ROZMRAZANIE_WIATRAKI);
-            }
-            switch(trybPracy)
-            {
-              case T_OFF:
-                   wiatraki[WIATRAK_IN].ustawPredkosc(0);
-                   wiatraki[WIATRAK_OUT].ustawPredkosc(0);
-                 break;
-              case T_MANUAL:
-                break;
-              case T_AUTO:
-                //pora roku czy chlodzic czy ziebic
-                //temp zewn? czy z temp wewn da sie oszacować ile os
-                //liczba osob = czy pusto/domownicy/impreza
-                //pora dnia
-                  wiatraki[WIATRAK_IN].ustawPredkosc(15);
-                  wiatraki[WIATRAK_OUT].ustawPredkosc(15);
-                break;
-              case T_KOMINEK:
-              //todo czas 5min?
-                if(millis()-kominekMillis>300000)//5min
-                {
-                    setTrybPracy(trybPracyPop);
-                }
-                  wiatraki[WIATRAK_IN].ustawPredkosc(50);
-                  wiatraki[WIATRAK_OUT].ustawPredkosc(15);
-                
-                break;
-              case T_ROZMRAZANIE_WIATRAKI:
-                if(komory[KOMORA_WYRZUTNIA].dajTemp()>3.0f)
-                {
-                  setTrybPracy(T_AUTO);
-                } 
-                wiatraki[WIATRAK_IN].ustawPredkosc(15);
-                wiatraki[WIATRAK_OUT].ustawPredkosc(30);
-                break;
-              case T_ROZMRAZANIE_GGWC:
-                break;
-            
-            }
-            
-            // gdy auto to ???
+        if(czekaNaPublikacjeStanu)
+        {
+          pcf8574.write8(stanSekcji);
+          publikujStanSekcji();
+         
+        }
+          ///////////////    ////////////////     //////////////////////
+   
           /////////////////// publikuj stan do mqtt ////////////////
            if(millis()-publicMillis>1000)
            { 
             
             publicMillis=millis();
             publicID++;
-           if(publicID>=KOMORA_SZT+WIATRAKI_SZT)
-           {
-            publicID=0;
-           }
-            char tmpTopic[MAX_TOPIC_LENGHT];
-            char tmpMsg[MAX_TOPIC_LENGHT];
+            if(publicID>=KOMORA_SZT+WIATRAKI_SZT)
+            {
+              publicID=0;
+            }
+
             
             if(publicID<KOMORA_SZT)  //publikacja stanu komor
             {
@@ -440,99 +432,8 @@ void loop()
               }
 }
 
-void setTrybPracy(char t)
-{
-  trybPracyPop=trybPracy;
-  trybPracy=t;
-  if(trybPracy==T_KOMINEK)
-  {
-    kominekMillis=millis();
-  }
-  
-  char topic[MAX_TOPIC_LENGHT];
-  strcpy(topic,outTopic);
-  strcat(topic,"/TrybPracy");
-  char msg[2];//[MAX_MSG_LENGHT];
-  msg[0]=t;msg[1]='\0';
-  RSpisz(topic,msg);
-}
 
-void dodajDoKolejki(uint16_t paramName,uint16_t paramValue)
-{
-  DPRINT("Dodaj do kolejki"); DPRINT(paramName);DPRINT(", ");DPRINTLN(paramValue);
-  
-  if(ile_w_kolejce>=MAX_ROZKAZOW) return;
-  kolejkaRozkazow[ile_w_kolejce][0]=paramName;
-  kolejkaRozkazow[ile_w_kolejce][1]=paramValue;
-  ile_w_kolejce++;
-}
-void parsujIdodajDoKolejki(char* topic,char * msg)
-{
-   if(strstr(topic,"WiatrakN")>0)
-   {
-     if(isIntChars(msg))
-     {
-        dodajDoKolejki(R_PWM_NAWIEW,atoi(msg));       
-     }else
-     {
-         DPRINT("ERR msg WiatrakN nie int, linia:");DPRINTLN(__LINE__);
-     }
-     return;
-    }
-    if(strstr(topic,"WiatrakW")>0)
-    {
-      if(isIntChars(msg))
-      {
-        dodajDoKolejki(R_PWM_WYWIEW,atoi(msg));
-      }else
-      {
-        DPRINT("ERR msg WiatrakW nie int, linia:");DPRINTLN(__LINE__);
-      }
-     return; 
-    }
-    if(strlen(topic)==strlen(inTopic)+2)  //Reku/X
-    {
-       if(isIntChars(msg))
-      {
-        dodajDoKolejki(topic[strlen(topic)-1],atoi(msg));
-      }else
-      {
-        DPRINT("ERR msg ");DPRINT(msg);DPRINT(" nie int, linia:");DPRINTLN(__LINE__);
-      }
-      
-     return; 
-    }
-}
-void realizujRozkaz(uint16_t paramName,uint16_t paramValue) 
-{
-  switch(paramName)
-  {
-    case R_PWM_NAWIEW:
-      setTrybPracy(T_MANUAL);
-      wiatraki[WIATRAK_IN].ustawPredkosc(paramValue);
-    break;
-    case R_PWM_WYWIEW:
-      setTrybPracy(T_MANUAL);
-      wiatraki[WIATRAK_OUT].ustawPredkosc(paramValue);
-    break;
-    case R_ROZMRAZANIE_WIATRAKI:
-      setTrybPracy(T_ROZMRAZANIE_WIATRAKI) ;
-    break;
-    case R_ROZMRAZANIE_GGWC:
-      setTrybPracy(T_ROZMRAZANIE_GGWC);
-    break;
-    case R_KOMINEK:
-      setTrybPracy(T_KOMINEK);   
-    break;
-    case R_AUTO:
-      setTrybPracy(T_AUTO);
-    break;
-    case R_OFF:
-      setTrybPracy(T_OFF);
-    break;        
-  }
-  
-}
+
 
 bool isFloatString(String tString) {
   String tBuf;
@@ -582,4 +483,17 @@ bool isFloatChars(char * ctab) {
    if(!isDigit(ctab[x])) return false;
   }
   return true;
+}
+bool isNumber(char * tmp)
+{
+   int j=0;
+   while(j<strlen(tmp))
+  {
+    if(tmp[j] > '9' || tmp[j] < '0')
+    {
+      return false;
+    }     
+    j++;
+  }
+ return true; 
 }

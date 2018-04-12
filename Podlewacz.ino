@@ -15,9 +15,21 @@
 #include <ESP8266WiFiMulti.h>
 #include <PubSubClient.h>
 #include <pcf8574_esp.h>
-#include <NTPClient.h>
+//#include <NTPClient.h>
+#include <WiFiUdp.h>
 
 #include "Defy.h"
+
+//// wifi udp  ntp
+WiFiUDP ntpUDP;
+// By default 'time.nist.gov' is used with 60 seconds update interval and
+// no offset
+NTPClient timeClient(ntpUDP);
+// You can specify the time server pool and the offset, (in seconds)
+// additionaly you can specify the update interval (in milliseconds).
+// NTPClient timeClient(ntpUDP, "europe.pool.ntp.org", 3600, 60000);
+
+//////////////////////////////
 
 ////////////pcf
 PCF857x pcf8574(0b00111000, &Wire);
@@ -56,16 +68,16 @@ void(* resetFunc) (void) = 0; //declare reset function @ address 0
 
 // Event Handler when an IP address has been assigned
 // Once connected to WiFi, start the NTP Client
-void onSTAGotIP(WiFiEventStationModeGotIP event) {
+/*void onSTAGotIP(WiFiEventStationModeGotIP event) {
   Serial.printf("Got IP: %s\n", event.ip.toString().c_str());
   NTP.init((char *)"pool.ntp.org", UTC0900);
   NTP.setPollingInterval(60); // Poll every minute
-}
+}*/
 // Event Handler when WiFi is disconnected
-void onSTADisconnected(WiFiEventStationModeDisconnected event) {
+/*void onSTADisconnected(WiFiEventStationModeDisconnected event) {
   Serial.printf("WiFi connection (%s) dropped.\n", event.ssid.c_str());
   Serial.printf("Reason: %d\n", event.reason);
-}
+}*/
 
 ESP8266WiFiMulti wifiMulti;
 WiFiClient espClient;
@@ -161,7 +173,7 @@ boolean reconnectMQTT()
 /////////////////////////SETUP///////////////////////////
 void setup()
 {
- static WiFiEventHandler gotIpEventHandler, disconnectedEventHandler;
+ //static WiFiEventHandler gotIpEventHandler, disconnectedEventHandler;
   Serial.begin(115200);
    
   DPRINTLN("");
@@ -182,13 +194,15 @@ void setup()
 
   wifiMulti.addAP("DOrangeFreeDom", "KZagaw01_ruter_key");
   wifiMulti.addAP("open.t-mobile.pl", "");
-  wifiMulti.addAP("instalujWirusa", "blablabla123");
+  wifiMulti.addAP("InstalujWirusa", "BlaBlaBla123");
   
   client.setServer(mqtt_server, mqtt_port);
   client.setCallback(callback);
   delay(2000);
   setup_wifi();
-  NTP.onSyncEvent([](NTPSyncEvent_t ntpEvent) {
+  delay(2000);
+  timeClient.begin();
+  /*NTP.onSyncEvent([](NTPSyncEvent_t ntpEvent) {
     switch (ntpEvent) {
     case NTP_EVENT_INIT:
       break;
@@ -205,6 +219,7 @@ void setup()
 
   gotIpEventHandler = WiFi.onStationModeGotIP(onSTAGotIP);
   disconnectedEventHandler = WiFi.onStationModeDisconnected(onSTADisconnected);
+  */
 }
 
 
@@ -337,14 +352,18 @@ void loop()
             sprintf(m2,"%s/watchdog",inTopic);
             RSpisz(m2,m);
    }
+   timeClient.update();
+
+  
    ///// LED status blink
    d=millis()-sLEDmillis;
    if(d>3000)// max 3 sek
    {
-          Serial.printf("Current time: %s - First synchronized at: %s.\n",
+     Serial.println(timeClient.getFormattedTime());
+      /*    Serial.printf("Current time: %s - First synchronized at: %s.\n",
                   NTP.getTimeDate(now()), NTP.getTimeDate(NTP.getFirstSync()));  
            sLEDmillis=millis();
-         
+        */ 
  //char mst[50];
   //   sprintf(mst,"nodeMCU millis od restartu %lu ms.",sLEDmillis);
     // serial.printRS(RS_DEBUG_INFO,"Z nodeMCU",mst);

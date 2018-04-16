@@ -99,7 +99,7 @@ void publishAllProg()
 {
   for(uint16_t i=0;i<progIle;i++)
   {
-   publishProg(prTab[i]);
+   publishProg(prTab[i],i);
   }
   
 }

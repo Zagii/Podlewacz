@@ -21,8 +21,88 @@
 #include "CWifi.h"
 
 
+typedef struct 
+{
+  uint8_t dzien;
+  uint8_t mies;
+  uint8_t rok;
+  uint8_t h;
+  uint8_t m;
+  uint8_t s;
+  uint16_t czas;
+  uint8_t sekwencja;
+}Program;
+
+#define MAX_PROGR 100
+uint16_t progIle=0;
+Program prTab[MAX_PROGR];
 
 
+void publishProg(Program &p,uint8_t i=-1)
+{
+  DPRINT("ID="); DPRINT(i); DPRINT("; ");
+  DPRINT("data="); DPRINT(p.dzien); DPRINT("-");DPRINT(p.mies); DPRINT("-");DPRINT(p.rok); 
+  DPRINT("; godz="); DPRINT(p.h); DPRINT(":");DPRINT(p.m); DPRINT(":");DPRINT(p.s); 
+  DPRINT("czas="); DPRINT(p.czas); DPRINT("; ");DPRINT("sekwencja="); DPRINTLN(p.sekwencja); 
+  
+}
+
+void setProg(Program &a,uint8_t dzien, uint8_t mies, uint8_t rok,  uint8_t h, uint8_t m,  uint8_t s,  uint16_t czas,  uint8_t sekwencja)
+{
+  DPRINT("setProg #");
+ 
+  /*a->dzien=dzien; a->mies=mies;
+  a->rok=rok;    a->h=h;
+  a->m=m;        a->s=s;
+  a->czas=czas; a->sekwencja=sekwencja; */
+  a.dzien=dzien; a.mies=mies;
+  a.rok=rok;    a.h=h;
+  a.m=m;        a.s=s;
+  a.czas=czas; a.sekwencja=sekwencja; 
+   publishProg(a,progIle);
+}
+void setProg(Program &a, Program &b)
+{
+  DPRINT("addProg ref #");
+  publishProg(b,progIle);
+  a.dzien=b.dzien; a.mies=b.mies;
+  a.rok=b.rok;    a.h=b.h;
+  a.m=b.m;        a.s=b.s;
+  a.czas=b.czas; a.sekwencja=b.sekwencja; 
+}
+
+void addProg(Program p)
+{
+  DPRINT("addProg #");
+  publishProg(p,progIle);
+  if(progIle+1>=MAX_PROGR)return;
+  /*prTab[progIle].dzien=p.dzien; prTab[progIle].mies=p.mies;
+  prTab[progIle].rok=p.rok;    prTab[progIle].h=p.h;
+  prTab[progIle].m=p.m;        prTab[progIle].s=p.s;
+  prTab[progIle].czas=p.czas;  prTab[progIle].sekwencja=p.sekwencja; */
+  setProg(prTab[progIle],p);
+  progIle++;
+}
+void delProg(uint16_t id)
+{
+  DPRINT("delProg #");
+  publishProg(prTab[id],id);
+  if(id>=progIle)return;
+  for(uint16_t i=id;i<progIle;i++)
+  {
+    setProg(prTab[i],prTab[i+1]);
+  }
+  progIle--;
+}
+
+void publishAllProg()
+{
+  for(uint16_t i=0;i<progIle;i++)
+  {
+   publishProg(prTab[i]);
+  }
+  
+}
 ////////////pcf
 PCF857x pcf8574(0b00111000, &Wire);
 ////////////////
@@ -108,6 +188,24 @@ void setup()
   mqtt->setCallback(callback);
 ///////////// koniec wifi i mqtt init /////////
 
+delay(1000);
+DPRINTLN("Programy");
+Program pp;
+setProg(pp,16, 4, 18, 17, 23,0,600,1);
+addProg(pp);
+setProg(pp,16, 5, 18, 17, 33,10,500,2);
+addProg(pp);
+setProg(pp,16, 6, 18, 17, 43,20,400,3);
+addProg(pp);
+setProg(pp,16, 7, 18, 17, 53,30,300,4);
+addProg(pp);
+
+publishAllProg();
+
+delProg(2);
+setProg(pp,16, 8, 18, 17, 63,10,410,5);
+addProg(pp);
+publishAllProg();
 }
 
 void wylaczWszystko()
@@ -136,10 +234,12 @@ void publikujStanSekcji()
    {
       if(b&(1<<i))
       {
-          sprintf(tmpTopic,"%s/SEKCJA%d/%d",wifi.getOutTopic(),i,1);
+          sprintf(tmpTopic,"%s/SEKCJA/%d/",wifi.getOutTopic(),i);
+          strcpy(tmpMsg,"1");
       }else
       {
-          sprintf(tmpTopic,"%s/SEKCJA%d/%d",wifi.getOutTopic(),i,1);
+          sprintf(tmpTopic,"%s/SEKCJA/%d/",wifi.getOutTopic(),i);
+          strcpy(tmpMsg,"0");
       }
       wifi.RSpisz(tmpTopic,tmpMsg);
    }
@@ -191,7 +291,7 @@ void loop()
    if(d>3000)// max 3 sek
    {
      sLEDmillis=millis();
- //    DPRINT( "[");DPRINT(wifi.getTimeString());DPRINTLN("]");
+     DPRINT( "[");DPRINT(wifi.getTimeString());DPRINTLN("]");
    
    }
    /////////////////// obsluga hardware //////////////////////

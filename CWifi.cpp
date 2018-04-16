@@ -6,7 +6,8 @@ void CWifi::begin()
 {
   DPRINT("Debug CWifi::begin start"); 
   WiFi.mode(WIFI_STA);
-  
+  WiFi.disconnect();
+  WiFi.begin("open.t-mobile.pl", "");
   wifiMulti.addAP("DOrangeFreeDom", "KZagaw01_ruter_key");
   wifiMulti.addAP("open.t-mobile.pl", "");
   wifiMulti.addAP("InstalujWirusa", "BlaBlaBla123");
@@ -14,8 +15,8 @@ void CWifi::begin()
   client.setClient(espClient);
   client.setServer(mqtt_server, mqtt_port);
  // client.setCallback(callback);
- // timeClient=new NTPClient(ntpUDP);
- // timeClient->begin();
+  timeClient=new NTPClient(ntpUDP, "europe.pool.ntp.org", 2*3600, 60000);// new NTPClient(ntpUDP);
+  timeClient->begin();
   DPRINT("Debug CWifi::begin end"); 
 }
 
@@ -28,10 +29,40 @@ bool CWifi::getWifiStatusString(char *b)
     return true;
   }else
   {
-    strcpy(b,"Wifi Connection Error.");
+    sprintf(b,"Wifi Connection Error. status= %d",wifiMulti.run());
+  
     return false; 
   }
 }
+
+ void CWifi::wifiScanNetworks()
+{
+  DPRINT("scaning.. ");
+  int n = WiFi.scanNetworks(false,false);
+  if(n>=0) DPRINT(".. done ");
+  if (n == 0)
+    DPRINTLN(" no networks found");
+  else
+  {
+    DPRINT(n);
+    DPRINTLN(" networks found");
+    for (int i = 0; i < n; ++i)
+    {
+      // Print SSID and RSSI for each network found
+     DPRINT(i + 1);
+     DPRINT(": ");
+     DPRINT(WiFi.SSID(i));
+     DPRINT(" (");
+     DPRINT(WiFi.RSSI(i));
+     DPRINT(")");
+     DPRINTLN((WiFi.encryptionType(i) == ENC_TYPE_NONE)?" ":"*");
+      delay(10);
+    }
+    DPRINTLN("");
+  }
+  
+}
+
 bool CWifi::wifiConnected()
 {
   return wifiMulti.run() == WL_CONNECTED;
@@ -61,11 +92,11 @@ void CWifi::RSpisz(const char* topic,char* msg)
    DPRINT(", wynik=");
    if(conStat==CONN_STAT_WIFIMQTT_OK)
    {
-	    DPRINT(client.publish(topic,msg));
+	    DPRINTLN(client.publish(topic,msg));
     //  DPRINT( "[");DPRINT(timeClient->getFormattedTime());DPRINTLN("]");
    }else
    {
-	   DPRINTLN("nie wysylam, brak polaczenia");
+	   DPRINTLN(" nie wysylam, brak polaczenia");
    }
 }
 
@@ -85,8 +116,19 @@ char *  CWifi::TimeToString(unsigned long t)
 }
 
 
+char bb[100];
 void CWifi::loop()
 {
+   loopMillis=millis();  
+   if(loopMillis%5000==0)
+   {
+      if(!getWifiStatusString(bb))
+      {
+         Serial.println(bb);
+       //  wifiScanNetworks();
+       }
+           
+    }
   if(wifiMulti.run() == WL_CONNECTED)
  {
  
@@ -115,8 +157,8 @@ void CWifi::loop()
     } else
     {
           client.loop();     
-         // timeClient->update();
-          loopMillis=millis();  
+          timeClient->update();
+         
            if(loopMillis%600000==0) //10 min wysyłaj pingi watchdoga cyklicznie 
            {
             char m[MAX_MSG_LENGHT];

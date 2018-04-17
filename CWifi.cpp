@@ -1,15 +1,22 @@
 #include "CWifi.h"
 
-
+void CWifi::wifiReconnect()
+{
+  DPRINTLN("  Debug CWifi::wifiReconnect start"); 
+  //WiFi.disconnect();
+  delay(1000);
+ // WiFi.begin("open.t-mobile.pl");
+  delay(1000);
+  DPRINTLN("  Debug CWifi::wifiReconnect end"); 
+}
 
 void CWifi::begin()
 {
-  DPRINT("Debug CWifi::begin start"); 
+  DPRINTLN("Debug CWifi::begin start"); 
   WiFi.mode(WIFI_STA);
-  WiFi.disconnect();
-  WiFi.begin("open.t-mobile.pl", "");
+  wifiReconnect();
   wifiMulti.addAP("DOrangeFreeDom", "KZagaw01_ruter_key");
-  wifiMulti.addAP("open.t-mobile.pl", "");
+  wifiMulti.addAP("open.t-mobile.pl");
   wifiMulti.addAP("InstalujWirusa", "BlaBlaBla123");
 
   client.setClient(espClient);
@@ -17,20 +24,20 @@ void CWifi::begin()
  // client.setCallback(callback);
   timeClient=new NTPClient(ntpUDP, "europe.pool.ntp.org", 2*3600, 60000);// new NTPClient(ntpUDP);
   timeClient->begin();
-  DPRINT("Debug CWifi::begin end"); 
+  DPRINTLN("Debug CWifi::begin end"); 
 }
 
 bool CWifi::getWifiStatusString(char *b) 
 { 
-  if(wifiMulti.run() == WL_CONNECTED)
+  if(wifiConnected())
   {
     IPAddress ip=WiFi.localIP();
     sprintf(b,"WiFi connected: %s ,%d.%d.%d.%d\n", WiFi.SSID().c_str(), ip[0],ip[1],ip[2],ip[3]);
     return true;
   }else
   {
-    sprintf(b,"Wifi Connection Error. status= %d",wifiMulti.run());
-  
+   // sprintf(b,"Wifi Connection Error. status= %d",wifiMulti.run());
+  sprintf(b,"Wifi Connection Error. status= %d",WiFi.status());
     return false; 
   }
 }
@@ -65,7 +72,9 @@ bool CWifi::getWifiStatusString(char *b)
 
 bool CWifi::wifiConnected()
 {
-  return wifiMulti.run() == WL_CONNECTED;
+ // return wifiMulti.run() == WL_CONNECTED;
+ //if (WiFi.status()==WL_CONNECTED)return true; else return false;
+ if (wifiMulti.run()==WL_CONNECTED)return true; else return false;
 }
 
 
@@ -93,7 +102,7 @@ void CWifi::RSpisz(const char* topic,char* msg)
    if(conStat==CONN_STAT_WIFIMQTT_OK)
    {
 	    DPRINTLN(client.publish(topic,msg));
-    //  DPRINT( "[");DPRINT(timeClient->getFormattedTime());DPRINTLN("]");
+      DPRINT( "[");DPRINT(timeClient->getFormattedTime());DPRINTLN("]");
    }else
    {
 	   DPRINTLN(" nie wysylam, brak polaczenia");
@@ -129,7 +138,11 @@ void CWifi::loop()
        }
            
     }
-  if(wifiMulti.run() == WL_CONNECTED)
+ 
+  if(!wifiConnected())
+ {
+    wifiReconnect();
+ }else
  {
  
      if (!client.connected()) 
@@ -157,7 +170,7 @@ void CWifi::loop()
     } else
     {
           client.loop();     
-          timeClient->update();
+         timeClient->update();
          
            if(loopMillis%600000==0) //10 min wysyłaj pingi watchdoga cyklicznie 
            {

@@ -5,7 +5,6 @@
 #include <ESP8266WiFiMulti.h>
 #include <PubSubClient.h>
 #include <NTPClient.h>
-#include <NTPClient.h>
 #include <WiFiUdp.h>
 
 //#include "Defy.h"
@@ -81,6 +80,7 @@ const uint16_t mqtt_port=1883;
   const char * getInTopic(){return inTopic;};
  String getTimeString(){return timeClient->getFormattedTime();};
  void wifiScanNetworks();
+  void wifiReconnect();
   
 };
 

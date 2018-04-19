@@ -24,6 +24,7 @@ void CWifi::begin()
  // client.setCallback(callback);
   timeClient=new NTPClient(ntpUDP, "europe.pool.ntp.org", 2*3600, 60000);// new NTPClient(ntpUDP);
   timeClient->begin();
+  
   DPRINTLN("Debug CWifi::begin end"); 
 }
 
@@ -170,7 +171,7 @@ void CWifi::loop()
     } else
     {
           client.loop();     
-         timeClient->update();
+          timeClient->update();
          
            if(loopMillis%600000==0) //10 min wysyłaj pingi watchdoga cyklicznie 
            {

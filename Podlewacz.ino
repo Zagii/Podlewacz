@@ -118,13 +118,13 @@ conf.begin();
 delay(1000);
 DPRINTLN("Programy");
 Program pp;
-conf.setProg(pp,16, 4, 18, 17, 23,0,600,11,1);
+conf.setProg(pp,16, 4, 2018, 17, 23,0,600,11,1);
 conf.addProg(pp);
-conf.setProg(pp,16, 5, 18, 17, 33,10,500,22,2);
+conf.setProg(pp,16, 5, 2018, 17, 33,10,500,22,2);
 conf.addProg(pp);
-conf.setProg(pp,16, 6, 18, 17, 43,20,400,33,3);
+conf.setProg(pp,16, 6, 2018, 17, 43,20,400,33,3);
 conf.addProg(pp);
-conf.setProg(pp,16, 7, 18, 17, 53,30,300,44,4);
+conf.setProg(pp,16, 7, 2018, 17, 53,30,300,44,4);
 conf.addProg(pp);
 
 conf.publishAllProg();
@@ -219,6 +219,7 @@ void loop()
    {
      sLEDmillis=millis();
      DPRINT( "[");DPRINT(wifi.getTimeString());DPRINTLN("]");
+     conf.wlaczoneSekcje(wifi.getEpochTime());
    
    }
    /////////////////// obsluga hardware //////////////////////

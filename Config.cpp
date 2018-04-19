@@ -8,11 +8,11 @@ void CConfig::begin()
    DPRINTLN("Failed to mount file system");
     return;
   }
-  if (!saveConfig()) {
+/*  if (!saveConfig()) {
    DPRINTLN("Failed to save config");
   } else {
    DPRINTLN("Config saved");
-  }
+  }*/
   if (!loadConfig()) {
     DPRINTLN("Failed to load config");
   } else {
@@ -79,25 +79,24 @@ bool CConfig::saveConfig() {
 }
 
 //----------------------------------------------------
-void CConfig::setProg(Program &a,int dzien, int mies, int rok,  int h, int m,  int s,  unsigned long czas_trwania,uint8_t co_ile_h,  uint8_t sekwencja)
+void CConfig::setProg(Program &a,uint8_t dzien, uint8_t mies, uint16_t rok,  uint8_t h, uint8_t m,  uint8_t s,  unsigned long czas_trwania_s,uint8_t co_ile_h,  uint8_t sekwencja)
 {
-  DPRINT("setProg #");
-   tmElements_t t;
-  t.Year = rok;  t.Month = mies;  t.Day = dzien;
-  t.Hour = h;  t.Minute = m;  t.Second = s;
+  DPRINT("setProg #->");
+  tmElements_t t;
+  t.Year = CalendarYrToTm(rok);
+  t.Month = mies;  t.Day = dzien;
+  t.Hour = 0;  t.Minute = 0;  t.Second = 0;
   a.dataOdKiedy=makeTime(t);
-  /*a->dzien=dzien; a->mies=mies;
-  a->rok=rok;    a->h=h;
-  a->m=m;        a->s=s;
-  a->czas=czas; a->sekwencja=sekwencja; */
-  /*a.dzien=dzien; a.mies=mies;
-  a.rok=rok;    a.h=h;
-  a.m=m;        a.s=s;*/
-  a.czas_trwania=czas_trwania; a.sekwencja=sekwencja; 
+  
+  t.Year = 1970;
+  t.Month = 1;  t.Day = 1;
+  t.Hour = h;  t.Minute = m;  t.Second = s;
+  a.godzinaStartu=makeTime(t);
+  
+  a.czas_trwania_s=czas_trwania_s; 
+  a.sekwencja=sekwencja; 
   a.co_ile_s=(unsigned long) (3600*co_ile_h);
-  //a.od=
- // a.
-   publishProg(a,progIle);
+  publishProg(a,progIle);
 }
 
 
@@ -105,14 +104,13 @@ void CConfig::setProg(Program &a, Program &b)
 {
   DPRINT("addProg ref #");
   publishProg(b,progIle);
- /* a.dzien=b.dzien; a.mies=b.mies;
-  a.rok=b.rok;    a.h=b.h;
-  a.m=b.m;        a.s=b.s;*/
-  //a.czas=b.czas; 
-  tmElements_t t;
-   breakTime(b.dataOdKiedy, t); 
-  a.dataOdKiedy=makeTime(t);
+//  tmElements_t t;
+ // breakTime(b.dataOdKiedy, t); 
+ // a.dataOdKiedy=makeTime(t);
+  a.dataOdKiedy=b.dataOdKiedy;
+  a.godzinaStartu=b.godzinaStartu;
   a.co_ile_s=b.co_ile_s;
+  a.czas_trwania_s=b.czas_trwania_s;
   a.sekwencja=b.sekwencja; 
 }
 
@@ -122,10 +120,7 @@ void CConfig::addProg(Program p)
   DPRINT("addProg #");
   publishProg(p,progIle);
   if(progIle+1>=MAX_PROGR)return;
-  /*prTab[progIle].dzien=p.dzien; prTab[progIle].mies=p.mies;
-  prTab[progIle].rok=p.rok;    prTab[progIle].h=p.h;
-  prTab[progIle].m=p.m;        prTab[progIle].s=p.s;
-  prTab[progIle].czas=p.czas;  prTab[progIle].sekwencja=p.sekwencja; */
+
   setProg(prTab[progIle],p);
   progIle++;
 }
@@ -135,13 +130,19 @@ void CConfig::addProg(Program p)
 void CConfig::publishProg(Program &p,uint8_t i)
 {
   DPRINT("ID="); DPRINT(i); DPRINT("; ");
- // DPRINT("data="); DPRINT(p.dzien); DPRINT("-");DPRINT(p.mies); DPRINT("-");DPRINT(p.rok); 
-//  DPRINT("; godz="); DPRINT(p.h); DPRINT(":");DPRINT(p.m); DPRINT(":");DPRINT(p.s); 
-//  DPRINT("czas="); DPRINT(p.czas); DPRINT("; ");DPRINT("sekwencja="); DPRINTLN(p.sekwencja); 
+  DPRINT("data="); DPRINT(day(p.dataOdKiedy)); DPRINT("-");DPRINT(month(p.dataOdKiedy)); DPRINT("-");DPRINT(year(p.dataOdKiedy)); 
+  DPRINT("; godz="); DPRINT(hour(p.godzinaStartu)); DPRINT(":");DPRINT(minute(p.godzinaStartu)); DPRINT(":");DPRINT(second(p.godzinaStartu)); 
+  DPRINT(" czas_trwania_s="); DPRINT(p.czas_trwania_s); DPRINT("; ");DPRINT("co_ile_s="); DPRINT(p.co_ile_s); DPRINT("; ");
+  DPRINT(" sekwencja="); DPRINTLN(p.sekwencja); 
   
 }
 
-
+void CConfig::printCzas(time_t t)
+{
+  DPRINT("czas* time_t= ");DPRINT(t); 
+  DPRINT("data="); DPRINT(day(t)); DPRINT("-");DPRINT(month(t)); DPRINT("-");DPRINT(year(t)); 
+  DPRINT("; godz="); DPRINT(hour(t)); DPRINT(":");DPRINT(minute(t)); DPRINT(":");DPRINT(second(t)); 
+}
 
 void CConfig::delProg(uint16_t id)
 {
@@ -164,8 +165,35 @@ void CConfig::publishAllProg()
   
 }
 
-bool CConfig::checkRangeProg(uint8_t id,unsigned long sysczasms)
+bool CConfig::checkRangeProg(Program &p,time_t sysczas_t)
 {
-  
+  DPRINT("checkRangeProg start, sysczas_s");
+  printCzas(sysczas_t);DPRINTLN("");
+  DPRINT(" p.dataOdKiedy ");printCzas(p.dataOdKiedy);DPRINTLN("");
+   DPRINT(" p.godzinaStartu ");printCzas(p.godzinaStartu);DPRINTLN("");
+  time_t  czasSysOdKiedy = sysczas_t - p.dataOdKiedy;
+  DPRINT(" czasSysOdKiedy ");printCzas(czasSysOdKiedy);DPRINTLN("");
+  time_t czas_w_oknie= sysczas_t % p.co_ile_s;
+ DPRINT(" czas_w_oknie ");printCzas(czas_w_oknie);DPRINTLN("");
+  if(czas_w_oknie >=p.godzinaStartu && p.godzinaStartu+p.czas_trwania_s<=czas_w_oknie)
+  {
+    DPRINTLN(" w zakresie ");
+    return true;
+  }
+  else
+  { 
+    DPRINTLN(" poza zakresem ");
+    return false;
+  }
+}
+uint8_t  CConfig::wlaczoneSekcje(time_t sysczas_s)
+{
+  for(uint16_t i=0;i<progIle;i++)
+  {
+    DPRINT("test programu:");DPRINTLN(i);
+      checkRangeProg(prTab[i], sysczas_s);
+    DPRINTLN(" koniec.");
+  }
+  return 0;
 }
 

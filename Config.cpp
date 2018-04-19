@@ -88,7 +88,7 @@ void CConfig::setProg(Program &a,uint8_t dzien, uint8_t mies, uint16_t rok,  uin
   t.Hour = 0;  t.Minute = 0;  t.Second = 0;
   a.dataOdKiedy=makeTime(t);
   
-  t.Year = 1970;
+  t.Year = CalendarYrToTm(1970);
   t.Month = 1;  t.Day = 1;
   t.Hour = h;  t.Minute = m;  t.Second = s;
   a.godzinaStartu=makeTime(t);

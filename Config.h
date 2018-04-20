@@ -10,22 +10,19 @@
 
 #define PROGRAM_CONFIG_FILE "/programy.json"
 
-#define MAX_PROGR 250
+#define MAX_PROGR 50
 
+#define GODZ_ZERO 30000L
+#define SEK_W_DNIU (3600*24)
 
 typedef struct 
 {
   time_t dataOdKiedy; //dzien przedstawia date od kiedy podlewac dla godz 00:00:00, 
   time_t godzinaStartu; //a godzina o której godzinie wzgledem daty
-  /*uint8_t dzien;  //data od kiedy
-  uint8_t mies;
-  uint8_t rok;
-  uint8_t h;      //o ktorej godzinie
-  uint8_t m;
-  uint8_t s;*/
+
   unsigned long czas_trwania_s;    //czas trwania
   uint8_t sekwencja;
-  unsigned long co_ile_s;
+  uint8_t co_ile_dni;
 }Program;
 
 class CConfig
@@ -39,7 +36,8 @@ class CConfig
     bool loadConfig();
     bool saveConfig();
 
-    void setProg(Program &a,uint8_t dzien, uint8_t mies, uint16_t rok,  uint8_t h, uint8_t m,  uint8_t s,  unsigned long czas_trwania_s,uint8_t co_ile_h,  uint8_t sekwencja);
+    void setProg(Program &a,uint8_t dzien, uint8_t mies, uint16_t rok,  uint8_t h, uint8_t m,  uint8_t s,  unsigned long czas_trwania_s,uint8_t co_ile_dni,  uint8_t sekwencja);
+     void setProg(Program &a,time_t data,time_t godzina,  unsigned long czas_trwania_s,uint8_t co_ile_dni,  uint8_t sekwencja);
     void setProg(Program &a, Program &b);
     void addProg(Program p);
     void publishProg(Program &p,uint8_t i=-1);

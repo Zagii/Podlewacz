@@ -79,7 +79,7 @@ const uint16_t mqtt_port=1883;
   const char * getOutTopic(){return outTopic;};
   const char * getInTopic(){return inTopic;};
  String getTimeString(){return timeClient->getFormattedTime();};
- uint8_t getEpochTime(){return timeClient->getEpochTime();};
+ unsigned long getEpochTime(){return timeClient->getEpochTime();};
  void wifiScanNetworks();
   void wifiReconnect();
   

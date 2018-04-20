@@ -103,7 +103,7 @@ void CWifi::RSpisz(const char* topic,char* msg)
    if(conStat==CONN_STAT_WIFIMQTT_OK)
    {
 	    DPRINTLN(client.publish(topic,msg));
-      DPRINT( "[");DPRINT(timeClient->getFormattedTime());DPRINTLN("]");
+      DPRINT( "[");DPRINT(timeClient->getFormattedTime());DPRINT("] ");DPRINTLN(timeClient->getEpochTime());
    }else
    {
 	   DPRINTLN(" nie wysylam, brak polaczenia");

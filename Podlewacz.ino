@@ -118,21 +118,37 @@ conf.begin();
 delay(1000);
 DPRINTLN("Programy");
 Program pp;
-conf.setProg(pp,16, 4, 2018, 17, 23,0,600,11,1);
+conf.setProg(pp,1, 1, 1970, 7, 0,0,8*60,1,1); 
 conf.addProg(pp);
-conf.setProg(pp,16, 5, 2018, 17, 33,10,500,22,2);
+conf.setProg(pp,1, 1, 1970, 7, 8,10,8*60,1,2);
 conf.addProg(pp);
-conf.setProg(pp,16, 6, 2018, 17, 43,20,400,33,3);
+conf.setProg(pp,1, 1, 1970, 7, 16,20,8*60,1,3);
 conf.addProg(pp);
-conf.setProg(pp,16, 7, 2018, 17, 53,30,300,44,4);
+conf.setProg(pp,1, 1, 1970, 7, 24,30,8*60,1,4);
 conf.addProg(pp);
-
+conf.setProg(pp,1, 1, 1970, 7, 32,40,8*60,1,6);
+conf.addProg(pp);
+conf.setProg(pp,1, 1, 1970, 7, 40,50,5*60,1,5);
+conf.addProg(pp);
+conf.setProg(pp,1, 1, 1970, 19, 0,0,8*60,1,1); 
+conf.addProg(pp);
+conf.setProg(pp,1, 1, 1970, 19, 8,10,8*60,1,2);
+conf.addProg(pp);
+conf.setProg(pp,1, 1, 1970, 19, 16,20,8*60,1,3);
+conf.addProg(pp);
+conf.setProg(pp,1, 1, 1970, 19, 24,30,8*60,1,4);
+conf.addProg(pp);
+conf.setProg(pp,1, 1, 1970, 19, 32,40,8*60,1,6);
+conf.addProg(pp);
+conf.setProg(pp,1, 1, 1970, 19, 40,50,5*60,1,5);
+conf.addProg(pp);
+conf.setProg(pp,1, 1, 1970, 15, 43,50,3600,1,7);
+conf.addProg(pp);
+conf.setProg(pp,1, 1, 1970, 15, 55,50,15*60,1,5);
+conf.addProg(pp);
 conf.publishAllProg();
 
-conf.delProg(2);
-conf.setProg(pp,16, 8, 18, 17, 63,10,410,55,5);
-conf.addProg(pp);
-conf.publishAllProg();
+//conf.saveConfig();
 }
 
 void wylaczWszystko()
@@ -140,8 +156,16 @@ void wylaczWszystko()
   stanSekcji=0;
   czekaNaPublikacjeStanu=true;
 }
+void zmienStanSekcji(uint8_t stan)
+{
+  if(stanSekcji==stan) return;
+   stanSekcji=stan;
+   czekaNaPublikacjeStanu=true;
+}
 void zmienStanSekcji(uint8_t sekcjanr,uint8_t stan)
 {
+  if((stanSekcji & (1<<sekcjanr))==stan) return;
+   
   if(stan==ON)
   {
     stanSekcji |= 1<<sekcjanr;
@@ -218,13 +242,16 @@ void loop()
    if(d>3000)// max 3 sek
    {
      sLEDmillis=millis();
-     DPRINT( "[");DPRINT(wifi.getTimeString());DPRINTLN("]");
-     conf.wlaczoneSekcje(wifi.getEpochTime());
+     DPRINT( "[");DPRINT(wifi.getTimeString());DPRINT("] ");DPRINTLN(wifi.getEpochTime());
+     uint8_t sekcjaProg=conf.wlaczoneSekcje(wifi.getEpochTime());
+     Serial.println(sekcjaProg,BIN);
+     zmienStanSekcji(sekcjaProg);
    
    }
    /////////////////// obsluga hardware //////////////////////
   if(czekaNaPublikacjeStanu)
   {
+    DPRINT("######### ZMIANA STANU WYJSC ############ ");DPRINTLN(stanSekcji,BIN);
       pcf8574.write8(stanSekcji);
       publikujStanSekcji();
          

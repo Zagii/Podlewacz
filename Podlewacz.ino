@@ -14,6 +14,9 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266WiFiMulti.h>
 #include <PubSubClient.h>
+#include <WebSocketsServer.h>
+#include <ESP8266WebServer.h>
+#include <ESP8266mDNS.h>
 
 #include <pcf8574_esp.h>
 #include <ArduinoJson.h>
@@ -22,7 +25,7 @@
 #include "Defy.h"
 #include "CWifi.h"
 #include "Config.h"
-
+#include "CWebSerwer.h"
 
 
 
@@ -34,6 +37,8 @@ CWifi wifi;
 PubSubClient *mqtt;
 
 CConfig conf;
+
+CWebSerwer web;
 
 char tmpTopic[MAX_TOPIC_LENGHT];
 char tmpMsg[MAX_MSG_LENGHT];
@@ -85,6 +90,12 @@ void callback(char* topic, byte* payload, unsigned int length)
   free(p);
 }
 
+////////////// obsluga websocket
+void wse(uint8_t num, WStype_t type, uint8_t * payload, size_t length)
+{
+  web.webSocketEvent(num,type,payload,length);
+}
+
 /////////////////////////SETUP///////////////////////////
 void setup()
 {
@@ -115,8 +126,8 @@ void setup()
 
 conf.begin();
 
-delay(1000);
-DPRINTLN("Programy");
+//delay(1000);
+/*DPRINTLN("Programy");
 Program pp;
 conf.setProg(pp,1, 1, 1970, 7, 0,0,8*60,1,1); 
 conf.addProg(pp);
@@ -147,8 +158,12 @@ conf.addProg(pp);
 conf.setProg(pp,1, 1, 1970, 15, 55,50,15*60,1,5);
 conf.addProg(pp);
 conf.publishAllProg();
-
+*/
 //conf.saveConfig();
+conf.publishAllProg();
+web.begin();
+WebSocketsServer * webSocket=web.getWebSocket();
+webSocket->onEvent(wse);
 }
 
 void wylaczWszystko()
@@ -237,12 +252,13 @@ unsigned long d=0;
 void loop()
 {
   wifi.loop();
+  web.loop();
    ///// LED status blink
    d=millis()-sLEDmillis;
    if(d>3000)// max 3 sek
    {
      sLEDmillis=millis();
-     DPRINT( "[");DPRINT(wifi.getTimeString());DPRINT("] ");DPRINTLN(wifi.getEpochTime());
+     //DPRINT( "[");DPRINT(wifi.getTimeString());DPRINT("] ");DPRINTLN(wifi.getEpochTime());
      uint8_t sekcjaProg=conf.wlaczoneSekcje(wifi.getEpochTime());
      Serial.println(sekcjaProg,BIN);
      zmienStanSekcji(sekcjaProg);

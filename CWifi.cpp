@@ -2,12 +2,12 @@
 
 void CWifi::wifiReconnect()
 {
-  DPRINTLN("  Debug CWifi::wifiReconnect start"); 
+ // DPRINTLN("  Debug CWifi::wifiReconnect start"); 
   //WiFi.disconnect();
-  delay(1000);
+ // delay(1000);
  // WiFi.begin("open.t-mobile.pl");
-  delay(1000);
-  DPRINTLN("  Debug CWifi::wifiReconnect end"); 
+ // delay(1000);
+ // DPRINTLN("  Debug CWifi::wifiReconnect end"); 
 }
 
 void CWifi::begin()

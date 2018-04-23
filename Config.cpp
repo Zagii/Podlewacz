@@ -28,7 +28,7 @@ bool CConfig::loadConfig() {
   }
 
   size_t size = configFile.size();
-  if (size > 1024) {
+  if (size > 2048) {
     DPRINT("Za duży plik ");DPRINTLN(PROGRAM_CONFIG_FILE);
     return false;
   }
@@ -58,13 +58,15 @@ bool CConfig::loadConfig() {
     setProg(pp,prog[0],prog[1],prog[2], prog[3], prog[4]);
     addProg(pp);
   }
-  DPRINT("progIle");DPRINTLN(n);
+  DPRINT("progIle=");DPRINTLN(n);
   return true;
 }
 
 bool CConfig::saveConfig() {
 
+  DPRINT(" saveConfig bufferSize=");
   const size_t bufferSize = JSON_ARRAY_SIZE(2) + progIle*JSON_ARRAY_SIZE(5) + JSON_OBJECT_SIZE(1);
+  DPRINTLN(bufferSize);
   DynamicJsonBuffer jsonBuffer(bufferSize);
 
   JsonObject& root = jsonBuffer.createObject();
@@ -72,7 +74,7 @@ bool CConfig::saveConfig() {
   JsonArray& Programy = root.createNestedArray("Programy");
   for(uint8_t i=0;i<progIle;i++)
   {
-    JsonArray& pr = pr.createNestedArray();
+    JsonArray& pr = Programy.createNestedArray();
     pr.add(prTab[i].dataOdKiedy);
     pr.add(prTab[i].godzinaStartu);
     pr.add(prTab[i].czas_trwania_s);
@@ -189,8 +191,8 @@ void CConfig::publishAllProg()
 
 bool CConfig::checkRangeProg(Program &p,time_t sysczas_t)
 {
-  DPRINT("checkRangeProg start, sysczas_s ");  printCzas(sysczas_t);DPRINTLN("");
-  publishProg(p);
+ // DPRINT("checkRangeProg start, sysczas_s ");  printCzas(sysczas_t);DPRINTLN("");
+ // publishProg(p);
  
   if(p.dataOdKiedy>sysczas_t)
   {
@@ -201,24 +203,24 @@ bool CConfig::checkRangeProg(Program &p,time_t sysczas_t)
   uint8_t deltaDni=czasSysOdKiedy/SEK_W_DNIU;
   if(deltaDni%p.co_ile_dni!=0)
   {
-     DPRINT(" Program nie z tego dnia. delta=");DPRINTLN(deltaDni);
+    // DPRINT(" Program nie z tego dnia. delta=");DPRINTLN(deltaDni);
     return false;
   }
    time_t aktualnaGodzina=sysczas_t % SEK_W_DNIU;
 
- DPRINT(" poczatkowaGodzina ");printCzas(p.godzinaStartu);DPRINT(" / ");
- DPRINT(" aktualnaGodzina ");printCzas(aktualnaGodzina);DPRINT(" / ");
- DPRINT(" koncowaGodzina ");printCzas(p.godzinaStartu+p.czas_trwania_s);DPRINT(" ");
- DPRINT(" okno [ ");
+// DPRINT(" poczatkowaGodzina ");printCzas(p.godzinaStartu);DPRINT(" / ");
+// DPRINT(" aktualnaGodzina ");printCzas(aktualnaGodzina);DPRINT(" / ");
+// DPRINT(" koncowaGodzina ");printCzas(p.godzinaStartu+p.czas_trwania_s);DPRINT(" ");
+ //DPRINT(" okno [ ");
  
   if((aktualnaGodzina >=p.godzinaStartu) && (p.godzinaStartu+p.czas_trwania_s>=aktualnaGodzina))
   {
-    DPRINTLN(" w zakresie ]");
+ //   DPRINTLN(" w zakresie ]");
     return true;
   }
   else
   { 
-    DPRINTLN(" poza zakresem ]");
+  //  DPRINTLN(" poza zakresem ]");
     return false;
   }
 }
@@ -227,12 +229,12 @@ uint8_t  CConfig::wlaczoneSekcje(time_t sysczas_s)
   uint8_t stan=0;
   for(uint16_t i=0;i<progIle;i++)
   {
-    DPRINT("test programu:");DPRINTLN(i);
+   // DPRINT("test programu:");DPRINTLN(i);
       if(checkRangeProg(prTab[i], sysczas_s))
       {
         stan |=1<<prTab[i].sekwencja;
       }
-    DPRINTLN(" koniec.");
+  //  DPRINTLN(" koniec.");
   }
   return stan;
 }

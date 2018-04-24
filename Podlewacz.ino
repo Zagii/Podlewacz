@@ -94,6 +94,23 @@ void callback(char* topic, byte* payload, unsigned int length)
 void wse(uint8_t num, WStype_t type, uint8_t * payload, size_t length)
 {
   web.webSocketEvent(num,type,payload,length);
+  if(type==WStype_TEXT)
+  {
+    char* p = (char*)malloc(length);
+    memcpy(p,payload,length);
+    char t[MAX_TOPIC_LENGHT];
+    if(payload[0]=='s')//sekcja
+    {
+      char s[2];
+      s[0]=payload[1]; s[1]='\0';
+      char w[2];
+      w[0]=payload[2]; w[1]='\0';
+      strcpy(t,"SEKCJA");
+      strcat(t,s);
+      parsujRozkaz(t,w);
+    }
+    free(p);
+  }
 }
 
 /////////////////////////SETUP///////////////////////////
@@ -188,6 +205,7 @@ void zmienStanSekcji(uint8_t sekcjanr,uint8_t stan)
   {
     stanSekcji &= ~(1<<sekcjanr);
   }
+  web.zmienStanSekcji(stanSekcji);
   czekaNaPublikacjeStanu=true;
   
 }
@@ -252,7 +270,7 @@ unsigned long d=0;
 void loop()
 {
   wifi.loop();
-  web.loop();
+  web.loop(wifi.getEpochTime(),"Duchnice",20.1f,1023.34f,0,0);
    ///// LED status blink
    d=millis()-sLEDmillis;
    if(d>3000)// max 3 sek
@@ -260,7 +278,7 @@ void loop()
      sLEDmillis=millis();
      //DPRINT( "[");DPRINT(wifi.getTimeString());DPRINT("] ");DPRINTLN(wifi.getEpochTime());
      uint8_t sekcjaProg=conf.wlaczoneSekcje(wifi.getEpochTime());
-     Serial.println(sekcjaProg,BIN);
+  //  Serial.println(sekcjaProg,BIN);
      zmienStanSekcji(sekcjaProg);
    
    }

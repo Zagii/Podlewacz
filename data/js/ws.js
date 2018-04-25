@@ -1,5 +1,5 @@
 //var wsSerw="192.168.1.144";
-var debug;//=document.getElementById('deb');
+var debug;
 function deb(t)
 {
     debug.innerHTML+=t+"<br>";
@@ -9,34 +9,61 @@ connection.onopen = function () { connection.send('Connect ' + new Date()); };
 connection.onerror = function (error) { console.log('WebSocket Error ', error); }; 
 connection.onmessage = function (e) 
 {
+   //  }
+  //   function a(nr){
+ //        var dt="{\"GEO\":\"123\",\"TEMP\":124.4,\"TRYB\":0,\"CZAS\":123,\"CISN\":333,\"DESZCZ\":0,\"SEKCJE\":"+nr+"}";
      console.log('Server: ', e.data); 
-     
      deb("onMessage: "+e.data);
+     var json=JSON.parse(e.data); 
+   //  var json=JSON.parse(dt); 
+     if(json.hasOwnProperty("CZAS"))
+     {
+            var d=new Date(parseInt(json["CZAS"])*1000);
+            document.getElementById('godz').innerHTML=d.getHours()+":"+d.getMinutes()+":"+d.getSeconds();
+            document.getElementById('data').innerHTML=d.getDay()+"-"+d.getMonth()+"-"+d.getFullYear();
+     }
+     if(json.hasOwnProperty("GEO"))
+     { 
+            document.getElementById('geo').innerHTML=json["GEO"];
+     }
+      if(json.hasOwnProperty("TEMP"))
+     { 
+            document.getElementById('temp').innerHTML=json["TEMP"];
+     }
+     if(json.hasOwnProperty("CISN"))
+     { 
+            document.getElementById('cisn').innerHTML=json["CISN"];
+     }
+     if(json.hasOwnProperty("DESZCZ"))
+     { 
+            document.getElementById('deszcz').innerHTML=json["DESZCZ"];
+     }
+     if(json.hasOwnProperty("TRYB"))
+     { 
+            document.getElementById('tryb').innerHTML=json["TRYB"];
+     }
+     if(json.hasOwnProperty("SEKCJE"))
+     { 
+            setStan(json["SEKCJE"]);
+     }
 }; 
 
 document.addEventListener("DOMContentLoaded", function(event) {
-    // - Code to execute when all DOM content is loaded. 
-    // - including fonts, images, etc.
     debug=document.getElementById('deb');
     console.log("document On load");
     for(i=1;i<7;i++)
     {
         add(i);
-       // setStan(i,i%2);
         console.log("Dodaje: "+i);
     }
 });
 
-function sendRGB() { 
-    var r = parseInt(document.getElementById('r').value).toString(16); 
-    var g = parseInt(document.getElementById('g').value).toString(16); 
-    var b = parseInt(document.getElementById('b').value).toString(16); 
-    if (r.length < 2) { r = '0' + r; } 
-    if (g.length < 2) { g = '0' + g; } 
-    if (b.length < 2) { b = '0' + b; } 
-    var rgb = '#' + r + g + b; 
-    console.log('RGB: ' + rgb); 
-  //  connection.send(rgb); 
+function setStan(sekcje)
+{
+    for(i=0;i<8;i++)
+    {
+        setStan(i,sekcje&1<<i);
+    }
 }
 function setStan(nr,stan)
 {
@@ -57,26 +84,23 @@ function sendStan( nr)
 {
     var s=document.getElementById("bs"+nr);
     var w=0;
-    if(s.innerHTML=="ON")w=1;
-    
-    var msg=nr+",stan="+w;
+    if(s.innerHTML=="OFF")w=1;
+    var jsonOb={ "typ":"SEKCJA", "id":nr, "wart":w };
+    var msg=JSON.stringify(jsonOb);
     console.log("sendStan msg="+msg );
     deb("sendStan msg="+msg);
-    connection.send(msg);
+    connection.send(msg);   
 }
 
 function add(i) {
-
     var d = document.createElement("div"); 
     console.log("add: "+d);
     d.className="w3-third w3-section";
     d.innerHTML= "<button type=\"submit\" class=\"button button5\" id=\"b"+i+"\" onclick=\"sendStan("+i+")\">"+
                 " <small id=\"bs"+i+"\">OFF</small>"+           
                 " <p class=\"w3-wide\" >Sekcja "+i+"\</p>"+
-                " <i class=\"fa fa-shower fa-5x\" style=\"color:darkred\" id=\"bi"+i+"\"></i></button>";
-      
+                " <i class=\"fa fa-shower fa-5x\" style=\"color:darkred\" id=\"bi"+i+"\"></i></button>";     
     var foo = document.getElementById("sDiv");
-    //Append the element in page (in span).  
     foo.appendChild(d);
   }
  

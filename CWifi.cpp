@@ -2,10 +2,11 @@
 
 void CWifi::wifiReconnect()
 {
+  return;
  // DPRINTLN("  Debug CWifi::wifiReconnect start"); 
-  //WiFi.disconnect();
+ // WiFi.disconnect();
  // delay(1000);
- // WiFi.begin("open.t-mobile.pl");
+ // WiFi.begin("DOrangeFreeDom", "KZagaw01_ruter_key");
  // delay(1000);
  // DPRINTLN("  Debug CWifi::wifiReconnect end"); 
 }
@@ -37,8 +38,8 @@ bool CWifi::getWifiStatusString(char *b)
     return true;
   }else
   {
-   // sprintf(b,"Wifi Connection Error. status= %d",wifiMulti.run());
-  sprintf(b,"Wifi Connection Error. status= %d",WiFi.status());
+    sprintf(b,"Wifi Connection Error. status= %d",wifiMulti.run());
+ // sprintf(b,"Wifi Connection Error. status= %d",WiFi.status());
     return false; 
   }
 }
@@ -74,7 +75,7 @@ bool CWifi::getWifiStatusString(char *b)
 bool CWifi::wifiConnected()
 {
  // return wifiMulti.run() == WL_CONNECTED;
- //if (WiFi.status()==WL_CONNECTED)return true; else return false;
+// if (WiFi.status()==WL_CONNECTED)return true; else return false;
  if (wifiMulti.run()==WL_CONNECTED)return true; else return false;
 }
 
@@ -126,7 +127,7 @@ char *  CWifi::TimeToString(unsigned long t)
 }
 
 
-char bb[100];
+char bb[50];
 void CWifi::loop()
 {
    loopMillis=millis();  

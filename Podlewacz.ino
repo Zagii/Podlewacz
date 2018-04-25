@@ -61,9 +61,6 @@ void(* resetFunc) (void) = 0; //declare reset function @ address 0
 
 
 
-
-
-
 void callback(char* topic, byte* payload, unsigned int length) 
 {
   char* p = (char*)malloc(length);
@@ -98,16 +95,29 @@ void wse(uint8_t num, WStype_t type, uint8_t * payload, size_t length)
   {
     char* p = (char*)malloc(length);
     memcpy(p,payload,length);
+    p[length]='\0';
+    //var jsonOb={ "typ":"SEKCJA", "id":nr, "wart":w };
     char t[MAX_TOPIC_LENGHT];
-    if(payload[0]=='s')//sekcja
+    StaticJsonBuffer<200> jsonBuffer;
+    JsonObject& root = jsonBuffer.parseObject(p);
+    if (!root.success()) 
     {
-      char s[2];
-      s[0]=payload[1]; s[1]='\0';
-      char w[2];
-      w[0]=payload[2]; w[1]='\0';
-      strcpy(t,"SEKCJA");
-      strcat(t,s);
-      parsujRozkaz(t,w);
+      Serial.println("parseObject() failed");
+      Serial.println(p);
+      return;
+    }
+    const char* typ = root["typ"];
+    const char* id= root["id"];
+    const char* wart= root["wart"];
+   Serial.println(typ);
+   Serial.println(id);
+   Serial.println(wart);
+    if(strstr(typ,"SEKCJA"))//sekcja
+    {
+      
+      strcpy(t,typ);
+      strcat(t,id);
+      parsujRozkaz(t,(char*)wart);
     }
     free(p);
   }
@@ -144,8 +154,8 @@ void setup()
 conf.begin();
 
 //delay(1000);
-/*DPRINTLN("Programy");
-Program pp;
+DPRINTLN("Programy");
+/*Program pp;
 conf.setProg(pp,1, 1, 1970, 7, 0,0,8*60,1,1); 
 conf.addProg(pp);
 conf.setProg(pp,1, 1, 1970, 7, 8,10,8*60,1,2);
@@ -170,13 +180,10 @@ conf.setProg(pp,1, 1, 1970, 19, 32,40,8*60,1,6);
 conf.addProg(pp);
 conf.setProg(pp,1, 1, 1970, 19, 40,50,5*60,1,5);
 conf.addProg(pp);
-conf.setProg(pp,1, 1, 1970, 15, 43,50,3600,1,7);
-conf.addProg(pp);
-conf.setProg(pp,1, 1, 1970, 15, 55,50,15*60,1,5);
-conf.addProg(pp);
 conf.publishAllProg();
+
+conf.saveConfig();
 */
-//conf.saveConfig();
 conf.publishAllProg();
 web.begin();
 WebSocketsServer * webSocket=web.getWebSocket();
@@ -196,6 +203,7 @@ void zmienStanSekcji(uint8_t stan)
 }
 void zmienStanSekcji(uint8_t sekcjanr,uint8_t stan)
 {
+  DPRINT("zmienStanSekcji nr=");DPRINT(sekcjanr);DPRINT(", stan=");DPRINTLN(stan);
   if((stanSekcji & (1<<sekcjanr))==stan) return;
    
   if(stan==ON)
@@ -205,6 +213,7 @@ void zmienStanSekcji(uint8_t sekcjanr,uint8_t stan)
   {
     stanSekcji &= ~(1<<sekcjanr);
   }
+   DPRINT("zmienStanSekcji koniec nr=");DPRINT(sekcjanr);DPRINT(", stan=");DPRINTLN(stan);
   web.zmienStanSekcji(stanSekcji);
   czekaNaPublikacjeStanu=true;
   
@@ -228,22 +237,25 @@ void publikujStanSekcji()
       wifi.RSpisz(tmpTopic,tmpMsg);
    }
   czekaNaPublikacjeStanu=false;
+   DPRINT("######### ZMIANA STANU WYJSC ############ ");DPRINTLN(stanSekcji,BIN);
 }
 
  void parsujRozkaz(char *topic, char *msg)
  {
+  DPRINT("parsujRozkaz topic=");DPRINT(topic);DPRINT(", msg=");DPRINTLN(msg);
    char *ind=NULL;
    ///////////////// SEKCJA  //////////////////////////
    ind=strstr(topic,"SEKCJA");
    if(ind!=NULL)
    {
+    DPRINTLN(ind);
      ind+=strlen("SEKCJA");
-
+    DPRINTLN(ind);
      if(isIntChars(ind))
      {
         if(isIntChars(msg))
         {
-          if(msg[0]=='0')
+          if(msg[0]=='1')
           {
             zmienStanSekcji(atoi(ind),OFF);
           }else
@@ -285,7 +297,7 @@ void loop()
    /////////////////// obsluga hardware //////////////////////
   if(czekaNaPublikacjeStanu)
   {
-    DPRINT("######### ZMIANA STANU WYJSC ############ ");DPRINTLN(stanSekcji,BIN);
+   
       pcf8574.write8(stanSekcji);
       publikujStanSekcji();
          

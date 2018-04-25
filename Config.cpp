@@ -13,6 +13,8 @@ void CConfig::begin()
   } else {
    DPRINTLN("Config saved");
   }*/
+
+  
   if (!loadConfig()) {
     DPRINTLN("Failed to load config");
   } else {
@@ -87,7 +89,7 @@ bool CConfig::saveConfig() {
     DPRINT("Blad zapisu pliku ");DPRINTLN(PROGRAM_CONFIG_FILE);
     return false;
   }
-
+  root.printTo(Serial);
   root.printTo(configFile);
   return true;
 }

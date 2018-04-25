@@ -55,17 +55,6 @@ void CWebSerwer::webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, s
         case WStype_TEXT:
             USE_SERIAL.printf("[%u] get Text: %s\n", num, payload);
 
-            if(payload[0] == '#') {
-                // we get RGB data
-
-                // decode rgb data
-                uint32_t rgb = (uint32_t) strtol((const char *) &payload[1], NULL, 16);
-
-           //     analogWrite(LED_RED,    ((rgb >> 16) & 0xFF));
-           //     analogWrite(LED_GREEN,  ((rgb >> 8) & 0xFF));
-             //   analogWrite(LED_BLUE,   ((rgb >> 0) & 0xFF));
-            }
-
             break;
     }
 
@@ -75,19 +64,23 @@ void CWebSerwer::zmienStanSekcji(uint8_t stan)
 {
   if(stan==stanSekcji)return;
   stanSekcji=stan;
-  char w[3]="s";
-  w[1]=(char)stan;
-  w[2]='\0';
-  webSocket->broadcastTXT(w);
+  
+  StaticJsonBuffer<200> jsonBuffer;
+  String jsStr="";
+  JsonObject& root = jsonBuffer.createObject();
+  root["SEKCJE"]=stanSekcji;
+  root.printTo(jsStr); 
+  webSocket->broadcastTXT(jsStr);
+  
 }
 
 bool CWebSerwer::handleFileRead(String path){  // send the right file to the client (if it exists)
   Serial.println("handleFileRead: " + path);
   if(path.endsWith("/")) path += "index.html";           // If a folder is requested, send the index file
-  String adr="";
-  if(path=="ws.js")
+  String jsString="";
+  if(path.endsWith("ws.js"))
   {
-    adr="var wsSerw=\""+WiFi.localIP().toString()+"\"";
+    jsString="var wsSerw=\""+WiFi.localIP().toString()+"\";";
   }
   String contentType = getContentType(path);             // Get the MIME type
   String pathWithGz = path + ".gz";
@@ -95,13 +88,19 @@ bool CWebSerwer::handleFileRead(String path){  // send the right file to the cli
     if(SPIFFS.exists(pathWithGz))                          // If there's a compressed version available
       path += ".gz";                                         // Use the compressed version
     File file = SPIFFS.open(path, "r");                    // Open the file
-    if(adr!="")
+    size_t sent;
+    if(jsString!="")
     {
-       size_t sent = server.streamFile(adr, contentType);  
+    // Serial.println("!!!!!!!!!!!!!!!  PRZED  !!!!!!!!!!!!!!!");
+    // Serial.println(jsString);
+    // Serial.println("!!!!!!!!!!!!!!!  PO  !!!!!!!!!!!!!!!");
+     jsString+=file.readString();
+     Serial.println(jsString);
+     server.send(200,contentType,jsString);
+    }else
+    {
+       sent = server.streamFile(file, contentType);    // Send it to the client
     }
-    
-      size_t sent = server.streamFile(file, contentType);    // Send it to the client
-    
     file.close();                                          // Close the file again
     Serial.println(String("\tSent file: ") + path);
     return true;
@@ -131,23 +130,48 @@ void CWebSerwer::loop(unsigned long t_s, char* geo, double temp,double p, bool d
 {
    webSocket->loop();
    server.handleClient();
+
+
+   
    if(ostatnioWyslanyCzas_s!=t_s)
    {
+    StaticJsonBuffer<200> jsonBuffer;
+    String jsStr="";
+    JsonObject& root = jsonBuffer.createObject();
+   
     ostatnioWyslanyCzas_s=t_s;
-    char w[15]="t";
- 
-    sprintf(w, "t%03ldd%02ldh%02dm",hour(t_s), minute(t_s), second(t_s));
-    
-    webSocket->broadcastTXT(w);
-   }
-   if(strcmp(geo,geoLok)!=0)
-   {
-     /*Temperatura;
-    Cisnienie;
-    czujnikDeszczu;
-    TrybAuto;
-    geoLok[30];*/
-   }
+    root["CZAS"]=t_s; 
+    root["SEKCJE"]=stanSekcji;
+    if(strcmp(geo,geoLok)!=0)
+    {
+       strcpy(geoLok,geo);
+       root["GEO"]=geo;
+    }
+    if(Temperatura!=temp)
+    { 
+        Temperatura=temp;
+        root["TEMP"]=temp;
+    }
+    if(Cisnienie!=p)
+    { 
+      Cisnienie=p;
+      root["CISN"]=p;
+    }
+    if(czujnikDeszczu!=deszcz)
+    { 
+      czujnikDeszczu=deszcz;
+      root["DESZCZ"]=deszcz;
+    }
+     if(TrybAuto!=trybAuto)
+     { 
+        TrybAuto=trybAuto;
+        root["TRYB"]=trybAuto;
+     }
+  
+    root.printTo(jsStr); 
+ //   Serial.println(jsStr);
+    webSocket->broadcastTXT(jsStr);
+    }
    
 }
 

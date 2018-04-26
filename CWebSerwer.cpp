@@ -131,8 +131,6 @@ void CWebSerwer::loop(unsigned long t_s, char* geo, double temp,double p, bool d
    webSocket->loop();
    server.handleClient();
 
-
-   
    if(ostatnioWyslanyCzas_s!=t_s)
    {
     StaticJsonBuffer<200> jsonBuffer;

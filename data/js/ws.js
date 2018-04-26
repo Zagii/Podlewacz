@@ -8,19 +8,21 @@ var connection = new WebSocket('ws://'+wsSerw+':81/');
 connection.onopen = function () { connection.send('Connect ' + new Date()); };
 connection.onerror = function (error) { console.log('WebSocket Error ', error); }; 
 connection.onmessage = function (e) 
+//     function a(nr)
 {
    //  }
-  //   function a(nr){
- //        var dt="{\"GEO\":\"123\",\"TEMP\":124.4,\"TRYB\":0,\"CZAS\":123,\"CISN\":333,\"DESZCZ\":0,\"SEKCJE\":"+nr+"}";
-     console.log('Server: ', e.data); 
-     deb("onMessage: "+e.data);
+  // nr=parseInt("00100000", 2).toString(10);
+deb("a="+nr);
+//         var dt="{\"GEO\":\"123\",\"TEMP\":124.4,\"TRYB\":0,\"CZAS\":123,\"CISN\":333,\"DESZCZ\":0,\"SEKCJE\":"+nr+"}";
+ //    console.log('Server: ', e.data); 
+  //   deb("onMessage: "+e.data);
      var json=JSON.parse(e.data); 
    //  var json=JSON.parse(dt); 
      if(json.hasOwnProperty("CZAS"))
      {
             var d=new Date(parseInt(json["CZAS"])*1000);
-            document.getElementById('godz').innerHTML=d.getHours()+":"+d.getMinutes()+":"+d.getSeconds();
-            document.getElementById('data').innerHTML=d.getDay()+"-"+d.getMonth()+"-"+d.getFullYear();
+            document.getElementById('godz').innerHTML=d.getHours().toString().padStart(2,"0")+":"+d.getMinutes().toString().padStart(2,"0")+":"+d.getSeconds().toString().padStart(2,"0");
+            document.getElementById('data').innerHTML=d.getDay().toString().padStart(2,"0")+"-"+d.getMonth().toString().padStart(2,"0")+"-"+d.getFullYear();
      }
      if(json.hasOwnProperty("GEO"))
      { 
@@ -44,7 +46,7 @@ connection.onmessage = function (e)
      }
      if(json.hasOwnProperty("SEKCJE"))
      { 
-            setStan(json["SEKCJE"]);
+            setStany(json["SEKCJE"]);
      }
 }; 
 
@@ -58,15 +60,18 @@ document.addEventListener("DOMContentLoaded", function(event) {
     }
 });
 
-function setStan(sekcje)
+function setStany(sekcje)
 {
-    for(i=0;i<8;i++)
+    deb("setStan sekcje="+sekcje);
+    for(i=1;i<7;i++)
     {
-        setStan(i,sekcje&1<<i);
+        deb("i="+i+" w="+sekcje&(1<<i));
+        setStan(i,sekcje&(1<<i));
     }
 }
 function setStan(nr,stan)
 {
+    
     var s=document.getElementById("bs"+nr);
     var i=document.getElementById("bi"+nr);
     if(stan==0)
@@ -82,9 +87,11 @@ function setStan(nr,stan)
 }
 function sendStan( nr)
 {
+    
     var s=document.getElementById("bs"+nr);
     var w=0;
     if(s.innerHTML=="OFF")w=1;
+  //  a(w<<nr);
     var jsonOb={ "typ":"SEKCJA", "id":nr, "wart":w };
     var msg=JSON.stringify(jsonOb);
     console.log("sendStan msg="+msg );

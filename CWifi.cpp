@@ -2,10 +2,11 @@
 
 void CWifi::wifiReconnect()
 {
+
   //return;
  // DPRINTLN("  Debug CWifi::wifiReconnect start"); 
 //  WiFi.disconnect();
- // delay(1000);
+  delay(1000);
  // WiFi.begin("DOrangeFreeDom", "KZagaw01_ruter_key");
  // delay(1000);
  // DPRINTLN("  Debug CWifi::wifiReconnect end"); 
@@ -14,6 +15,7 @@ void CWifi::wifiReconnect()
 void CWifi::begin()
 {
   DPRINTLN("Debug CWifi::begin start"); 
+ 
   WiFi.mode(WIFI_STA);
   wifiReconnect();
   wifiMulti.addAP("DOrangeFreeDom", "KZagaw01_ruter_key");
@@ -136,7 +138,8 @@ void CWifi::loop()
       if(!getWifiStatusString(bb))
       {
          Serial.println(bb);
-       //  wifiScanNetworks();
+         wifiScanNetworks();
+         DPRINT("Free heap: ");DPRINTLN(ESP.getFreeHeap());
        }
            
     }

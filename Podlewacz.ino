@@ -152,7 +152,7 @@ void setup()
 ///////////// koniec wifi i mqtt init /////////
 
 conf.begin();
-
+conf.setTryb(TRYB_MANUAL);
 //delay(1000);
 DPRINTLN("Programy");
 /*Program pp;
@@ -203,17 +203,23 @@ void zmienStanSekcji(uint8_t stan)
 }
 void zmienStanSekcji(uint8_t sekcjanr,uint8_t stan)
 {
-  DPRINT("zmienStanSekcji nr=");DPRINT(sekcjanr);DPRINT(", stan=");DPRINTLN(stan);
-  if((stanSekcji & (1<<sekcjanr))==stan) return;
+  DPRINT("zmienStanSekcji nr=");DPRINT(sekcjanr);DPRINT(", stan=");DPRINT(stan);DPRINT(", stanSekcji=");DPRINTLN(stanSekcji);
+
+  uint8_t x=bitRead(stanSekcji,sekcjanr);
+
+  if(x==stan)return;
+ 
    
-  if(stan==ON)
+  if(stan==1)
   {
-    stanSekcji |= 1<<sekcjanr;
+    DPRINT("ON");
+    bitSet(stanSekcji,sekcjanr);
   }else
   {
-    stanSekcji &= ~(1<<sekcjanr);
+    DPRINT("OFF");
+    bitClear(stanSekcji,sekcjanr);
   }
-   DPRINT("zmienStanSekcji koniec nr=");DPRINT(sekcjanr);DPRINT(", stan=");DPRINTLN(stan);
+   DPRINT("zmienStanSekcji koniec nr=");DPRINT(sekcjanr);DPRINT(", stan=");DPRINT(stan);DPRINT(", stanSekcji=");DPRINTLN(stanSekcji);
   web.zmienStanSekcji(stanSekcji);
   czekaNaPublikacjeStanu=true;
   
@@ -225,7 +231,8 @@ void publikujStanSekcji()
    byte b = pcf8574.read8();
    for(int i=SEKCJA_MIN;i<=SEKCJA_MAX;i++)
    {
-      if(b&(1<<i))
+      //if(b&(1<<i))
+      if(bitRead(b,i))
       {
           sprintf(tmpTopic,"%s/SEKCJA/%d/",wifi.getOutTopic(),i);
           strcpy(tmpMsg,"1");
@@ -255,12 +262,12 @@ void publikujStanSekcji()
      {
         if(isIntChars(msg))
         {
-          if(msg[0]=='1')
+          if(msg[0]=='0')
           {
-            zmienStanSekcji(atoi(ind),OFF);
+            zmienStanSekcji(atoi(ind),0);
           }else
           {
-            zmienStanSekcji(atoi(ind),ON);
+            zmienStanSekcji(atoi(ind),1);
           }
         }else
         {
@@ -281,6 +288,7 @@ unsigned long d=0;
 
 void loop()
 {
+  yield();
   wifi.loop();
   web.loop(wifi.getEpochTime(),"Duchnice",20.1f,1023.34f,0,0);
    ///// LED status blink
@@ -291,7 +299,7 @@ void loop()
      //DPRINT( "[");DPRINT(wifi.getTimeString());DPRINT("] ");DPRINTLN(wifi.getEpochTime());
      uint8_t sekcjaProg=conf.wlaczoneSekcje(wifi.getEpochTime());
   //  Serial.println(sekcjaProg,BIN);
-     zmienStanSekcji(sekcjaProg);
+     if(conf.getTryb()==TRYB_AUTO)zmienStanSekcji(sekcjaProg);
    
    }
    /////////////////// obsluga hardware //////////////////////

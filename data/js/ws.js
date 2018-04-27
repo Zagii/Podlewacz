@@ -12,10 +12,10 @@ connection.onmessage = function (e)
 {
    //  }
   // nr=parseInt("00100000", 2).toString(10);
-deb("a="+nr);
+///deb("a="+nr);
 //         var dt="{\"GEO\":\"123\",\"TEMP\":124.4,\"TRYB\":0,\"CZAS\":123,\"CISN\":333,\"DESZCZ\":0,\"SEKCJE\":"+nr+"}";
- //    console.log('Server: ', e.data); 
-  //   deb("onMessage: "+e.data);
+     console.log('Server: ', e.data); 
+     deb("onMessage: "+e.data);
      var json=JSON.parse(e.data); 
    //  var json=JSON.parse(dt); 
      if(json.hasOwnProperty("CZAS"))
@@ -62,10 +62,10 @@ document.addEventListener("DOMContentLoaded", function(event) {
 
 function setStany(sekcje)
 {
-    deb("setStan sekcje="+sekcje);
+   // deb("setStan sekcje="+sekcje);
     for(i=1;i<7;i++)
     {
-        deb("i="+i+" w="+sekcje&(1<<i));
+     //   deb("i="+i+" w="+sekcje&(1<<i));
         setStan(i,sekcje&(1<<i));
     }
 }
@@ -83,7 +83,7 @@ function setStan(nr,stan)
         s.innerHTML="ON";
         i.style.color="lime";
     }
-    deb("setStan : nr="+nr+", stan="+stan);
+  //  deb("setStan : nr="+nr+", stan="+stan);
 }
 function sendStan( nr)
 {
@@ -95,7 +95,7 @@ function sendStan( nr)
     var jsonOb={ "typ":"SEKCJA", "id":nr, "wart":w };
     var msg=JSON.stringify(jsonOb);
     console.log("sendStan msg="+msg );
-    deb("sendStan msg="+msg);
+  //  deb("sendStan msg="+msg);
     connection.send(msg);   
 }
 

@@ -64,7 +64,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
     console.log("document On load");
     for(i=1;i<7;i++)
     {
-        add(i);
+        addProg(i,i*10000,i*100,i,i)
         console.log("Dodaje: "+i);
     }
     startWS();
@@ -111,15 +111,43 @@ function sendStan( nr)
     if(ws) ws.send(msg);   
 }
 
-function add(i) {
-    var d = document.createElement("div"); 
-    console.log("add: "+d);
-    d.className="w3-third w3-section";
-    d.innerHTML= "<button type=\"submit\" class=\"button button5\" id=\"b"+i+"\" onclick=\"sendStan("+i+")\">"+
+function addProg(i,dd,ile_s,coIle_d,sek) {
+    //console.log("add: "+d);
+    dt=new Date(dd);
+    var w = document.createElement("div"); 
+    w.className="w3-third w3-section";
+    c1a=document.createElement("div");
+    c1a.className="w3-half w3-section";
+    c1a.innerHTML= dt.getDay().toString().padStart(2,"0")+"-"+dt.getMonth().toString().padStart(2,"0")+"-"+dt.getFullYear();
+    w.appendChild(c1a);
+    c1b=document.createElement("div");
+    c1b.className="w3-half w3-section";
+    c1b.innerHTML= dt.getHours().toString().padStart(2,"0")+":"+dt.getMinutes().toString().padStart(2,"0")+":"+dt.getSeconds().toString().padStart(2,"0");
+    w.appendChild(c1b);
+    
+    c2a=document.createElement("div");
+    c2a.className="w3-half w3-section";
+    c2a.innerHTML= ile_s;
+    w.appendChild(c2a);
+    c2b=document.createElement("div");
+    c2b.className="w3-half w3-section";
+    c2b.innerHTML= coIle_d;
+    w.appendChild(c2b);
+
+    c3a=document.createElement("div");
+    c3a.className="w3-half w3-section";
+    c3a.innerHTML= sek;
+    w.appendChild(c3a);
+    c3b=document.createElement("div");
+    c3b.className="w3-half w3-section";
+    c3b.innerHTML= "button";
+    w.appendChild(c3b);
+    
+    /*d.innerHTML= "<button type=\"submit\" class=\"button button5\" id=\"b"+i+"\" onclick=\"sendStan("+i+")\">"+
                 " <small id=\"bs"+i+"\">OFF</small>"+           
                 " <p class=\"w3-wide\" >Sekcja "+i+"\</p>"+
-                " <i class=\"fa fa-shower fa-5x\" style=\"color:darkred\" id=\"bi"+i+"\"></i></button>";     
-    var foo = document.getElementById("sDiv");
-    foo.appendChild(d);
+                " <i class=\"fa fa-shower fa-5x\" style=\"color:darkred\" id=\"bi"+i+"\"></i></button>";     */
+    var foo = document.getElementById("prog");
+    foo.appendChild(w);
   }
  

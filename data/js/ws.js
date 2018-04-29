@@ -1,4 +1,4 @@
-//var wsSerw="192.168.1.144";
+var wsSerw="192.168.1.144";
 var debug;
 function deb(t)
 {
@@ -14,8 +14,15 @@ function startWS()
 {
     console.log("startWS");
     ws = new WebSocket('ws://'+wsSerw+':81/'); 
-    ws.onopen = function () { ws.send('Connect ' + new Date()); };
-    ws.onerror = function (error) { console.log('WebSocket Error ', error); delete ws; }; 
+    ws.onopen = function () { ws.send('Connect ' + new Date());
+	var s=document.getElementById("pol");
+	s.textContent="on-line";
+	s.style="color:lime";
+	};
+    ws.onerror = function (error) { console.log('WebSocket Error ', error); delete ws; 
+	var s=document.getElementById("pol");
+	s.textContent="off-line";
+	s.style="color:darkred";}; 
     ws.onmessage = function (e) 
     //     function a(nr)
     {
@@ -51,7 +58,23 @@ function startWS()
         }
         if(json.hasOwnProperty("TRYB"))
         { 
-                document.getElementById('tryb').innerHTML=json["TRYB"];
+              //  document.getElementById('tryb').innerHTML=json["TRYB"];
+				
+				var s=document.getElementById("trSw");
+				var t=document.getElementById("tryb");
+				console.log(t.textContent);
+				if(json["TRYB"]=="m")
+				{
+					t.textContent="manual";
+					s.className="fas fa-toggle-off w3-xlarge"
+					s.style="color:darkred";
+
+				}else
+				{
+					t.textContent="auto";
+					s.className="fas fa-toggle-on w3-xlarge"
+					s.style="color:lime";
+				}
         }
         if(json.hasOwnProperty("SEKCJE"))
         { 
@@ -110,7 +133,31 @@ function sendStan( nr)
   //  deb("sendStan msg="+msg);
     if(ws) ws.send(msg);   
 }
+function trybSwitch()
+{
+	//var s=document.getElementById("trSw");
+	var t=document.getElementById("tryb");
+	console.log(t.textContent);
+	 var jsonOb;
+		
 
+	if(t.textContent=="auto")
+	{
+	//	t.textContent="manual";
+//		s.className="fas fa-toggle-off w3-xlarge"
+//		s.style="color:darkred";
+		jsonOb={ "typ":"TRYB", "wart":"m" };
+	}else
+	{
+	//	t.textContent="auto";
+	//	s.className="fas fa-toggle-on w3-xlarge"
+	//	s.style="color:lime";
+		jsonOb={ "typ":"TRYB", "wart":"a" };
+	}
+	var msg=JSON.stringify(jsonOb);
+	console.log("sendStan msg="+msg );
+    if(ws) ws.send(msg);   
+}
 function add(i) {
     var d = document.createElement("div"); 
     console.log("add: "+d);

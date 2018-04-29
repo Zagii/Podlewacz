@@ -15,8 +15,8 @@
 #define GODZ_ZERO 30000L
 #define SEK_W_DNIU (3600*24)
 
-#define TRYB_AUTO 0
-#define TRYB_MANUAL 1
+#define TRYB_AUTO 'a'
+#define TRYB_MANUAL 'm'
 
 typedef struct 
 {
@@ -32,7 +32,7 @@ class CConfig
 {
   uint16_t progIle=0;
   Program prTab[MAX_PROGR];
-  uint8_t tryb; 
+  char tryb; 
   public:
     CConfig(){};
     void begin();
@@ -49,8 +49,8 @@ class CConfig
     bool checkRangeProg(Program &p,time_t sysczas_s);
     void printCzas(time_t t);
     uint8_t wlaczoneSekcje(time_t sysczas_s);
-    void setTryb(uint8_t t){tryb=t;};
-    uint8_t getTryb(){return tryb;};
+    void setTryb(char t){tryb=t;};
+    char getTryb(){return tryb;};
 };
 
 

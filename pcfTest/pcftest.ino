@@ -23,7 +23,7 @@ long time_led;
 ESP8266WebServer server(80);
 #define WIFI_SSID "DOrangeFreeDom"
 #define WIFI_PASSWORD "KZagaw01_ruter_key"
-#define HOST_NAME "onoff"
+#define HOST_NAME "podlewacz"
 
 
 
@@ -67,6 +67,7 @@ void setup() {
 
   pcf8574.begin( 0x00 ); //0xF0 4 pin input, 4 pin output
   pcf8574.resetInterruptPin();
+  SW_all_on();
 }
 
 void loop() {
@@ -125,7 +126,7 @@ void SW_all_on(){
 }
 
 void SW_all_off(){
-  pcf8574.write8( 0xF0 | 0 );
+  pcf8574.write8( /*0xF0 |*/ 0 );
   sw_state = 0x00;
 }
 

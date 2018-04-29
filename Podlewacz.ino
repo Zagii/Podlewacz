@@ -47,7 +47,6 @@ char tmpMsg[MAX_MSG_LENGHT];
 ////////// https://github.com/arduino-libraries/NTPClient
 
 
-
 unsigned long sLEDmillis=0;
 
 byte stanSekcji=0;
@@ -112,13 +111,14 @@ void wse(uint8_t num, WStype_t type, uint8_t * payload, size_t length)
    Serial.println(typ);
    Serial.println(id);
    Serial.println(wart);
-    if(strstr(typ,"SEKCJA"))//sekcja
+    if(strstr(typ,"SEKCJA")||strstr(typ,"TRYB"))//sekcja
     {
       
       strcpy(t,typ);
       strcat(t,id);
       parsujRozkaz(t,(char*)wart);
     }
+    
     free(p);
   }
 }
@@ -280,7 +280,21 @@ void publikujStanSekcji()
      return;
     }
     //////////////////////////////////////
-
+    ind=strstr(topic,"TRYB");
+    if(ind!=NULL)
+    {
+        if(isIntChars(msg))
+        {
+          if(msg[0]=='a')
+          {
+            conf.setTryb(TRYB_AUTO);  
+          }
+          if(msg[0]=='m')
+          {
+            conf.setTryb(TRYB_MANUAL);
+          }
+        }
+    }
  }
 
 unsigned long d=0;
@@ -290,7 +304,7 @@ void loop()
 {
   yield();
   wifi.loop();
-  web.loop(wifi.getEpochTime(),"Duchnice",20.1f,1023.34f,0,0);
+  web.loop(wifi.getEpochTime(),"Duchnice",20.1f,1023.34f,0,conf.getTryb());
    ///// LED status blink
    d=millis()-sLEDmillis;
    if(d>3000)// max 3 sek

@@ -24,13 +24,13 @@ class CWebSerwer
     double Temperatura;
     double Cisnienie;
     bool czujnikDeszczu;
-    bool TrybAuto;
+    char Tryb;
     
     public: 
     CWebSerwer(){};
      void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length);
      void begin();
-     void loop(unsigned long t_s, char* geo, double temp,double p, bool deszcz,bool trybAuto);
+     void loop(unsigned long t_s, char* geo, double temp,double p, bool deszcz,char tryb);
      WebSocketsServer *getWebSocket(){return webSocket;};
      void zmienStanSekcji(uint8_t stan);
      String getContentType(String filename);

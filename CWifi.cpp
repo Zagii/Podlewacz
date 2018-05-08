@@ -18,7 +18,7 @@ void CWifi::begin()
  
   WiFi.mode(WIFI_STA);
   wifiReconnect();
-  wifiMulti.addAP("DOrangeFreeDom", "KZagaw01_ruter_key");
+  wifiMulti.addAP("xDOrangeFreeDom", "KZagaw01_ruter_key");
   wifiMulti.addAP("open1.t-mobile.pl");
   wifiMulti.addAP("InstalujWirusa", "BlaBlaBla123");
 

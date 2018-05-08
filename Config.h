@@ -49,7 +49,7 @@ class CConfig
     bool checkRangeProg(Program &p,time_t sysczas_s);
     void printCzas(time_t t);
     uint8_t wlaczoneSekcje(time_t sysczas_s);
-    void setTryb(char t){tryb=t;};
+    void setTryb(char t){tryb=t; DPRINT("nowy TRYB=");DPRINTLN(t);};
     char getTryb(){return tryb;};
 };
 

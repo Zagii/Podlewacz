@@ -62,7 +62,7 @@ void(* resetFunc) (void) = 0; //declare reset function @ address 0
 
 void callback(char* topic, byte* payload, unsigned int length) 
 {
-  char* p = (char*)malloc(length);
+  char* p = (char*)malloc(length+1);
   memcpy(p,payload,length);
   p[length]='\0';
   if(strstr(topic,"watchdog"))
@@ -87,39 +87,50 @@ void callback(char* topic, byte* payload, unsigned int length)
 }
 
 ////////////// obsluga websocket
+char wsbuf[200];
 void wse(uint8_t num, WStype_t type, uint8_t * payload, size_t length)
 {
   web.webSocketEvent(num,type,payload,length);
   if(type==WStype_TEXT)
   {
-    char* p = (char*)malloc(length);
+    char* p = (char*)malloc(length+1);
     memcpy(p,payload,length);
     p[length]='\0';
+    strcpy(wsbuf,p);
+   
+    DPRINT("wse if type==TEXT: ");DPRINTLN(wsbuf);
+     free(p);
     //var jsonOb={ "typ":"SEKCJA", "id":nr, "wart":w };
     char t[MAX_TOPIC_LENGHT];
     StaticJsonBuffer<200> jsonBuffer;
-    JsonObject& root = jsonBuffer.parseObject(p);
+    JsonObject& root = jsonBuffer.parseObject(wsbuf);
     if (!root.success()) 
     {
       Serial.println("parseObject() failed");
-      Serial.println(p);
+      Serial.println(wsbuf);
+     
+      //free(p);
+      DPRINTLN("return");
       return;
     }
+    Serial.println("wse");
     const char* typ = root["typ"];
-    const char* id= root["id"];
-    const char* wart= root["wart"];
    Serial.println(typ);
-   Serial.println(id);
+    const char* id= root["id"];
+   
+   if(id)Serial.println(id);
+    const char* wart= root["wart"];
+   
    Serial.println(wart);
     if(strstr(typ,"SEKCJA")||strstr(typ,"TRYB"))//sekcja
     {
       
       strcpy(t,typ);
-      strcat(t,id);
+      if(id)strcat(t,id);
       parsujRozkaz(t,(char*)wart);
     }
     
-    free(p);
+    //free(p);
   }
 }
 
@@ -283,17 +294,15 @@ void publikujStanSekcji()
     ind=strstr(topic,"TRYB");
     if(ind!=NULL)
     {
-        if(isIntChars(msg))
-        {
-          if(msg[0]=='a')
-          {
-            conf.setTryb(TRYB_AUTO);  
-          }
-          if(msg[0]=='m')
-          {
+       if(msg[0]=='a')
+       {
+          conf.setTryb(TRYB_AUTO);  
+       }
+       if(msg[0]=='m')
+       {
             conf.setTryb(TRYB_MANUAL);
-          }
-        }
+       }
+        
     }
  }
 
@@ -304,13 +313,15 @@ void loop()
 {
   yield();
   wifi.loop();
+  yield();
   web.loop(wifi.getEpochTime(),"Duchnice",20.1f,1023.34f,0,conf.getTryb());
+  yield();
    ///// LED status blink
    d=millis()-sLEDmillis;
    if(d>3000)// max 3 sek
    {
      sLEDmillis=millis();
-     //DPRINT( "[");DPRINT(wifi.getTimeString());DPRINT("] ");DPRINTLN(wifi.getEpochTime());
+     DPRINT( "[");DPRINT(wifi.getTimeString());DPRINT("] ");DPRINTLN(wifi.getEpochTime());
      uint8_t sekcjaProg=conf.wlaczoneSekcje(wifi.getEpochTime());
   //  Serial.println(sekcjaProg,BIN);
      if(conf.getTryb()==TRYB_AUTO)zmienStanSekcji(sekcjaProg);

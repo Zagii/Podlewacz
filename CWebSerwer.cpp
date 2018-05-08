@@ -35,6 +35,7 @@ void CWebSerwer::begin()
    // digitalWrite(LED_RED, 0);
    // digitalWrite(LED_GREEN, 0);
    // digitalWrite(LED_BLUE, 0);
+   
 }
 
 void CWebSerwer::webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length)
@@ -49,7 +50,7 @@ void CWebSerwer::webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, s
             USE_SERIAL.printf("[%u] Connected from %d.%d.%d.%d url: %s\n", num, ip[0], ip[1], ip[2], ip[3], payload);
 
             // send message to client
-            webSocket->sendTXT(num, "Connected");
+            webSocket->sendTXT(num, "{\"STATUS\":\"Connected\"}");
         }
             break;
         case WStype_TEXT:
@@ -95,7 +96,7 @@ bool CWebSerwer::handleFileRead(String path){  // send the right file to the cli
     // Serial.println(jsString);
     // Serial.println("!!!!!!!!!!!!!!!  PO  !!!!!!!!!!!!!!!");
      jsString+=file.readString();
-     Serial.println(jsString);
+    // Serial.println(jsString);
      server.send(200,contentType,jsString);
     }else
     {
@@ -126,7 +127,7 @@ String CWebSerwer::getContentType(String filename){
   return "text/plain";
 }
 
-void CWebSerwer::loop(unsigned long t_s, char* geo, double temp,double p, bool deszcz,bool trybAuto)
+void CWebSerwer::loop(unsigned long t_s, char* geo, double temp,double p, bool deszcz,char tryb)
 {
    webSocket->loop();
    server.handleClient();
@@ -140,34 +141,35 @@ void CWebSerwer::loop(unsigned long t_s, char* geo, double temp,double p, bool d
     ostatnioWyslanyCzas_s=t_s;
     root["CZAS"]=t_s; 
     root["SEKCJE"]=stanSekcji;
-    if(strcmp(geo,geoLok)!=0)
-    {
+    //if(strcmp(geo,geoLok)!=0)
+    //{
        strcpy(geoLok,geo);
        root["GEO"]=geo;
-    }
-    if(Temperatura!=temp)
-    { 
+    //}
+    //if(Temperatura!=temp)
+    //{ 
         Temperatura=temp;
         root["TEMP"]=temp;
-    }
-    if(Cisnienie!=p)
-    { 
+    //}
+    //if(Cisnienie!=p)
+    //{ 
       Cisnienie=p;
       root["CISN"]=p;
-    }
-    if(czujnikDeszczu!=deszcz)
-    { 
+    //}
+    //if(czujnikDeszczu!=deszcz)
+    //{ 
       czujnikDeszczu=deszcz;
       root["DESZCZ"]=deszcz;
-    }
-     if(TrybAuto!=trybAuto)
-     { 
-        TrybAuto=trybAuto;
-        root["TRYB"]=trybAuto;
-     }
+    //}
+    // if(Tryb!=tryb)
+    // { 
+        Tryb=tryb;
+        root["TRYB"]=String(tryb);
+        
+     //}
   
     root.printTo(jsStr); 
- //   Serial.println(jsStr);
+    Serial.println(jsStr);
     webSocket->broadcastTXT(jsStr);
     }
    

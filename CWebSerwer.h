@@ -16,8 +16,9 @@ class CWebSerwer
   
     ESP8266WebServer server;
     WebSocketsServer *webSocket;
-
-    uint8_t stanSekcji;
+    uint8_t clientConnected;
+ //   unsigned long lastLongPubl;
+  //  uint8_t stanSekcji;
 
     unsigned long ostatnioWyslanyCzas_s;
     char geoLok[30];
@@ -30,9 +31,9 @@ class CWebSerwer
     CWebSerwer(){};
      void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length);
      void begin();
-     void loop(unsigned long t_s, char* geo, double temp,double p, bool deszcz,char tryb);
+     void loop(unsigned long t_s, uint8_t stanSekcji, char* geo, double temp,double p, bool deszcz,char tryb);
      WebSocketsServer *getWebSocket(){return webSocket;};
-     void zmienStanSekcji(uint8_t stan);
+     void publikujStanSekcji(uint8_t stan);
      String getContentType(String filename);
      bool handleFileRead(String path);
   

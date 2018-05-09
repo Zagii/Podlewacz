@@ -35,7 +35,7 @@ void CWebSerwer::begin()
    // digitalWrite(LED_RED, 0);
    // digitalWrite(LED_GREEN, 0);
    // digitalWrite(LED_BLUE, 0);
-   
+   clientConnected=0;
 }
 
 void CWebSerwer::webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length)
@@ -44,11 +44,12 @@ void CWebSerwer::webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, s
     switch(type) {
         case WStype_DISCONNECTED:
             USE_SERIAL.printf("[%u] Disconnected!\n", num);
+            clientConnected--;
             break;
         case WStype_CONNECTED: {
             IPAddress ip = webSocket->remoteIP(num);
             USE_SERIAL.printf("[%u] Connected from %d.%d.%d.%d url: %s\n", num, ip[0], ip[1], ip[2], ip[3], payload);
-
+            clientConnected++;
             // send message to client
             webSocket->sendTXT(num, "{\"STATUS\":\"Connected\"}");
         }
@@ -61,15 +62,16 @@ void CWebSerwer::webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, s
 
 }
 
-void CWebSerwer::zmienStanSekcji(uint8_t stan)
+void CWebSerwer::publikujStanSekcji(uint8_t stan)
 {
-  if(stan==stanSekcji)return;
-  stanSekcji=stan;
+ // if(stan==stanSekcji)return;
+ // stanSekcji=stan;
+ if(clientConnected<=0)return;
   
   StaticJsonBuffer<200> jsonBuffer;
   String jsStr="";
   JsonObject& root = jsonBuffer.createObject();
-  root["SEKCJE"]=stanSekcji;
+  root["SEKCJE"]=stan;
   root.printTo(jsStr); 
   webSocket->broadcastTXT(jsStr);
   
@@ -127,11 +129,13 @@ String CWebSerwer::getContentType(String filename){
   return "text/plain";
 }
 
-void CWebSerwer::loop(unsigned long t_s, char* geo, double temp,double p, bool deszcz,char tryb)
+void CWebSerwer::loop(unsigned long t_s, uint8_t stanSekcji, char* geo, double temp,double p, bool deszcz,char tryb)
 {
    webSocket->loop();
+   yield();
    server.handleClient();
-
+   yield();
+   if(clientConnected<=0)return;
    if(ostatnioWyslanyCzas_s!=t_s)
    {
     StaticJsonBuffer<200> jsonBuffer;
@@ -141,6 +145,13 @@ void CWebSerwer::loop(unsigned long t_s, char* geo, double temp,double p, bool d
     ostatnioWyslanyCzas_s=t_s;
     root["CZAS"]=t_s; 
     root["SEKCJE"]=stanSekcji;
+     // if(Tryb!=tryb)
+    // { 
+        Tryb=tryb;
+        root["TRYB"]=String(tryb);
+        
+     //}
+     
     //if(strcmp(geo,geoLok)!=0)
     //{
        strcpy(geoLok,geo);
@@ -161,15 +172,10 @@ void CWebSerwer::loop(unsigned long t_s, char* geo, double temp,double p, bool d
       czujnikDeszczu=deszcz;
       root["DESZCZ"]=deszcz;
     //}
-    // if(Tryb!=tryb)
-    // { 
-        Tryb=tryb;
-        root["TRYB"]=String(tryb);
-        
-     //}
-  
+   
+    yield();
     root.printTo(jsStr); 
-    Serial.println(jsStr);
+ //   Serial.println(jsStr);
     webSocket->broadcastTXT(jsStr);
     }
    

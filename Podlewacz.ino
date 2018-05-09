@@ -50,7 +50,9 @@ char tmpMsg[MAX_MSG_LENGHT];
 unsigned long sLEDmillis=0;
 
 byte stanSekcji=0;
-bool czekaNaPublikacjeStanu=false;
+bool czekaNaPublikacjeStanuMQTT=false;
+bool czekaNaPublikacjeStanuWS=false;
+bool czekaNaPublikacjeStanuHW=false;
 
 uint8_t publicID=0;
 unsigned long publicMillis=0;
@@ -87,7 +89,7 @@ void callback(char* topic, byte* payload, unsigned int length)
 }
 
 ////////////// obsluga websocket
-char wsbuf[200];
+
 void wse(uint8_t num, WStype_t type, uint8_t * payload, size_t length)
 {
   web.webSocketEvent(num,type,payload,length);
@@ -96,41 +98,29 @@ void wse(uint8_t num, WStype_t type, uint8_t * payload, size_t length)
     char* p = (char*)malloc(length+1);
     memcpy(p,payload,length);
     p[length]='\0';
-    strcpy(wsbuf,p);
-   
-    DPRINT("wse if type==TEXT: ");DPRINTLN(wsbuf);
-     free(p);
-    //var jsonOb={ "typ":"SEKCJA", "id":nr, "wart":w };
+    DPRINT("wse if type==TEXT: ");DPRINTLN(p);
+    
     char t[MAX_TOPIC_LENGHT];
     StaticJsonBuffer<200> jsonBuffer;
-    JsonObject& root = jsonBuffer.parseObject(wsbuf);
+    JsonObject& root = jsonBuffer.parseObject(p);
     if (!root.success()) 
     {
       Serial.println("parseObject() failed");
-      Serial.println(wsbuf);
-     
-      //free(p);
+      Serial.println(p);
+      free(p);
       DPRINTLN("return");
       return;
     }
-    Serial.println("wse");
-    const char* typ = root["typ"];
-   Serial.println(typ);
-    const char* id= root["id"];
-   
-   if(id)Serial.println(id);
-    const char* wart= root["wart"];
-   
-   Serial.println(wart);
-    if(strstr(typ,"SEKCJA")||strstr(typ,"TRYB"))//sekcja
+    const char* topic = root["topic"];
+    const char* msg= root["msg"];
+     if(topic) DPRINT("topic: ");DPRINTLN(topic);
+     if(msg) DPRINT("msg: ");DPRINTLN(msg);
+    if(strstr(topic,"SEKCJA")||strstr(topic,"TRYB"))//sekcja
     {
-      
-      strcpy(t,typ);
-      if(id)strcat(t,id);
-      parsujRozkaz(t,(char*)wart);
+      strcpy(t,topic);
+      parsujRozkaz(t,(char*)msg);
     }
-    
-    //free(p);
+    free(p);
   }
 }
 
@@ -163,7 +153,7 @@ void setup()
 ///////////// koniec wifi i mqtt init /////////
 
 conf.begin();
-conf.setTryb(TRYB_MANUAL);
+conf.setTryb(TRYB_AUTO);
 //delay(1000);
 DPRINTLN("Programy");
 /*Program pp;
@@ -204,23 +194,21 @@ webSocket->onEvent(wse);
 void wylaczWszystko()
 {
   stanSekcji=0;
-  czekaNaPublikacjeStanu=true;
+  czekaNaPublikacjeStanuMQTT=true;
 }
-void zmienStanSekcji(uint8_t stan)
+void zmienStanSekcjiAll(uint8_t stan)
 {
   if(stanSekcji==stan) return;
    stanSekcji=stan;
-   czekaNaPublikacjeStanu=true;
+   czekaNaPublikacjeStanuMQTT=true;
+   czekaNaPublikacjeStanuWS=true;
+   czekaNaPublikacjeStanuHW=true;
 }
 void zmienStanSekcji(uint8_t sekcjanr,uint8_t stan)
 {
   DPRINT("zmienStanSekcji nr=");DPRINT(sekcjanr);DPRINT(", stan=");DPRINT(stan);DPRINT(", stanSekcji=");DPRINTLN(stanSekcji);
-
   uint8_t x=bitRead(stanSekcji,sekcjanr);
-
   if(x==stan)return;
- 
-   
   if(stan==1)
   {
     DPRINT("ON");
@@ -231,11 +219,12 @@ void zmienStanSekcji(uint8_t sekcjanr,uint8_t stan)
     bitClear(stanSekcji,sekcjanr);
   }
    DPRINT("zmienStanSekcji koniec nr=");DPRINT(sekcjanr);DPRINT(", stan=");DPRINT(stan);DPRINT(", stanSekcji=");DPRINTLN(stanSekcji);
-  web.zmienStanSekcji(stanSekcji);
-  czekaNaPublikacjeStanu=true;
-  
+  //web.zmienStanSekcji(stanSekcji);
+  czekaNaPublikacjeStanuMQTT=true;
+  czekaNaPublikacjeStanuWS=true;
+  czekaNaPublikacjeStanuHW=true;
 }
-void publikujStanSekcji()
+void publikujStanSekcjiMQTT()
 {
    if(wifi.getConStat()!=CONN_STAT_WIFIMQTT_OK)return;
    
@@ -254,7 +243,6 @@ void publikujStanSekcji()
       }
       wifi.RSpisz(tmpTopic,tmpMsg);
    }
-  czekaNaPublikacjeStanu=false;
    DPRINT("######### ZMIANA STANU WYJSC ############ ");DPRINTLN(stanSekcji,BIN);
 }
 
@@ -263,11 +251,11 @@ void publikujStanSekcji()
   DPRINT("parsujRozkaz topic=");DPRINT(topic);DPRINT(", msg=");DPRINTLN(msg);
    char *ind=NULL;
    ///////////////// SEKCJA  //////////////////////////
-   ind=strstr(topic,"SEKCJA");
+   ind=strstr(topic,"SEKCJA/");
    if(ind!=NULL)
    {
     DPRINTLN(ind);
-     ind+=strlen("SEKCJA");
+     ind+=strlen("SEKCJA/"); //bo jeszcze nr sekcji
     DPRINTLN(ind);
      if(isIntChars(ind))
      {
@@ -311,31 +299,44 @@ unsigned long d=0;
 
 void loop()
 {
-  yield();
+ delay(5);
   wifi.loop();
-  yield();
-  web.loop(wifi.getEpochTime(),"Duchnice",20.1f,1023.34f,0,conf.getTryb());
-  yield();
+ delay(5);
+  web.loop(wifi.getEpochTime(), stanSekcji,"Duchnice",20.1f,1023.34f,0,conf.getTryb());
+ delay(5);
    ///// LED status blink
    d=millis()-sLEDmillis;
    if(d>3000)// max 3 sek
    {
      sLEDmillis=millis();
      DPRINT( "[");DPRINT(wifi.getTimeString());DPRINT("] ");DPRINTLN(wifi.getEpochTime());
-     uint8_t sekcjaProg=conf.wlaczoneSekcje(wifi.getEpochTime());
-  //  Serial.println(sekcjaProg,BIN);
-     if(conf.getTryb()==TRYB_AUTO)zmienStanSekcji(sekcjaProg);
+     if(conf.getTryb()==TRYB_AUTO) // test czy programator każe wlączyć
+     {
+      uint8_t sekcjaProg=conf.wlaczoneSekcje(wifi.getEpochTime());
+      //  Serial.println(sekcjaProg,BIN);
+      zmienStanSekcjiAll(sekcjaProg);
+     }
    
    }
    /////////////////// obsluga hardware //////////////////////
-  if(czekaNaPublikacjeStanu)
-  {
+    if(czekaNaPublikacjeStanuHW)
+    {
+        pcf8574.write8(stanSekcji);
+        czekaNaPublikacjeStanuHW=false;
+    }
+    /////////// publikowanie ///////////////
+    if(czekaNaPublikacjeStanuMQTT)
+    {
+        publikujStanSekcjiMQTT();  // na podstawie pcf8574
+        czekaNaPublikacjeStanuMQTT=false;   
+    }
+    if(czekaNaPublikacjeStanuWS)
+    {
+        web.publikujStanSekcji(stanSekcji);
+        czekaNaPublikacjeStanuWS=false;     
+    }
+    
    
-      pcf8574.write8(stanSekcji);
-      publikujStanSekcji();
-         
-  }
-   /////////////////// obsluga hardware //////////////////////
    
   ///////////////////// status LED /////////////////////////
             switch(wifi.getConStat())

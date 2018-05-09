@@ -42,7 +42,7 @@ bool CConfig::loadConfig() {
   // buffer to be mutable. If you don't use ArduinoJson, you may as well
   // use configFile.readString instead.
   configFile.readBytes(buf.get(), size);
-
+  yield();
   const size_t bufferSize = JSON_ARRAY_SIZE(2) + 10*JSON_ARRAY_SIZE(5) + JSON_OBJECT_SIZE(1) + 80;
   DynamicJsonBuffer jsonBuffer(bufferSize);
   JsonObject& json = jsonBuffer.parseObject(buf.get());
@@ -55,6 +55,7 @@ bool CConfig::loadConfig() {
   uint8_t n = json["n"]; // progIle
   for(uint8_t i=0;i<n;i++)
   {
+    yield();
     JsonArray& prog = json["Programy"][i];
     Program pp;
     setProg(pp,prog[0],prog[1],prog[2], prog[3], prog[4]);
@@ -76,6 +77,7 @@ bool CConfig::saveConfig() {
   JsonArray& Programy = root.createNestedArray("Programy");
   for(uint8_t i=0;i<progIle;i++)
   {
+    yield();
     JsonArray& pr = Programy.createNestedArray();
     pr.add(prTab[i].dataOdKiedy);
     pr.add(prTab[i].godzinaStartu);
@@ -177,6 +179,7 @@ void CConfig::delProg(uint16_t id)
   if(id>=progIle)return;
   for(uint16_t i=id;i<progIle;i++)
   {
+    yield();
     setProg(prTab[i],prTab[i+1]);
   }
   progIle--;
@@ -186,6 +189,7 @@ void CConfig::publishAllProg()
 {
   for(uint16_t i=0;i<progIle;i++)
   {
+    yield();
    publishProg(prTab[i],i);
   }
   
@@ -231,10 +235,12 @@ uint8_t  CConfig::wlaczoneSekcje(time_t sysczas_s)
   uint8_t stan=0;
   for(uint16_t i=0;i<progIle;i++)
   {
+    yield();
    // DPRINT("test programu:");DPRINTLN(i);
       if(checkRangeProg(prTab[i], sysczas_s))
       {
-        stan |=1<<prTab[i].sekwencja;
+        bitSet(stan,prTab[i].sekwencja);
+        //stan |=1<<prTab[i].sekwencja;
       }
   //  DPRINTLN(" koniec.");
   }

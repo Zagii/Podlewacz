@@ -18,7 +18,7 @@ void CWifi::begin()
  
   WiFi.mode(WIFI_STA);
   wifiReconnect();
-  wifiMulti.addAP("xDOrangeFreeDom", "KZagaw01_ruter_key");
+  wifiMulti.addAP("DOrangeFreeDom", "KZagaw01_ruter_key");
   wifiMulti.addAP("open1.t-mobile.pl");
   wifiMulti.addAP("InstalujWirusa", "BlaBlaBla123");
 
@@ -175,6 +175,7 @@ void CWifi::loop()
     } else
     {
           client.loop();     
+          yield();
           timeClient->update();
          
            if(loopMillis%600000==0) //10 min wysyłaj pingi watchdoga cyklicznie 

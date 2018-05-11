@@ -11,7 +11,16 @@ document.addEventListener("DOMContentLoaded", function(event) {
         console.log("Dodaje: "+i);
     }
     
-
+    document.getElementById('godz').addEventListener('change', function() {
+        const className = 'error-field';
+        const reg = new RegExp('^[a-zA-Z]{3,}$', 'g');
+    
+        if (!reg.test(this.value)) {
+            this.classList.add(className); //dodaję klase do pola
+        } else {
+            this.classList.remove(className); //usuwam klasę
+        }
+    });
 });
 
 
@@ -28,7 +37,8 @@ function addProg(i,dd,ile_s,coIle_d,sek,akt) {
     k.className="w3-third w3-section";
     c1a=document.createElement("div");
     c1a.className="w3-half w3-section";
-    c1a.innerHTML="<i>Utworzono</i><br><h4>"+ dt.getUTCDate().toString().padStart(2,"0")+"-"+(dt.getUTCMonth()+1).toString().padStart(2,"0")+"-"+dt.getUTCFullYear()+"</h4>";
+    let dzienTyg=["Poniedziałek","Wtorek","Środa","Czwarek","Piątek","Sobota","Niedziela"];
+    c1a.innerHTML="<i>Dzień tygodnia</i><br><h4>"+dzienTyg[dt.getUTCDay()] /*dt.getUTCDayte().toString().padStart(2,"0")+"-"+(dt.getUTCMonth()+1).toString().padStart(2,"0")+"-"+dt.getUTCFullYear()*/+"</h4>";
     k.appendChild(c1a);
     c1b=document.createElement("div");
     c1b.className="w3-half w3-section";
@@ -105,3 +115,4 @@ function addProg(i,dd,ile_s,coIle_d,sek,akt) {
     foo.appendChild(w);
   }
  
+  

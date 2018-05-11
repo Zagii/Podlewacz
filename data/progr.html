@@ -66,7 +66,7 @@ a:hover {
   <!--  <img src="/w3images/man_smoke.jpg" alt="boy" class="w3-image" width="992" height="1108">-->
   </header>
 
-  <div class="w3-content w3-justify w3-padding-64" >
+  <div class="w3-content w3-justify w3-padding-16" >
   <div class="w3-row">
       <div class="w3-col m2"><h2>Programy</h2></div>
      
@@ -74,34 +74,42 @@ a:hover {
          <form method="post" action="..." >
           
             <div class="w3-col m2">
-              <label for="data" style="width:90%">Data dodania</label>
-              <input class="w3-input" style="width:90%" type="text" id="data" name="data" value="" placeholder="dd-mm-yyyy" />
+              <label for="dzien" style="width:90%">Dzien</label>
+              <select class="w3-select" required name="dzien" style="width:90%">
+                 
+                  <option value="1">Poniedziałek</option>
+                  <option value="2">Wtorek</option>
+                  <option value="3">Środa</option>
+                  <option value="4">Czwartek</option>
+                  <option value="5">Piątek</option>
+                  <option value="6">Sobota</option>
+                  <option value="7">Niedziela</option>
+              </select>
             </div>
             <div class="w3-col m2">
                 <label for="godz" style="width:90%">Godzina startu</label>
-                <input class="w3-input" style="width:90%" type="text" id="godz" name="godz" value="" placeholder="hh:mm:ss" />
+                <input class="w3-input" style="width:90%" type="text" 
+                      pattern="^([0-9]|[0-1][0-9]|2[0-3]):([0-9]|[0-5][0-9]):([0-9]|[0-5][0-9])$" 
+                      id="godz" name="godz" value="" placeholder="hh:mm:ss" required />
               </div>
               <div class="w3-col m2">
                   <label for="dlug" style="width:90%">Długość [s]</label>
-                  <input class="w3-input" style="width:90%" type="text" id="dlug" name="dlug" value="" placeholder="nnn" />
+                  <input class="w3-input" style="width:90%" type="text"
+                      pattern="\d{3,6}" required id="dlug" name="dlug" value="" placeholder="nnn" />
                 </div>
                 <div class="w3-col m3">
-                    <label for="co_ile" style="width:90%">Okres [x dni]</label><br>
+                    <label for="co_ile" style="width:90%">Powtarzaj</label><br>
                     <select class="w3-select" name="option" style="width:90%">
-                        <option value="" disabled selected>Cykliczność</option>
+                        
                         <option value="1">codziennie</option>
                         <option value="2">co 2 dni</option>
                         <option value="3">co 3 dni</option>
-                        <option value="4">co 4 dni</option>
-                        <option value="5">co 5 dni</option>
-                        <option value="6">co 6 dni</option>
-                        <option value="7">co 7 dni</option>
                     </select>
                 </div>
                 <div class="w3-col m2">
                     <label for="sekcja" style="width:90%">Sekcja</label><br>
-                    <select class="w3-select" name="option" style="width:90%">
-                        <option value="" disabled selected>Sekcja</option>
+                    <select class="w3-select" required name="option" style="width:90%">
+                        
                         <option value="1">Sekcja 1</option>
                         <option value="2">Sekcja 2</option>
                         <option value="3">Sekcja 3</option>
@@ -111,8 +119,9 @@ a:hover {
                     </select>
                 </div>
                 <div class="w3-rest">
-                    <button class="button button5" style="width:80%;">    
-                        <p>Dodaj</p> 
+                    <label for="btnAdd" style="width:90%">Dodaj</label><br>
+                    <button class="btn button5" style="width:80%;">    
+                        
                         <i style="color:green" class="fa fa-plus-square w3-xlarge" aria-hidden="true" ></i>
                     </button>
                 </div>
@@ -123,15 +132,9 @@ a:hover {
   </div>
   </div>
 
-
-
-
-
-
-
   <!-- About Section -->
-  <div class="w3-content w3-justify w3-text-grey w3-padding-16" >
-       <div class="w3-row w3-center w3-padding-16 w3-section" id="prog">
+  <div class="w3-content w3-justify w3-text-grey " >
+       <div class="w3-row w3-center w3-section" id="prog">
      
     </div>
       

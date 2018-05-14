@@ -1,5 +1,5 @@
 //var wsSerw="192.168.1.144";
-
+var progN=0;
 document.addEventListener("DOMContentLoaded", function(event) {
     debug=document.getElementById('deb');
     console.log("document On load");
@@ -23,10 +23,28 @@ document.addEventListener("DOMContentLoaded", function(event) {
     });
 });
 
+function addProgBtn()
+{
+  let d1=new Date(0);
+  let ff=document.getElementById("addProgForm");
+  console.log(ff.validity);
+  let f=ff.elements;
+  
+  console.log(f["dzien"].value);
+ 
+  d1.setDate(f["dzien"].value);
+  let h=f["godz"].value.split(":");
+  console.log(h);
+  d1.setHours(h[0],h[1],h[2])
 
+  alert(d1.toDateString());
+  console.log(f["godz"].validity.valid);
+  console.log(f["dlug"].validity.valid);
+}
 
 function addProg(i,dd,ile_s,coIle_d,sek,akt) {
     //console.log("add: "+d);
+    
     dt=new Date(dd);
     var w = document.createElement("div"); 
     w.className="w3-row w3-center w3-padding-16 w3-section";
@@ -113,6 +131,7 @@ function addProg(i,dd,ile_s,coIle_d,sek,akt) {
                 " <i class=\"fa fa-shower fa-5x\" style=\"color:darkred\" id=\"bi"+i+"\"></i></button>";     */
     var foo = document.getElementById("prog");
     foo.appendChild(w);
+    progN++;
   }
  
   

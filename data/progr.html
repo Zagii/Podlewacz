@@ -72,7 +72,6 @@ a:hover {
      
       <div class="w3-rest w3-row-padding w3-padding-16 w3-grey"> 
          <form id="addProgForm" >
-            method="post" action="..." 
             <div class="w3-col m2">
               <label for="dzien" style="width:90%">Dzien</label>
               <select class="w3-select" required name="dzien" style="width:90%">
@@ -83,7 +82,7 @@ a:hover {
                   <option value="4">Czwartek</option>
                   <option value="5">Piątek</option>
                   <option value="6">Sobota</option>
-                  <option value="7">Niedziela</option>
+                  <option value="0">Niedziela</option>
               </select>
             </div>
             <div class="w3-col m2">
@@ -99,7 +98,7 @@ a:hover {
                 </div>
                 <div class="w3-col m3">
                     <label for="co_ile" style="width:90%">Powtarzaj</label><br>
-                    <select class="w3-select" name="option" style="width:90%">
+                    <select class="w3-select" name="co_ile" style="width:90%">
                         
                         <option value="1">codziennie</option>
                         <option value="2">co 2 dni</option>
@@ -108,7 +107,7 @@ a:hover {
                 </div>
                 <div class="w3-col m2">
                     <label for="sekcja" style="width:90%">Sekcja</label><br>
-                    <select class="w3-select" required name="option" style="width:90%">
+                    <select class="w3-select" required name="sekcja" style="width:90%">
                         
                         <option value="1">Sekcja 1</option>
                         <option value="2">Sekcja 2</option>
@@ -120,7 +119,7 @@ a:hover {
                 </div>
                 <div class="w3-rest">
                     <label for="btnAdd" style="width:90%">Dodaj</label><br>
-                    <button class="btn button5" style="width:80%;" onclick="addProgBtn()">    
+                    <button type='button' class="btn button5" style="width:80%;" onclick="addProgBtn()">    
                         <i style="color:green" class="fa fa-plus-square w3-xlarge" aria-hidden="true" ></i>
                     </button>
                 </div>

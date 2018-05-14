@@ -7,7 +7,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
     //alert (fileName);
     for(i=1;i<7;i++)
     {
-        addProg(i,i*10000,i*100,i,i,i%2)
+        progN=addProg(i,i*10000,i*100,i,i,i%2)
         console.log("Dodaje: "+i);
     }
     
@@ -26,24 +26,31 @@ document.addEventListener("DOMContentLoaded", function(event) {
 function addProgBtn()
 {
   let d1=new Date(0);
-  let ff=document.getElementById("addProgForm");
-  console.log(ff.validity);
-  let f=ff.elements;
+  let f=document.getElementById("addProgForm").elements;
   
+  if(!(f["godz"].validity.valid && f["dlug"].validity.valid))  return;
+ 
+
   console.log(f["dzien"].value);
  
-  d1.setDate(f["dzien"].value);
+  d1.setUTCDate(parseInt(f["dzien"].value)+4);
+  console.log(d1.toDateString());
   let h=f["godz"].value.split(":");
   console.log(h);
-  d1.setHours(h[0],h[1],h[2])
+  d1.setUTCHours(h[0],h[1],h[2])
 
-  alert(d1.toDateString());
-  console.log(f["godz"].validity.valid);
-  console.log(f["dlug"].validity.valid);
+  let dl=f["dlug"].value;
+  let co=f["co_ile"].value;
+  let s=f["sekcja"].value;
+  console.log("przed add: "+progN);
+    
+  progN=addProg(progN+1,d1,dl,co,s,false);
+  console.log(" po add: "+progN);
+    
 }
 
 function addProg(i,dd,ile_s,coIle_d,sek,akt) {
-    //console.log("add: "+d);
+    console.log("add: "+i);
     
     dt=new Date(dd);
     var w = document.createElement("div"); 
@@ -55,7 +62,7 @@ function addProg(i,dd,ile_s,coIle_d,sek,akt) {
     k.className="w3-third w3-section";
     c1a=document.createElement("div");
     c1a.className="w3-half w3-section";
-    let dzienTyg=["Poniedziałek","Wtorek","Środa","Czwarek","Piątek","Sobota","Niedziela"];
+    let dzienTyg=["Niedziela","Poniedziałek","Wtorek","Środa","Czwarek","Piątek","Sobota"];
     c1a.innerHTML="<i>Dzień tygodnia</i><br><h4>"+dzienTyg[dt.getUTCDay()] /*dt.getUTCDayte().toString().padStart(2,"0")+"-"+(dt.getUTCMonth()+1).toString().padStart(2,"0")+"-"+dt.getUTCFullYear()*/+"</h4>";
     k.appendChild(c1a);
     c1b=document.createElement("div");
@@ -120,7 +127,7 @@ function addProg(i,dd,ile_s,coIle_d,sek,akt) {
     c3b.appendChild(c3b1);
     c3b2=document.createElement("div");
     c3b2.className="w3-half w3-section";
-    c3b2.innerHTML="<button style=\"color:red\"><i class=\"fa fa-trash-alt w3-xlarge\"></i></button><br><i>Usuń</i>";
+    c3b2.innerHTML="<button type='button' style=\"color:red\" onclick=\"delProg("+i+")\"><i class=\"fa fa-trash-alt w3-xlarge\"></i></button><br><i>Usuń</i>";
     c3b.appendChild(c3b2);    
     k.appendChild(c3b);
     w.appendChild(k);
@@ -131,7 +138,12 @@ function addProg(i,dd,ile_s,coIle_d,sek,akt) {
                 " <i class=\"fa fa-shower fa-5x\" style=\"color:darkred\" id=\"bi"+i+"\"></i></button>";     */
     var foo = document.getElementById("prog");
     foo.appendChild(w);
-    progN++;
+   return i;
   }
- 
+  function delProg(i){
+    if(confirm("Czy chcesz usunąć program? "+i))
+    {
+        alert("usuwam");
+    }
+}
   

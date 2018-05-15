@@ -67,7 +67,7 @@ a:hover {
   </header>
 
   <div class="w3-content w3-justify w3-padding-16" >
-  <div class="w3-row">
+    <div class="w3-row">
       <div class="w3-col m2"><h2>Programy</h2></div>
      
       <div class="w3-rest w3-row-padding w3-padding-16 w3-grey"> 
@@ -75,7 +75,6 @@ a:hover {
             <div class="w3-col m2">
               <label for="dzien" style="width:90%">Dzien</label>
               <select class="w3-select" required name="dzien" style="width:90%">
-                 
                   <option value="1">Poniedziałek</option>
                   <option value="2">Wtorek</option>
                   <option value="3">Środa</option>
@@ -98,8 +97,7 @@ a:hover {
                 </div>
                 <div class="w3-col m3">
                     <label for="co_ile" style="width:90%">Powtarzaj</label><br>
-                    <select class="w3-select" name="co_ile" style="width:90%">
-                        
+                    <select class="w3-select" name="co_ile" style="width:90%">                    
                         <option value="1">codziennie</option>
                         <option value="2">co 2 dni</option>
                         <option value="3">co 3 dni</option>
@@ -108,13 +106,6 @@ a:hover {
                 <div class="w3-col m2">
                     <label for="sekcja" style="width:90%">Sekcja</label><br>
                     <select class="w3-select" required name="sekcja" style="width:90%">
-                        
-                        <option value="1">Sekcja 1</option>
-                        <option value="2">Sekcja 2</option>
-                        <option value="3">Sekcja 3</option>
-                        <option value="4">Sekcja 4</option>
-                        <option value="5">Selcka 5</option>
-                        <option value="6">Selcka 6</option>
                     </select>
                 </div>
                 <div class="w3-rest">
@@ -126,18 +117,146 @@ a:hover {
          </form>
       </div>
       <hr style="width:200px" class="w3-opacity">
-  
-  </div>
+    </div>
   </div>
 
   <!-- About Section -->
   <div class="w3-content w3-justify w3-text-grey " >
        <div class="w3-row w3-center w3-section" id="prog">
-     
-    </div>
-      
+       </div>  
   </div>
-    
+  <div class="w3-content w3-justify w3-padding-16" >
+        <div class="w3-row ">
+          <h2>Konfiguracja</h2>
+        </div>
+        
+        <hr style="width:200px" class="w3-opacity">
+        
+    </div>
+    <div class="w3-content w3-justify w3-text-grey " >
+        
+            <div class="w3-row w3-grey">
+                <h3>Ustawienia Wifi</h3>
+                <div class="w3-row">
+                    <form id="WifiForm" >
+                        <div class="w3-col m5">
+                            <label for="ssid" style="width:90%">SSID</label>
+                            <input class="w3-input" style="width:90%" type="text" 
+                                id="ssid" name="ssid" value="" placeholder="SSID" required />
+                        </div>
+                        <div class="w3-col m5">
+                            <label for="pass" style="width:90%">Hasło</label>
+                            <input class="w3-input" style="width:90%" type="password" 
+                                id="pass" name="pass" value="" placeholder="SSID"/>
+                        </div>
+                        <div class="w3-rest">
+                            <label for="btnAdd" style="width:90%">Zmień</label><br>
+                            <button type='button' class="btn button5" style="width:80%;" onclick="setWifi()">    
+                                <i style="color:green" class="fa fa-check w3-xlarge" aria-hidden="true" ></i>
+                            </button>
+                        </div>
+                    </form> 
+                </div>
+            </div>        
+            <div class="w3-row w3-grey">
+                    <h3>Ustawienia MQTT</h3>
+                    <div class="w3-row">
+                        <form id="MqttForm" >
+                            <div class="w3-col m3">
+                                <label for="sm" style="width:90%">Serwer MQTT</label>
+                                <input class="w3-input" style="width:90%" type="text" 
+                                    id="sm" name="sm" value="" placeholder="my.mqtt.com" required />
+                            </div>
+                            <div class="w3-col m2">
+                                <label for="port" style="width:90%">Port</label>
+                                <input class="w3-input" style="width:90%" type="text" pattern="\d{1,5}"
+                                    id="port" name="port" value="" placeholder="1883" required/>
+                            </div>
+                            <div class="w3-col m2">
+                                <label for="us" style="width:90%">Login</label>
+                                <input class="w3-input" style="width:90%" type="text" 
+                                    id="us" name="us" value="" placeholder="Login"  />
+                            </div>
+                            <div class="w3-col m2">
+                                <label for="smp" style="width:90%">Hasło</label>
+                                <input class="w3-input" style="width:90%" type="password" 
+                                    id="smp" name="smp" value="" placeholder="Hasło" />
+                                </div>
+                            <div class="w3-rest">
+                                <label for="btnAdd" style="width:90%">Zmień</label><br>
+                                <button type='button' class="btn button5" style="width:80%;" onclick="setWifi()">    
+                                    <i style="color:green" class="fa fa-check w3-xlarge" aria-hidden="true" ></i>
+                                </button>
+                            </div>
+                        </form> 
+                    </div>
+                </div>
+            <div class="w3-row w3-grey">
+                    <h3>Ustawienia daty</h3>
+                    <div class="w3-row">
+                        <form id="CzasForm" >
+                            <div class="w3-col m4">
+                                <label for="tserw" style="width:90%">Serwer czasu</label>
+                                <input class="w3-input" style="width:90%" type="text" 
+                                    id="tserw" name="tserw" value="" placeholder="europe.pool.ntp.org" required />
+                            </div>
+                            <div class="w3-col m2">
+                                <label for="ofs" style="width:90%">Strefa czasu [h]</label>
+                                <input class="w3-input" style="width:90%" type="text"  pattern="^([\d]|[-,+,][\d])$" 
+                                    id="ofs" name="ofs" value="" placeholder="+1" required/>
+                            </div>
+                            <div class="w3-col m1">
+                                <label for="btnAdd" style="width:90%">Zmień</label><br>
+                                <button type='button' class="btn button5" style="width:80%;" onclick="setWifi()">    
+                                    <i style="color:green" class="fa fa-check w3-xlarge" aria-hidden="true" ></i>
+                                </button>
+                            </div>
+                        </form>
+                        <form id="CzasForm2" >
+                            <div class="w3-col m2">
+                                <label for="cr" style="width:90%">Ustaw ręcznie</label>
+                                <input class="w3-input" style="width:90%" type="text" 
+                                    pattern="^([0-9]|[0-1][0-9]|2[0-3]):([0-9]|[0-5][0-9]):([0-9]|[0-5][0-9])$" 
+                                    id="cr" name="cr" value="" placeholder="hh:mm:ss" required/>
+                            </div>
+                            <div class="w3-col m2">
+                                    <label for="dd" style="width:90%">Dzień</label>
+                                    <select class="w3-select" required name="dd" style="width:90%">
+                                        <option value="1">Poniedziałek</option>
+                                        <option value="2">Wtorek</option>
+                                        <option value="3">Środa</option>
+                                        <option value="4">Czwartek</option>
+                                        <option value="5">Piątek</option>
+                                        <option value="6">Sobota</option>
+                                        <option value="0">Niedziela</option>
+                                    </select>
+                                  </div>
+                            <div class="w3-rest">
+                                <label for="btnAdd" style="width:90%">Zmień</label><br>
+                                <button type='button' class="btn button5" style="width:80%;" onclick="setWifi()">    
+                                    <i style="color:green" class="fa fa-check w3-xlarge" aria-hidden="true" ></i>
+                                </button>
+                            </div>
+                        </form>
+                        <div class="w3-row w3-grey">
+                            <h3>Definicje sekcji</h3>
+                            <div class="w3-row">
+                                <div class="w3-col m2 w3-center">Lp</div>
+                                <div class="w3-col m5 w3-center">Nazwa</div>
+                                <div class="w3-col m2 w3-center">Edytuj</div>
+                            </div>
+                            <div class="w3-row">
+                                <form id="SekForm" >
+                                    <div class="w3-row" id="sekList">
+
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+        
+    </div>
 
       <div class="w3-content w3-justify w3-text-grey w3-padding-64" id="deb">
         

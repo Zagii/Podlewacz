@@ -168,9 +168,10 @@ function addSekList(v,n)
 {
     let f=document.getElementById("sekList");
     let w = document.createElement("div"); 
-    w.className="w3-row w3-center w3-padding-8 w3-section";
-    if(v%2)w.classList.add("w3-light-grey");
-    else w.classList.add("w3-dark-grey");
+    w.className="w3-row w3-center w3-grey w3-padding-8 w3-section";
+    //if(true)
+    //w.classList.add("w3-light-grey");
+    //else w.classList.add("w3-dark-grey");
     w.id="Sek"+i;
 	//let k= document.createElement("div");
     //k.className="w3-third w3-section";
@@ -181,11 +182,10 @@ function addSekList(v,n)
     c1b=document.createElement("div");
     c1b.className="w3-col m5 w3-section";
     c1b.innerHTML="<input class=\"w3-input\" style=\"width:90%\" type=\"text\" "+
-            " pattern=\"^([0-9]|[0-1][0-9]|2[0-3]):([0-9]|[0-5][0-9]):([0-9]|[0-5][0-9])$\" "+
             " id=\"sekLi"+i+"\" name=\"sekLi"+i+"\" value=\"\" placeholder=\"Sekcja "+v+"\" required/>";
     //k.appendChild(c1b);
     c1c=document.createElement("div");
-    c1c.className="w3-col m2 w3-section ";
+    c1c.className="w3-col m1 w3-section ";
     c1c.innerHTML=" <button type='button' class='btn button5' style='width:80%;' onclick='setWifi()'> "+
             "<i style='color:green' class='fa fa-edit w3-xlarge' aria-hidden='true' ></i></button>";
     //k.appendChild(c1c);
@@ -194,4 +194,27 @@ function addSekList(v,n)
     w.appendChild(c1c);
     //w.appendChild(k);
     f.appendChild(w);
+}
+
+function KonfForm(id)
+{
+
+    var x = $("WifiForm").serializeArray();
+    $.each(x, function(i, field){
+        $("#results").append(field.name + ":" + field.value + " ");
+    });
+
+    let f=document.getElementById(id).elements;
+    console.log("KonfForm "+f);
+    var unindexed_array = f.serializeArray();
+    var indexed_array = {};
+
+    $.map(unindexed_array, function(n, i){
+        indexed_array[n['name']] = n['value'];
+    });
+
+
+    console.log(unindexed_array);
+        console.log(indexed_array);
+    return indexed_array;
 }

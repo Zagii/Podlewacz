@@ -8,12 +8,36 @@
 <link rel="stylesheet" href="css/a.css">
 <link rel="stylesheet" href="css/fontawesome-all.min.css">
 
-<script type="text/javascript">
-  function get_action() { // inside script tags
-  // return form_action;
-   }
-  </script>
+<script src="js/wsConn.js"></script>
+<script>
 
+
+const con=function()
+{
+  console.log("connected");
+};
+const dc=function()
+{
+  console.log("DC");
+};
+const msg=function(m)
+{
+  console.log(m);
+};
+
+  var c=new global();
+//var w=new wsConn(con.bind(this),dc.bind(this),msg.bind(this));
+var w=new wsConn(con,dc,msg);
+
+setInterval(w.sendtest.bind(w), 5000);
+w.begin(3);
+
+document.addEventListener("DOMContentLoaded", function(event) {
+
+w.send("{\"witaj\":\"swiecie\"}");
+});
+
+</script>
 <style>
 body, h1,h2,h3,h4,h5,h6 {font-family: "Montserrat", sans-serif}
 .w3-row-padding img {margin-bottom: 12px}
@@ -119,7 +143,7 @@ a:hover {
             </div>
           </div>
           <div class="row">
-            <input type="button" value="Submit" onclick="get_action">
+            <input type="button" value="Submit" onclick="w.send(JSON.stringify({'witaj':'swiecie'}))">
           </div>
         </form>
       </div>

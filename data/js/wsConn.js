@@ -7,9 +7,9 @@ class global
         this.sLbl=[];
         this.dt=new Date();   
     }
-    get dzien(i){return this.dTyg[i];}
-    set lbl(i,s){this.sLbl[i]=s;}
-    get lbl(i){return this.sLbl[i];}
+    getDzien(i){return this.dTyg[i];}
+    setLbl(i,s){this.sLbl[i]=s;}
+    geLbl(i){return this.sLbl[i];}
     setCzas(mSek)
     {
         dt.setTime(mSek*1000);
@@ -28,60 +28,77 @@ class global
     getDTyg() {return dTyg[dt.getUTCDay()];}
 }
 
-class wsConn {
+class wsConn
+{
     constructor(fCon,fDc,fMsg) {
         this.ws=null;
-        this.fCon=fCon;
-        this.fDc=fDc;
-        this.fMsg=fMsg;
-        setInterval(checkWS, 5000);
+        this.fCon=fCon.bind(this);
+        this.fDc=fDc.bind(this);
+        this.fMsg=fMsg.bind(this);
+        
+    }
+    begin(d)
+    {
+        setInterval(this.checkWS.bind(this), d*1000);
     }
     checkWS()
     {
-        console.log("checkWS");
-        if(ws)
+      //  console.log("checkWS");
+        if(this.ws)
         {
-            if(ws.readyState == WebSocket.CLOSED)
+            if(this.ws.readyState == WebSocket.CLOSED)
             {          
-                startWS();
+                this.startWS();
             }else
             {
-                if(ws.readyState==WebSocket.OPEN)
+                if(this.ws.readyState==WebSocket.OPEN)
                 {
                 } else
                 {
                 }
             }
+        
+        }else
+        {
+            this.startWS();
         }
         return this.ws.readyState;
+       
     }
     startWS()
     {
         console.log("startWS");
-        this.ws = new WebSocket('ws://'+wsSerw+':81/'); 
-        this.ws.onopen = function () { 
+      //  this.ws = new WebSocket('ws://'+wsSerw+':81/'); 
+        this.ws =new WebSocket("wss://echo.websocket.org/");
+        let me=this;
+        this.ws.onopen = function () 
+        { 
             let j={ "topic":"status", "msg":"Connected" };
-            send(JSON.stringify(j));
-            this.fCon();
+            this.send(JSON.stringify(j));
+            me.fCon();
         };
-        this.ws.onerror = function (error) { 
+        this.ws.onerror = function (error) 
+        { 
             console.log('WebSocket Error ', error); 
             delete this.ws; 
-            this.fDc();
+            me.fDc();
 	    }; 
         this.ws.onmessage = function (e) 
         {
-        //  }
-        // nr=parseInt("00100000", 2).toString(10);
-        ///deb("a="+nr);
-        //         let dt="{\"GEO\":\"123\",\"TEMP\":124.4,\"TRYB\":0,\"CZAS\":123,\"CISN\":333,\"DESZCZ\":0,\"SEKCJE\":"+nr+"}";
-        // console.log('ws recive: ', e.data); 
-            //deb("onMessage: "+e.data);
             let j=JSON.parse(e.data); 
-            this.fMsg(j);
-        }; 
+            me.fMsg(j);
+        };
+        return this.ws.readyState; 
     }
-    send(m){if(this.ws) ws.send(m);}
+    send(m)
+    {
+        if(this.ws) this.ws.send(m);
+    }
+    sendtest()
+    {
+        let t="{\"t\":\""+new Date().toISOString()+"\"}";
+        this.send(t);
+    }
 }
 
 

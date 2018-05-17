@@ -1,18 +1,25 @@
 //let wsSerw="192.168.1.144";
 let progN=0;
+let sLbl=["?"];
 document.addEventListener("DOMContentLoaded", function(event) {
     debug=document.getElementById('deb');
     console.log("document On load");
     let fileName = location.pathname.split("/").slice(-1);
     //alert (fileName);
     delSekcje();
-    for(i=1;i<7;i++)
+    for(let i=0;i<7;i++)
     {
-        progN=addProg(i,i*10000,i*100,i,i,i%2)
-        console.log("Dodaje: "+i);
-        addSekcja(i,"Sekcja "+i);
+        progN=addProg(i,i*10000,i*100,i,i+1,i%2)
     }
-    
+    for(let i=1;i<7;i++)
+    {
+        sLbl[i]="Sek"+i;
+     
+        console.log("Dodaje: "+i);
+        addSekcja(i,sLbl[i]);
+        changeSekcja(i,sLbl[i]+"opt");
+    }
+    changeSekcja(1,"nowa");
     document.getElementById('godz').addEventListener('change', function() {
         const className = 'error-field';
         const reg = new RegExp('^[a-zA-Z]{3,}$', 'g');
@@ -23,6 +30,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
             this.classList.remove(className); //usuwam klasę
         }
     });
+    
 });
 
 function addProgBtn()
@@ -90,7 +98,12 @@ function addProg(i,dd,ile_s,coIle_d,sek,akt) {
     k.className="w3-third w3-section";
    	c3a=document.createElement("div");
     c3a.className="w3-half w3-section";
-    c3a.innerHTML="<i>Sekcja</i><br><h4>"+ sek+"</h4>";
+    c3a.innerHTML="<i>Sekcja</i><br>";//<h4 data-nr="+sek+" id=\"prListSekLbl"+i+"\">"+ sLbl[sek]+"</h4>";
+    let c3a1=document.createElement("h4");
+    c3a1.dataset["nr"]=sek;
+    c3a1.id="prListSekLbl"+i;
+    c3a1.innerHTML=sLbl[sek];
+    c3a.appendChild(c3a1);
     k.appendChild(c3a);
     c3b=document.createElement("div");
     c3b.className="w3-half w3-section w3-center";
@@ -156,6 +169,25 @@ function delSekcje()
        f.remove(f.length-1);
     }
 }
+function changeSekcja(s,str)
+{
+    sLbl[s]=str;
+  let o= document.getElementById("addProgForm").elements["sekcja"];
+  o.childNodes[s].innerHTML=str;
+  document.getElementById("SekLbl"+s).elements["sekLi"+s].value=str;
+  for(let i=0;i<progN;i++)
+  {
+      let xx="prListSekLbl"+i;
+    let x=document.getElementById(xx);
+    if(x)
+    {
+        if(x.dataset.nr==s)
+        {
+            x.innerHTML=str;
+        }
+    } 
+  }
+}
 function addSekcja(v,n)
 {
     let o = document.createElement("option");
@@ -169,12 +201,10 @@ function addSekList(v,n)
     let f=document.getElementById("sekList");
     let w = document.createElement("div"); 
     w.className="w3-row w3-center w3-grey w3-padding-8 w3-section";
-    //if(true)
-    //w.classList.add("w3-light-grey");
-    //else w.classList.add("w3-dark-grey");
-    w.id="SekLbl"+v;
-	//let k= document.createElement("div");
-    //k.className="w3-third w3-section";
+    
+    let fs=document.createElement("form");
+    fs.id="SekLbl"+v;
+	
     c1a=document.createElement("div");
     c1a.className="w3-col m2 w3-section";
     c1a.innerHTML="<h4>"+v+"</h4>";
@@ -182,16 +212,16 @@ function addSekList(v,n)
     c1b=document.createElement("div");
     c1b.className="w3-col m5 w3-section";
     c1b.innerHTML="<input class=\"w3-input\" style=\"width:90%\" type=\"text\" "+
-            " id=\"sekLi"+i+"\" name=\"sekLi"+i+"\" value=\"\" placeholder=\"Sekcja "+v+"\" required/>";
+            " id=\"sekLi"+v+"\" name=\"Lbl"+v+"\" value=\"\" placeholder=\"Sekcja "+v+"\" required/>";
     //k.appendChild(c1b);
     c1c=document.createElement("div");
     c1c.className="w3-col m1 w3-section ";
-    c1c.innerHTML=" <button type='button' class='btn button5' style='width:80%;' onclick=\"KonfForm('SekLbl"+i+"')\"> "+
+    c1c.innerHTML=" <button type='button' class='btn button5' style='width:80%;' onclick=\"KonfForm('SekLbl"+v+"')\"> "+
             "<i style='color:green' class='fa fa-edit w3-xlarge' aria-hidden='true' ></i></button>";
-    //k.appendChild(c1c);
-    w.appendChild(c1a);
-    w.appendChild(c1b);
-    w.appendChild(c1c);
+    w.appendChild(fs);
+    fs.appendChild(c1a);
+    fs.appendChild(c1b);
+    fs.appendChild(c1c);
     //w.appendChild(k);
     f.appendChild(w);
 }

@@ -29,13 +29,21 @@ const msg=function(m)
 //var w=new wsConn(con.bind(this),dc.bind(this),msg.bind(this));
 var w=new wsConn(con,dc,msg);
 
-setInterval(w.sendtest.bind(w), 5000);
+//setInterval(w.sendtest.bind(w), 5000);
 w.begin(3);
 
 document.addEventListener("DOMContentLoaded", function(event) {
 
 w.send("{\"witaj\":\"swiecie\"}");
 });
+function k(id)
+{
+  console.log("id="+id);
+  let x = document.getElementById(id).elements;
+  const data =global.formToJSON(x);
+  console.log(data);
+  w.send(JSON.stringify(data));
+}
 
 </script>
 <style>
@@ -105,7 +113,7 @@ a:hover {
     
 
       <div class="w3-content w3-justify w3-text-grey w3-padding-64" id="dodaj">
-        <form action="dodajProg">
+        <form id="ff">
           <div class="row">
             <div class="col-25">
               <label for="fname">First Name</label>
@@ -143,7 +151,7 @@ a:hover {
             </div>
           </div>
           <div class="row">
-            <input type="button" value="Submit" onclick="w.send(JSON.stringify({'witaj':'swiecie'}))">
+            <input type="button" value="Submit" onclick="k('ff')">
           </div>
         </form>
       </div>

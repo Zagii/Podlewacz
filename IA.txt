@@ -1,0 +1,57 @@
+in- przychodzi z serwera (nodeMCU)
+out - wysyłane na serwer (nodeMCU)
+//// IA JSON web service
+in/out // setNTP  {"NTP":   {host:adr, offset:h}} ustawia parametry zegara NTP
+?? czy nie millis in/out // setTime {"Time":  {dzien:x, czas:str}} ustawia parametry zegara
+in/out // setWifi {"Wifi":  {typ:a/d/p, ssid:s;pass:p}} add/del/publish ssid passwd
+in/out // setMQTT {"Mqtt":  {host:adr, p:port, l:login, h:passwd}} ustawienia mqtt
+in/out // setLBL  {"LBL":   {id:i, lbl:nazwa}} zmiana nazwy/etykiety sekcji
+in/out // WifiMode {"WifiMode":{typ:"STA"/"AP", ssid:s;pass:p}} in: odbiera trym, out ustala tryb oraz ssid i haslo dla AP
+ok in/__ // {"MQTTstat":"ok/err", 
+           "GEO":"a123",
+           "TEMP":124.4,
+           "CZAS":123,
+           "CISN":333,
+           "DESZCZ":0,
+           "SEKCJE":3} odbiera status
+ok __/out // GET {"GET:"SLBL/PROG,KONF,STAT"} - pytanie o wartosc na serwerze
+ok in/out // {"SEKCJA/d":0/1} ustawienie sekcji
+ok in/out // {"TRYB":a/m} ustawienie trybu
+///
+
+
+///// MQTT 
+nodeMCUid="Podlewacz";
+outTopic="Podlewacz/OUT";
+inTopic="Podlewacz/IN";
+debugTopic="DebugTopic/Podlewacz";
+ 
+// ---------
+
+OUT
+topic:  %inTopic%/watchdog       msg: millis -- wysyłka info o watchdog
+       %outTopic%/SEKCJA/1/      msg: 0/1  -- publikacja zmiany stanu sekcji
+todo...        
+       %outTopic%/NTP          msg:{host:adr, offset:h} publikuje parametry zegara NTP        
+       %outTopic%/Time        msg:{dzien:x;czas:str} publikuje parametry zegara
+       %outTopic%/Wifi        msg:{typ:a/d/p, ssid:s;pass:p} add/del/publish ssid passwd
+       %outTopic%/MQTT        msg:{host:adr, p:port, l:login, h:passwd} publikuje ustawienia mqtt
+       %outTopic%/Sek         msg:{id:i, n:nazwa} publikuje nazwy/etykiety sekcji
+       %outTopic%/WifiMode    msg:{typ:"STA"/"AP", ssid:s;pass:p} publikuje zmiane trybu WIFI, dla AP, ssid i pass
+       %outTopic%/INF            msg:{"MQTTstat":"ok/err", "GEO":"a123","TEMP":124.4,"TRYB":a/m,"CZAS":123,"CISN":333,"DESZCZ":0,"SEKCJE":3} publikacja stanu systemu i jego czujnikow
+IN
+topic: %inTopic%/watchdog        msg: millis -- informacja od watchdog
+
+topic: rozkaz                    msg: wartosc
+
+topic:  %inTopic%/SEKCJA/1       msg: 0/1   -- zmiana stanu sekcji 
+        %inTopic%/TRYB           msg: a/m   -- zmiana trybu
+
+todo...
+        %inTopic%/setNTP         msg:{host:adr, offset:h} ustawia parametry zegara NTP        
+        %inTopic%/setTime        msg:{dzien:x;czas:str} ustawia parametry zegara
+        %inTopic%/setWifi        msg:{typ:a/d/p, ssid:s;pass:p} add/del/publish ssid passwd
+        %inTopic%/setMQTT        msg:{host:adr, p:port, l:login, h:passwd} ustawienia mqtt
+        %inTopic%/setSek         msg:{id:i, n:nazwa} zmiana nazwy/etykiety sekcji
+        %inTopic%/setWifiMode    msg:{typ:"STA"/"AP", ssid:s;pass:p} zmiana trybu WIFI, dla AP, ssid i pass
+        

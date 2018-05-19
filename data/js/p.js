@@ -24,12 +24,19 @@ const con=function()
     const msg=function(m)
     {
         console.log(m);
+        if(m.hasOwnProperty("LBL"))
+        {
+                if(!G.getLbl(m.msg.id))
+                {
+                    addSekcja(m.msg.id,m.msg.lbl);    
+                }else
+                {
+                    changeSekcja(m.msg.id,m.msg.lbl);
+                }
+        }
         if(!m.hasOwnProperty("msg")) return;
         
         j=m.msg;
-
-       
-
         for (let k in j) {
             if (j.hasOwnProperty(k)) {
                 console.log(k + " -> " + j[k]);
@@ -38,11 +45,6 @@ const con=function()
                     document.getElementById(k.toLowerCase()).innerHTML=j[k];
                 }
             }
-        }
-        if(j.hasOwnProperty("LBL"))
-        {
-                G.setLbl(j.LBL.i,j.LBL.n);
-                document.getElementById("Lbl"+j.LBL.i).innerHTML=j.LBL.n;
         }
         if(j.hasOwnProperty("CZAS"))
         {
@@ -79,9 +81,9 @@ document.addEventListener("DOMContentLoaded", function(event) {
     console.log("document On load");
     let fileName = location.pathname.split("/").slice(-1);
     //alert (fileName);
-    delSekcje();
+    delSekcje(); 
     W=new wsConn(con,dc,msg);
-    G=new global();
+    G=new global();    
     W.begin(3);
    
     for(let i=0;i<7;i++)
@@ -257,6 +259,7 @@ function changeSekcja(s,str)
 }
 function addSekcja(v,n)
 {
+    G.setLbl(s,str);
     let o = document.createElement("option");
     o.text = n;
     o.value=v;

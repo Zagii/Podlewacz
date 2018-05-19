@@ -2,13 +2,7 @@
 var W;
 var G;
 
-//// IA JSON 
-// setNTP  {topic:setNTP; msg:{host:adr; offset:h}} ustawia parametry zegara NTP
-// setTime {topic:setTime; msg:{dzien:x;czas:str}} ustawia parametry zegara
-// setWifi {topic:setWifi; msg:{typ:a/d/p; ssid:s;pass:p}} add/del/publish ssid passwd
-// setMQTT {topic:setMqtt; msg:{host:adr; p:port; l:login; h:passwd}} ustawienia mqtt
-// setSek  {topic:setSek;  msg:{id:i; n:nazwa}}
-///
+
 class global
 {
     constructor()
@@ -144,19 +138,19 @@ class wsConn
     }
     getSekLbl()
     {
-        this.send("{\"topic\":\"GET\",\"msg\":\"SLBL\"}");
+        this.send("{\"GET\":\"SLBL\"}");
     }
     getProgs()
     {
-        this.send("{\"topic\":\"GET\",\"msg\":\"PROG\"}");
+        this.send("{\"GET\":\"PROG\"}");
     }
     getKonf()
     {
-        this.send("{\"topic\":\"GET\",\"msg\":\"KONF\"}");
+        this.send("{:\"GET\":\"KONF\"}");
     }
     getStats()
     {
-        this.send("{\"topic\":\"GET\",\"msg\":\"STAT\"}");
+        this.send("{\"GET\":\"STAT\"}");
     }
 }
 

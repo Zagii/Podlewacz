@@ -20,15 +20,9 @@
         document.getElementById("plugm").style.color="darkred";
     delete W; 
     };
-    const msg=function(m)
+    const msg=function(j)
     {
-        console.log(m);
-        if(!m.hasOwnProperty("msg")) return;
-        
-        j=m.msg;
-
-       
-
+        console.log(j);
         for (let k in j) {
             if (j.hasOwnProperty(k)) {
                 console.log(k + " -> " + j[k]);
@@ -36,13 +30,19 @@
                 {
                     document.getElementById(k.toLowerCase()).innerHTML=j[k];
                 }
+                if(k.substr(0,7)=="SEKCJA/")
+                {
+                    setStan(k[7],j[k]);
+                }
             }
+
         }
         if(j.hasOwnProperty("LBL"))
         {
-                G.setLbl(j.LBL.i,j.LBL.n);
-                document.getElementById("Lbl"+j.LBL.i).innerHTML=j.LBL.n;
+                G.setLbl(j.LBL.id,j.LBL.lbl);
+                document.getElementById("Lbl"+j.LBL.id).innerHTML=j.LBL.lbl;
         }
+       
         if(j.hasOwnProperty("CZAS"))
         {
             G.setCzas(j["CZAS"]);
@@ -132,10 +132,10 @@
         let jsonOb;
         if(t.textContent=="auto")
         {
-            jsonOb={ "topic":"TRYB", "msg":"m" };
+            jsonOb={"TRYB": "m" };
         }else
         {
-            jsonOb={ "topic":"TRYB", "msg":"a" };
+            jsonOb={ "TRYB":"a" };
         }
         let msg=JSON.stringify(jsonOb);
         console.log("sendStan msg="+msg );

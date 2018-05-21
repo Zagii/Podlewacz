@@ -127,6 +127,18 @@ a:hover {
        <div class="w3-row w3-center w3-section" id="prog">
        </div>  
   </div>
+
+  <div class="w3-row w3-justify w3-text-grey w3-padding-64" id="deb">
+    <input class="w3-input" style="width:90%" type="text" id="debjson3" value="{&quot;LBL&quot;:{&quot;id&quot;:1,&quot;lbl&quot;:&quot;txt&quot;}}"/>
+    <button type="submit" class="button button5" onclick="(function(){ W.send(document.getElementById('debjson3').value); })();">ok</button>
+  
+    <input class="w3-input" style="width:90%" type="text" id="debjson2" value="{&quot;topic&quot;:&quot;INF&quot;,&quot;msg&quot;:{&quot;TRYB&quot;:&quot;m&quot;,&quot;GEO&quot;:&quot;a&quot;}}"/>
+    <button type="submit" class="button button5" onclick="(function(){ W.send(document.getElementById('debjson2').value); })();">ok</button>
+  <input class="w3-input" style="width:90%" type="text" id="debjson" 
+  value="{&quot;GEO&quot;:&quot;a123&quot;,&quot;TEMP&quot;:124.4,&quot;TRYB&quot;:1,&quot;CZAS&quot;:123,&quot;CISN&quot;:333,&quot;DESZCZ&quot;:0,&quot;SEKCJE&quot;:3}"/>
+  <button type="submit" class="button button5" onclick="(function(){ W.send(document.getElementById('debjson').value); })();">ok</button>
+</div>
+
   <div class="w3-content w3-justify w3-padding-16" id="konf">
         <div class="w3-row ">
           <h2>Konfiguracja</h2>

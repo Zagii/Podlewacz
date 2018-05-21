@@ -21,22 +21,9 @@ const con=function()
         document.getElementById("plugm").style.color="darkred";
     delete W; 
     };
-    const msg=function(m)
+    const msg=function(j)
     {
-        console.log(m);
-        if(m.hasOwnProperty("LBL"))
-        {
-                if(!G.getLbl(m.msg.id))
-                {
-                    addSekcja(m.msg.id,m.msg.lbl);    
-                }else
-                {
-                    changeSekcja(m.msg.id,m.msg.lbl);
-                }
-        }
-        if(!m.hasOwnProperty("msg")) return;
-        
-        j=m.msg;
+        console.log(j);
         for (let k in j) {
             if (j.hasOwnProperty(k)) {
                 console.log(k + " -> " + j[k]);
@@ -44,7 +31,38 @@ const con=function()
                 {
                     document.getElementById(k.toLowerCase()).innerHTML=j[k];
                 }
+                if(["setWifi"].indexOf(k)>=0)
+                {
+                    let m=j[k];
+                    let fe=document.getElementById(k).elements;
+                    for(let el=0; el<fe.length;el++ )
+                    {
+                        console.log(fe[el].id+" = "+m[fe[el].id]);
+                        console.log(fe[el].id+" = "+m[fe[el].id].key);
+                        console.log("value="+m[fe[el].value]);
+                        /*let ix = m.find(function()
+                            { 
+                                if(  el.id== m.id)
+                                 return true;
+                                 else
+                                 return false;
+                            })*/
+                       // console.log(ix);
+                    }
+                }
             }
+            
+        }
+        if(j.hasOwnProperty("LBL"))
+        {
+                G.setLbl(j.LBL.id,j.LBL.lbl);
+                if(!G.getLbl(j.LBL.id))
+                {
+                    addSekcja(j.LBL.id,j.LBL.lbl);    
+                }else
+                {
+                    changeSekcja(j.LBL.id,j.LBL.lbl);
+                }
         }
         if(j.hasOwnProperty("CZAS"))
         {
@@ -73,6 +91,7 @@ const con=function()
         { 
                 setStany(j["SEKCJE"]);
         }
+       
     };
 
 
@@ -259,7 +278,7 @@ function changeSekcja(s,str)
 }
 function addSekcja(v,n)
 {
-    G.setLbl(s,str);
+    G.setLbl(v,n);
     let o = document.createElement("option");
     o.text = n;
     o.value=v;
@@ -286,7 +305,7 @@ function addSekList(v,n)
 
     c1c=document.createElement("div");
     c1c.className="w3-col m1 w3-section ";
-    c1c.innerHTML=" <button type='button' class='btn button5' style='width:80%;' onclick=\"KonfForm('SekLbl"+v+"')\"> "+
+    c1c.innerHTML=" <button type='button' class='btn button5' style='width:80%;' onclick=\"setNewLBL('SekLbl"+v+"',"+v+")\"> "+
             "<i style='color:green' class='fa fa-edit w3-xlarge' aria-hidden='true' ></i></button>";
     w.appendChild(fs);
     fs.appendChild(c1a);
@@ -295,7 +314,24 @@ function addSekList(v,n)
 
     f.appendChild(w);
 }
-
+function setNewLBL(fid,sid)
+{
+    let x = document.getElementById(fid).elements;
+    let v =true;
+    for(let i=0;i<x.length;i++)
+    {
+    
+        if(!x[i].validity.valid)  v=false;
+    }
+    if(!v)
+    {
+        console.log("blad walidacji "+fid);
+        return;
+    }
+    let str={"LBL":{"id":sid,"lbl":x["sekLi"+sid].value}};
+    console.log(JSON.stringify(str));
+    W.send(JSON.stringify(str));
+}
 function KonfForm(id)
 {
 
@@ -314,9 +350,9 @@ function KonfForm(id)
     
     const data = global.formToJSON(x);
 
-    let str={"topic":id,"msg":data};
-    console.log(JSON.stringify(str));
-   
+    let str="{\""+id+"\":"+JSON.stringify(data)+"}";
+    console.log(str);
+    W.send(str);
 }
 
 

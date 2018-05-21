@@ -146,7 +146,7 @@ class wsConn
     }
     getKonf()
     {
-        this.send("{:\"GET\":\"KONF\"}");
+        this.send("{\"GET\":\"KONF\"}");
     }
     getStats()
     {

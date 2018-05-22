@@ -59,8 +59,8 @@ const con=function()
         if(j.hasOwnProperty("CZAS"))
         {
             G.setCzas(j["CZAS"]);
-           // document.getElementById('godz').innerHTML=G.getGodz();
-            //document.getElementById('dX').innerHTML=G.getDtStr();
+            document.getElementById('czas').innerHTML=G.getGodz();
+            document.getElementById('data').innerHTML=G.getDtStr();
         }      
     };
 
@@ -284,8 +284,6 @@ function addSekList(v,n)
 
     f.appendChild(w);
 }
-function isFormValid(eList)
-{}
 function setNewLBL(fid,sid)
 {
     let x = document.getElementById(fid).elements;
@@ -308,13 +306,19 @@ function setNewLBL(fid,sid)
 function setCzas(id)
 {
     let x = document.getElementById(id).elements;
-    if(!G.isFormValid(x))
+    if(!global.isFormValid(x))
     {
         console.log("blad walidacji "+id);
         return;
     }
     let dt = new Date();
-  ///  dt= x["data"].value.toDate("dd-MM-yyyy","-");
+    let t=x["data"].value.match(x["data"].pattern);
+    dt.setFullYear(t[3],t[2]-1,t[1]);
+    t=x["czas"].value.match(x["czas"].pattern);
+    dt.setHours(t[1],t[2],t[3]);
+    let str="{\"CZAS\":"+dt.getTime()+"}"
+    global.formClear(x);
+    W.send(str);
 }
 function KonfForm(id)
 {

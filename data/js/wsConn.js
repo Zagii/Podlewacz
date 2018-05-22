@@ -36,6 +36,15 @@ class global
     static isCheckbox(e){return e.type === 'checkbox';}
     static isBtn(e){return e.type === 'button';}
     static isMultiSelect(e){return e.options && e.multiple;}
+    static isFormValid(eList)
+    {
+        for(let i=0;i<eList.length;i++)
+        {
+            if(!eList[i].validity.valid)  return false;
+            
+        }
+        return true;
+    }
 
     static reducerFunc(data,element)
     {

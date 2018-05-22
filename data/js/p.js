@@ -25,32 +25,24 @@ const con=function()
     {
         console.log(j);
         for (let k in j) {
-            if (j.hasOwnProperty(k)) {
+           // if (j.hasOwnProperty(k)) {
                 console.log(k + " -> " + j[k]);
                 if(["GEO","TEMP","CISN","DESZCZ"].indexOf(k)>=0)
                 {
                     document.getElementById(k.toLowerCase()).innerHTML=j[k];
                 }
-                if(["setWifi"].indexOf(k)>=0)
+                if(["Wifi","Mqtt","NTP","Time"].indexOf(k)>=0)
                 {
                     let m=j[k];
                     let fe=document.getElementById(k).elements;
-                    for(let el=0; el<fe.length;el++ )
+                    for(let k1 in m)
                     {
-                        console.log(fe[el].id+" = "+m[fe[el].id]);
-                        console.log(fe[el].id+" = "+m[fe[el].id].key);
-                        console.log("value="+m[fe[el].value]);
-                        /*let ix = m.find(function()
-                            { 
-                                if(  el.id== m.id)
-                                 return true;
-                                 else
-                                 return false;
-                            })*/
-                       // console.log(ix);
+                        console.log('key ='+k1+', val ='+m[k1]); 
+                        fe[k1].value=m[k1];
                     }
+                    
                 }
-            }
+            //} has own prop
             
         }
         if(j.hasOwnProperty("LBL"))
@@ -67,31 +59,9 @@ const con=function()
         if(j.hasOwnProperty("CZAS"))
         {
             G.setCzas(j["CZAS"]);
-            document.getElementById('godz').innerHTML=G.getGodz();
-            document.getElementById('dX').innerHTML=G.getDtStr();
-        }
-        if(j.hasOwnProperty("TRYB"))
-        { 
-				let s=document.getElementById("trSw");
-				let t=document.getElementById("tryb");
-				if(j["TRYB"]=="m")
-				{
-					t.textContent="manual";
-					s.className="fas fa-toggle-off w3-xlarge"
-					s.style="color:darkred";
-
-				}else
-				{
-					t.textContent="auto";
-					s.className="fas fa-toggle-on w3-xlarge"
-					s.style="color:lime";
-				}
-        }
-        if(j.hasOwnProperty("SEKCJE"))
-        { 
-                setStany(j["SEKCJE"]);
-        }
-       
+           // document.getElementById('godz').innerHTML=G.getGodz();
+            //document.getElementById('dX').innerHTML=G.getDtStr();
+        }      
     };
 
 
@@ -314,6 +284,8 @@ function addSekList(v,n)
 
     f.appendChild(w);
 }
+function isFormValid(eList)
+{}
 function setNewLBL(fid,sid)
 {
     let x = document.getElementById(fid).elements;
@@ -329,8 +301,20 @@ function setNewLBL(fid,sid)
         return;
     }
     let str={"LBL":{"id":sid,"lbl":x["sekLi"+sid].value}};
+    x["sekLi"+sid].value="";
     console.log(JSON.stringify(str));
     W.send(JSON.stringify(str));
+}
+function setCzas(id)
+{
+    let x = document.getElementById(id).elements;
+    if(!G.isFormValid(x))
+    {
+        console.log("blad walidacji "+id);
+        return;
+    }
+    let dt = new Date();
+  ///  dt= x["data"].value.toDate("dd-MM-yyyy","-");
 }
 function KonfForm(id)
 {
@@ -352,7 +336,12 @@ function KonfForm(id)
 
     let str="{\""+id+"\":"+JSON.stringify(data)+"}";
     console.log(str);
+    for(let i=0;i<x.length;i++)
+    {
+        x[i].value="";
+    }
     W.send(str);
+    
 }
 
 

@@ -1,4 +1,3 @@
-//var wsSerw="192.168.1.144";
 var W;
 var G;
 
@@ -16,7 +15,7 @@ class global
     getLbl(i){return this.sLbl[i];}
     setCzas(mSek)
     {
-        this.dt.setTime(mSek*1000);
+        this.dt.setTime(mSek);//*1000);
     }
     getGodz(){
         return  this.dt.getUTCHours().toString().padStart(2,"0")+":"+
@@ -120,8 +119,8 @@ class wsConn
     {
         if(this.ws){ if(this.ws.readyState==WebSocket.OPEN) return; }
         console.log("startWS");
-      //  this.ws = new WebSocket('ws://'+wsSerw+':81/'); 
-        this.ws =new WebSocket("wss://echo.websocket.org/");
+        this.ws = new WebSocket('ws://'+wsSerw+':81/'); 
+      //  this.ws =new WebSocket("wss://echo.websocket.org/");
         let me=this;
         this.ws.onopen = function () 
         { 

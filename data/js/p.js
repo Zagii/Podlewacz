@@ -1,4 +1,3 @@
-//let wsSerw="192.168.1.144";
 let progN=0;
 let sLbl=["?"];
 
@@ -59,8 +58,8 @@ const con=function()
         if(j.hasOwnProperty("CZAS"))
         {
             G.setCzas(j["CZAS"]);
-            document.getElementById('czas').innerHTML=G.getGodz();
-            document.getElementById('data').innerHTML=G.getDtStr();
+            document.getElementById('czas').value=G.getGodz();
+            document.getElementById('data').value=G.getDtStr();
         }      
     };
 
@@ -98,7 +97,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
             this.classList.remove(className); //usuwam klasę
         }
     });
-    
+   
 });
 
 function addProgBtn()

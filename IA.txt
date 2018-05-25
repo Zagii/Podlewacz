@@ -1,19 +1,19 @@
 in- przychodzi z serwera (nodeMCU)
 out - wysyłane na serwer (nodeMCU)
 //// IA JSON web service
-in/out // setNTP  {"NTP":   {host:adr, offset:h}} ustawia parametry zegara NTP
-?? czy nie millis in/out // setTime {"Time":  {dzien:x, czas:str}} ustawia parametry zegara
-in/out // setWifi {"Wifi":  {typ:a/d/p, ssid:s;pass:p}} add/del/publish ssid passwd
-in/out // setMQTT {"Mqtt":  {host:adr, p:port, l:login, h:passwd}} ustawienia mqtt
-in/out // setLBL  {"LBL":   {id:i, lbl:nazwa}} zmiana nazwy/etykiety sekcji
-in/out // WifiMode {"WifiMode":{typ:"STA"/"AP", ssid:s;pass:p}} in: odbiera trym, out ustala tryb oraz ssid i haslo dla AP
+ok in/out // setNTP  {"NTP":   {host:adr, offset:h}} ustawia parametry zegara NTP
+ok in/out // setTime {"Time":  {dzien:x, czas:str}} ustawia parametry zegara
+ok setTimeM {"CZAS": millis} ustawia parametry zegara w UTC
+ok in/out // setWifi {"Wifi":  {ssid:s;pass:p;ip:ip;tryb:"AP/STA"}} add/del/publish ssid passwd
+ok in/out // setMQTT {"Mqtt":  {host:adr, port:port, user:login, pwd:passwd}} ustawienia mqtt
+ok in/out // setLBL  {"LBL":   {id:i, lbl:nazwa}} zmiana nazwy/etykiety sekcji
 ok in/__ // {"MQTTstat":"ok/err", 
            "GEO":"a123",
            "TEMP":124.4,
-           "CZAS":123,
+           "CZAS":123, 
            "CISN":333,
            "DESZCZ":0,
-           "SEKCJE":3} odbiera status
+           "SEKCJE":3} odbiera status 
 ok __/out // GET {"GET:"SLBL/PROG,KONF,STAT"} - pytanie o wartosc na serwerze
 ok in/out // {"SEKCJA/d":0/1} ustawienie sekcji
 ok in/out // {"TRYB":a/m} ustawienie trybu

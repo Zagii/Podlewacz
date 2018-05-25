@@ -79,7 +79,7 @@ void CWebSerwer::publikujStanSekcji(uint8_t stan)
 
 bool CWebSerwer::handleFileRead(String path){  // send the right file to the client (if it exists)
   Serial.println("handleFileRead: " + path);
-  if(path.endsWith("/")) path += "index.html";           // If a folder is requested, send the index file
+  if(path.endsWith("/")) path += "i.html";           // If a folder is requested, send the index file
   String jsString="";
   if(path.endsWith("ws.js"))
   {
@@ -97,7 +97,7 @@ bool CWebSerwer::handleFileRead(String path){  // send the right file to the cli
     // Serial.println("!!!!!!!!!!!!!!!  PRZED  !!!!!!!!!!!!!!!");
     // Serial.println(jsString);
     // Serial.println("!!!!!!!!!!!!!!!  PO  !!!!!!!!!!!!!!!");
-     jsString+=file.readString();
+    // jsString=file.readString();
     // Serial.println(jsString);
      server.send(200,contentType,jsString);
     }else
@@ -127,6 +127,9 @@ String CWebSerwer::getContentType(String filename){
   else if(filename.endsWith(".zip")) return "application/x-zip";
   else if(filename.endsWith(".gz")) return "application/x-gzip";
   return "text/plain";
+  // dodac Response.AppendHeader("Content-Encoding", "gzip"); ale nie wiem gdzie jeszcze
+  // Content-Type: application/javascript
+  // Content-Encoding: gzip
 }
 
 void CWebSerwer::loop(unsigned long t_s, uint8_t stanSekcji, char* geo, double temp,double p, bool deszcz,char tryb)

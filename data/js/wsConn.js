@@ -13,7 +13,11 @@ class global
     getDzien(i){return this.dTyg[i];}
     setLbl(i,s){this.sLbl[i]=s;}
     getLbl(i){return this.sLbl[i];}
-    setCzas(mSek)
+    setCzasS(mSek)
+    {
+        this.dt.setTime(mSek*1000);
+    }
+	setCzas(mSek)
     {
         this.dt.setTime(mSek);//*1000);
     }

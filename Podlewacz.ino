@@ -111,14 +111,26 @@ void wse(uint8_t num, WStype_t type, uint8_t * payload, size_t length)
       DPRINTLN("return");
       return;
     }
-    const char* topic = root["topic"];
-    const char* msg= root["msg"];
-     if(topic) DPRINT("topic: ");DPRINTLN(topic);
-     if(msg) DPRINT("msg: ");DPRINTLN(msg);
-    if(strstr(topic,"SEKCJA")||strstr(topic,"TRYB"))//sekcja
-    {
-      strcpy(t,topic);
-      parsujRozkaz(t,(char*)msg);
+
+    char* topic="";
+    char* msg="";
+    for (auto kv : root) {
+       topic=(char*)kv.key;
+       msg=(char*)kv.value.as<char*>();
+       DPRINT(topic);DPRINT("=");DPRINTLN(msg);
+       
+    
+    //const char* topic = root["topic"];
+    //const char* msg= root["msg"];
+    // if(topic){ DPRINT("topic: ");DPRINTLN(topic);
+     
+    // if(msg) {DPRINT("msg: ");DPRINTLN(msg);
+      if(strstr(topic,"SEKCJA")||strstr(topic,"TRYB"))//sekcja
+      {
+     //   strcpy(t,topic);
+       // parsujRozkaz(t,(char*)msg);
+        parsujRozkaz(topic,msg);
+      }else DPRINTLN("nieznany rozkaz");
     }
     free(p);
   }

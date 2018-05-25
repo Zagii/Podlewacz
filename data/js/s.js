@@ -45,7 +45,7 @@
        
         if(j.hasOwnProperty("CZAS"))
         {
-            G.setCzas(j["CZAS"]);
+            G.setCzasS(j["CZAS"]);
             document.getElementById('godz').innerHTML=G.getGodz();
             document.getElementById('dX').innerHTML=G.getDtStr();
         }
@@ -79,6 +79,8 @@
     //setInterval(w.sendtest.bind(w), 5000);
     
     document.addEventListener("DOMContentLoaded", function(event) {
+	 
+        
         debug=document.getElementById('deb');
         console.log("document On load");
         W=new wsConn(con,dc,msg);
@@ -119,8 +121,9 @@
         let w=0;
         if(s.innerHTML=="OFF")w=1;
     //  a(w<<nr);
-        let jsonOb={ "topic":"SEKCJA/"+nr, "msg":w };
-        let msg=JSON.stringify(jsonOb);
+       // let jsonOb={ "SEKCJA/"+nr+"\"", "msg":w };
+        //let msg=JSON.stringify(jsonOb);
+		let msg="{ \"SEKCJA/"+nr+"\", \"msg\":\""+w+"\" }";
         console.log("sendStan msg="+msg );
     //  deb("sendStan msg="+msg);
         W.send(msg);   

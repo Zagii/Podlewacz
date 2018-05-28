@@ -61,10 +61,13 @@ const char* nodeMCUid="Podlewacz";
 const char* outTopic="Podlewacz/OUT";
 const char* inTopic="Podlewacz/IN";
 const char* debugTopic="DebugTopic/Podlewacz";
-const char* mqtt_server ="broker.hivemq.com"; //"m23.cloudmqtt.com";
-const char* mqtt_user="";//"aigejtoh";
-const char* mqtt_pass="";//"ZFlzjMm4T-XH";
-const uint16_t mqtt_port=1883;
+
+char ntp_server[50];
+
+char mqtt_server[50];// ="broker.hivemq.com"; //"m23.cloudmqtt.com";
+char mqtt_user[20];//"aigejtoh";
+char mqtt_pass[20];//"ZFlzjMm4T-XH";
+uint16_t mqtt_port=1883;
   
   int conStat=CONN_STAT_NO;
   unsigned long lastMQTTReconnectAttempt = 0;
@@ -73,7 +76,7 @@ const uint16_t mqtt_port=1883;
   unsigned long loopMillis=0;
   unsigned long WDmillis=0;
 
-  ESP8266WiFiMulti wifiMulti;
+  ESP8266WiFiMulti *wifiMulti;
   WiFiClient espClient;
   PubSubClient client;
   
@@ -96,7 +99,9 @@ const uint16_t mqtt_port=1883;
  unsigned long getEpochTime(){return timeClient->getEpochTime();};
  void wifiScanNetworks();
   void wifiReconnect();
-  
+  void setNTP(const char* host,unsigned long offset);
+  void zmianaAP(const char* ssid,const char* pwd);
+  void setupMqtt(const char* host, uint16_t port, const char * usr, const char* pwd);
 };
 
 #endif

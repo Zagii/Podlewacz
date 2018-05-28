@@ -22,6 +22,41 @@ void CConfig::begin()
   }  
 }
 
+ bool CConfig::loadJSON( JsonObject& json, DynamicJsonBuffer jsonBuffer, const char *nazwaPliku)
+ {
+  File configFile = SPIFFS.open(nazwaPliku, "r");
+  if (!configFile) {
+     DPRINT("Blad odczytu pliku ");DPRINTLN(nazwaPliku);
+   return false;
+  }
+
+  size_t size = configFile.size();
+  if (size > 2048) {
+    DPRINT("Za duży plik ");DPRINTLN(nazwaPliku);
+    return false;
+  }
+
+  // Allocate a buffer to store contents of the file.
+  std::unique_ptr<char[]> buf(new char[size]);
+
+  // We don't use String here because ArduinoJson library requires the input
+  // buffer to be mutable. If you don't use ArduinoJson, you may as well
+  // use configFile.readString instead.
+  configFile.readBytes(buf.get(), size);
+  yield();
+  const size_t bufferSize = JSON_ARRAY_SIZE(2) + 10*JSON_ARRAY_SIZE(6) + JSON_OBJECT_SIZE(1) + 80;
+  
+  json = jsonBuffer.parseObject(buf.get());
+
+  if (!json.success()) {
+    DPRINT("Blad parsowania json ");DPRINTLN(nazwaPliku);
+    return false;
+  }
+  
+  //uint8_t n = json["n"]; // progIle
+  return true;
+ }
+
 bool CConfig::loadConfig() {
   File configFile = SPIFFS.open(PROGRAM_CONFIG_FILE, "r");
   if (!configFile) {
@@ -43,7 +78,7 @@ bool CConfig::loadConfig() {
   // use configFile.readString instead.
   configFile.readBytes(buf.get(), size);
   yield();
-  const size_t bufferSize = JSON_ARRAY_SIZE(2) + 10*JSON_ARRAY_SIZE(5) + JSON_OBJECT_SIZE(1) + 80;
+  const size_t bufferSize = JSON_ARRAY_SIZE(2) + 10*JSON_ARRAY_SIZE(6) + JSON_OBJECT_SIZE(1) + 80;
   DynamicJsonBuffer jsonBuffer(bufferSize);
   JsonObject& json = jsonBuffer.parseObject(buf.get());
 
@@ -58,10 +93,23 @@ bool CConfig::loadConfig() {
     yield();
     JsonArray& prog = json["Programy"][i];
     Program pp;
-    setProg(pp,prog[0],prog[1],prog[2], prog[3], prog[4]);
+    setProg(pp,prog[0],prog[1],prog[2], prog[3], prog[4],prog[5]);
     addProg(pp);
   }
   DPRINT("progIle=");DPRINTLN(n);
+  return true;
+}
+
+bool CConfig::saveConfigStr(const char *nazwaPliku,const char * str) {
+
+  DPRINT(" saveConfigJSON: ");DPRINT(str);DPRINT(" / ");DPRINTLN(nazwaPliku);
+
+  File configFile = SPIFFS.open(nazwaPliku, "w");
+  if (!configFile) {
+    DPRINT("Blad zapisu pliku ");DPRINTLN(nazwaPliku);
+    return false;
+  }
+  configFile.println(str);
   return true;
 }
 
@@ -84,6 +132,7 @@ bool CConfig::saveConfig() {
     pr.add(prTab[i].czas_trwania_s);
     pr.add(prTab[i].sekwencja);
     pr.add(prTab[i].co_ile_dni);
+    pr.add(prTab[i].aktywny);
   } 
 
   File configFile = SPIFFS.open(PROGRAM_CONFIG_FILE, "w");
@@ -97,7 +146,7 @@ bool CConfig::saveConfig() {
 }
 
 //----------------------------------------------------
-void CConfig::setProg(Program &a,uint8_t dzien, uint8_t mies, uint16_t rok,  uint8_t h, uint8_t m,  uint8_t s,  unsigned long czas_trwania_s,uint8_t co_ile_dni,  uint8_t sekwencja)
+void CConfig::setProg(Program &a,uint8_t dzien, uint8_t mies, uint16_t rok,  uint8_t h, uint8_t m,  uint8_t s,  unsigned long czas_trwania_s,uint8_t co_ile_dni,  uint8_t sekwencja, bool aktywny)
 {
   DPRINT("setProg #->");
   tmElements_t t;
@@ -114,10 +163,11 @@ void CConfig::setProg(Program &a,uint8_t dzien, uint8_t mies, uint16_t rok,  uin
   a.czas_trwania_s=czas_trwania_s; 
   a.sekwencja=sekwencja; 
   a.co_ile_dni=co_ile_dni;
+  a.aktywny=aktywny;
   publishProg(a,progIle);
 }
 
-void CConfig::setProg(Program &a,time_t data,time_t godzina,  unsigned long czas_trwania_s,uint8_t co_ile_dni,  uint8_t sekwencja)
+void CConfig::setProg(Program &a,time_t data,time_t godzina,  unsigned long czas_trwania_s,uint8_t co_ile_dni,  uint8_t sekwencja,bool aktywny)
 { 
   DPRINT("setProg time_t #->");
   a.dataOdKiedy=data;
@@ -125,6 +175,7 @@ void CConfig::setProg(Program &a,time_t data,time_t godzina,  unsigned long czas
   a.czas_trwania_s=czas_trwania_s; 
   a.sekwencja=sekwencja; 
   a.co_ile_dni=co_ile_dni;
+  a.aktywny=aktywny;
   publishProg(a,progIle);
   
 }
@@ -140,6 +191,7 @@ void CConfig::setProg(Program &a, Program &b)
   a.co_ile_dni=b.co_ile_dni;
   a.czas_trwania_s=b.czas_trwania_s;
   a.sekwencja=b.sekwencja; 
+  a.aktywny=b.aktywny;
 }
 
 
@@ -161,7 +213,7 @@ void CConfig::publishProg(Program &p,uint8_t i)
   DPRINT("data="); DPRINT(day(p.dataOdKiedy)); DPRINT("-");DPRINT(month(p.dataOdKiedy)); DPRINT("-");DPRINT(year(p.dataOdKiedy)); 
   DPRINT("; godz="); DPRINT(hour(p.godzinaStartu)); DPRINT(":");DPRINT(minute(p.godzinaStartu)); DPRINT(":");DPRINT(second(p.godzinaStartu)); 
   DPRINT(" czas_trwania_s="); DPRINT(p.czas_trwania_s); DPRINT("; ");DPRINT("co_ile_dni="); DPRINT(p.co_ile_dni); DPRINT("; ");
-  DPRINT(" sekwencja="); DPRINTLN(p.sekwencja); 
+  DPRINT(" sekwencja="); DPRINT(p.sekwencja); DPRINT(" aktywny=");DPRINTLN(p.aktywny);
   
 }
 
@@ -199,7 +251,8 @@ bool CConfig::checkRangeProg(Program &p,time_t sysczas_t)
 {
  // DPRINT("checkRangeProg start, sysczas_s ");  printCzas(sysczas_t);DPRINTLN("");
  // publishProg(p);
- 
+  if(!p.aktywny) return false;
+  
   if(p.dataOdKiedy>sysczas_t)
   {
     DPRINTLN(" Program z przyszlosci");

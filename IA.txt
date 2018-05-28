@@ -1,3 +1,5 @@
+http://arduino-esp8266.readthedocs.io/en/latest/exception_causes.html
+
 in- przychodzi z serwera (nodeMCU)
 out - wysyłane na serwer (nodeMCU)
 //// IA JSON web service
@@ -17,6 +19,7 @@ ok in/__ // {"MQTTstat":"ok/err",
 ok __/out // GET {"GET:"SLBL/PROG,KONF,STAT"} - pytanie o wartosc na serwerze
 ok in/out // {"SEKCJA/d":0/1} ustawienie sekcji
 ok in/out // {"TRYB":a/m} ustawienie trybu
+  in/out  // {"PROG":{id:x, dt="miliis", "okresS":s, "sekcja": n, "coIle":z, "aktywny":b }}
 ///
 
 

@@ -46,6 +46,8 @@ char tmpMsg[MAX_MSG_LENGHT];
 ////////////// sprawdzic ntp
 ////////// https://github.com/arduino-libraries/NTPClient
 
+unsigned long czasLokalnyMillis=0;
+unsigned long czasLokalny=0;
 
 unsigned long sLEDmillis=0;
 
@@ -125,12 +127,12 @@ void wse(uint8_t num, WStype_t type, uint8_t * payload, size_t length)
     // if(topic){ DPRINT("topic: ");DPRINTLN(topic);
      
     // if(msg) {DPRINT("msg: ");DPRINTLN(msg);
-      if(strstr(topic,"SEKCJA")||strstr(topic,"TRYB"))//sekcja
-      {
+   //   if(strstr(topic,"SEKCJA")||strstr(topic,"TRYB"))//sekcja
+    //  {
      //   strcpy(t,topic);
        // parsujRozkaz(t,(char*)msg);
         parsujRozkaz(topic,msg);
-      }else DPRINTLN("nieznany rozkaz");
+     // }else DPRINTLN("nieznany rozkaz");
     }
     free(p);
   }
@@ -302,7 +304,70 @@ void publikujStanSekcjiMQTT()
        {
             conf.setTryb(TRYB_MANUAL);
        }
+        return;
+    }
+    ind=strstr(topic,"CZAS");
+    if(ind!=NULL)
+    {
+      czasLokalny=atoi(msg);
+      return;
+    }
+    //////////////////////// komendy ktore maja jsona jako msg /////////////////////////
+    StaticJsonBuffer<200> jsonBuffer;
+    JsonObject& json = jsonBuffer.parseObject(msg);
+
+    if (!json.success()) {
+       DPRINTLN("Blad parsowania json !!!!");
+      return;
+    }
+    ind=strstr(topic,"NTP");
+    if(ind!=NULL)
+    {
+      const char* host=json["host"];
+      unsigned long offset=json["offset"];
+      wifi.setNTP(host,offset);
+      // zapisz do pliku
+    }
+    
+    ind=strstr(topic,"Wifi");
+    if(ind!=NULL)
+    {
+      const char* tryb=json["tryb"];
+       const char* ssid=json["ssid"];
+       const char* pass=json["pass"];
+      if(strcmp(tryb,"STA")==0)
+      {
+        wifi.zmianaAP(ssid,pass);
+        // zapisz do pliku
+      }else
+      {/// utworzyc AP
         
+      }
+    }
+    ind=strstr(topic,"Mqtt");
+    if(ind!=NULL)
+    {     
+      const char* host=json["host"];
+      uint16_t port=json["port"];
+      const char* user=json["user"];
+      const char* pwd=json["pwd"];
+      wifi.setupMqtt(json["host"],json["port"],json["user"],json["pwd"]);
+      // zapisz do pliku
+    }
+    ind=strstr(topic,"LBL");
+    if(ind!=NULL)
+    {
+      
+    }
+    ind=strstr(topic,"GET");
+    if(ind!=NULL)
+    {
+      
+    }
+    ind=strstr(topic,"PROG");
+    if(ind!=NULL)
+    {
+      
     }
  }
 
@@ -311,11 +376,29 @@ unsigned long d=0;
 
 void loop()
 {
+   if(millis()-czasLokalnyMillis>1000)
+  {
+    czasLokalnyMillis=millis();
+    czasLokalny++;
+  }
  delay(5);
   wifi.loop();
  delay(5);
-  web.loop(wifi.getEpochTime(), stanSekcji,"Duchnice",20.1f,1023.34f,0,conf.getTryb());
+ /*
+  *  1 styczen 2010 to
+  *  Epoch timestamp: 1262304000
+  *  Timestamp in milliseconds: 1262304000000
+  */
+  if(wifi.getEpochTime()<1262304000)// czyli brak polaczenia z NTP
+  {
+    web.loop(czasLokalny, stanSekcji,"Duchnice",20.1f,1023.34f,0,conf.getTryb());
+  }else{
+    web.loop(wifi.getEpochTime(), stanSekcji,"Duchnice",20.1f,1023.34f,0,conf.getTryb());
+  }
  delay(5);
+
+ 
+ 
    ///// LED status blink
    d=millis()-sLEDmillis;
    if(d>3000)// max 3 sek

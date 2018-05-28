@@ -26,21 +26,25 @@ typedef struct
   unsigned long czas_trwania_s;    //czas trwania
   uint8_t sekwencja;
   uint8_t co_ile_dni;
+  bool aktywny;
 }Program;
 
 class CConfig
 {
   uint16_t progIle=0;
   Program prTab[MAX_PROGR];
+  char sekcjeLbl[8];
   char tryb; 
   public:
-    CConfig(){};
+    CConfig(){for(int i=0;i<8;i++)sekcjeLbl[i]=0;};
     void begin();
     bool loadConfig();
+    bool loadJSON( JsonObject& json, DynamicJsonBuffer jsonBuffer, const char *nazwaPliku);
     bool saveConfig();
+    bool saveConfigStr(const char *nazwaPliku,const char * str);
 
-    void setProg(Program &a,uint8_t dzien, uint8_t mies, uint16_t rok,  uint8_t h, uint8_t m,  uint8_t s,  unsigned long czas_trwania_s,uint8_t co_ile_dni,  uint8_t sekwencja);
-     void setProg(Program &a,time_t data,time_t godzina,  unsigned long czas_trwania_s,uint8_t co_ile_dni,  uint8_t sekwencja);
+    void setProg(Program &a,uint8_t dzien, uint8_t mies, uint16_t rok,  uint8_t h, uint8_t m,  uint8_t s,  unsigned long czas_trwania_s,uint8_t co_ile_dni,  uint8_t sekwencja, bool aktywny);
+     void setProg(Program &a,time_t data,time_t godzina,  unsigned long czas_trwania_s,uint8_t co_ile_dni,  uint8_t sekwencja, bool aktywny);
     void setProg(Program &a, Program &b);
     void addProg(Program p);
     void publishProg(Program &p,uint8_t i=-1);

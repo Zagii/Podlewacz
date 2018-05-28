@@ -11,16 +11,36 @@ void CWifi::wifiReconnect()
  // delay(1000);
  // DPRINTLN("  Debug CWifi::wifiReconnect end"); 
 }
-
+void CWifi::setNTP(const char* host,unsigned long offset)
+{
+  strcpy(ntp_server,host);
+  timeClient->end();
+  delete timeClient;
+  timeClient=new NTPClient(ntpUDP, ntp_server, offset, 60000);
+  timeClient->begin();
+}
+void CWifi::zmianaAP(const char* ssid,const char* pwd)
+{
+  if(wifiMulti) delete wifiMulti;
+  wifiMulti=new ESP8266WiFiMulti();
+  wifiMulti->addAP(ssid,pwd);
+  
+}
 void CWifi::begin()
 {
   DPRINTLN("Debug CWifi::begin start"); 
  
+ strcpy(mqtt_server,"broker.hivemq.com");
+
+
+uint16_t mqtt_port=1883;
+  
   WiFi.mode(WIFI_STA);
   wifiReconnect();
-  wifiMulti.addAP("DOrangeFreeDom", "KZagaw01_ruter_key");
-  wifiMulti.addAP("open1.t-mobile.pl");
-  wifiMulti.addAP("InstalujWirusa", "BlaBlaBla123");
+  wifiMulti=new ESP8266WiFiMulti();
+  wifiMulti->addAP("DOrangeFreeDom", "KZagaw01_ruter_key");
+  wifiMulti->addAP("open1.t-mobile.pl");
+  wifiMulti->addAP("InstalujWirusa", "BlaBlaBla123");
 
   client.setClient(espClient);
   client.setServer(mqtt_server, mqtt_port);
@@ -40,7 +60,7 @@ bool CWifi::getWifiStatusString(char *b)
     return true;
   }else
   {
-    sprintf(b,"Wifi Connection Error. status= %d",wifiMulti.run());
+    sprintf(b,"Wifi Connection Error. status= %d",wifiMulti->run());
  // sprintf(b,"Wifi Connection Error. status= %d",WiFi.status());
     return false; 
   }
@@ -78,9 +98,19 @@ bool CWifi::wifiConnected()
 {
  // return wifiMulti.run() == WL_CONNECTED;
 // if (WiFi.status()==WL_CONNECTED)return true; else return false;
- if (wifiMulti.run()==WL_CONNECTED)return true; else return false;
+ if (wifiMulti->run()==WL_CONNECTED)return true; else return false;
 }
-
+void CWifi::setupMqtt(const char* host, uint16_t port,const char * usr,const char* pwd)
+{
+  client.disconnect();
+  strcpy(mqtt_server,host); 
+  mqtt_port=port; 
+  strcpy(mqtt_user, usr);
+  strcpy(mqtt_pass,pwd);
+  client.setServer(mqtt_server, mqtt_port);
+  reconnectMQTT();
+  
+}
 
 bool CWifi::reconnectMQTT()
 {

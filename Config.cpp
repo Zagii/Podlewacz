@@ -22,18 +22,19 @@ void CConfig::begin()
   }  
 }
 
- bool CConfig::loadJSON( JsonObject& json, DynamicJsonBuffer jsonBuffer, const char *nazwaPliku)
+ JsonObject& CConfig::loadJSON(  DynamicJsonBuffer jsonBuffer, const char *nazwaPliku)
  {
+  JsonObject& js=jsonBuffer.createObject();
   File configFile = SPIFFS.open(nazwaPliku, "r");
   if (!configFile) {
      DPRINT("Blad odczytu pliku ");DPRINTLN(nazwaPliku);
-   return false;
+   return js;
   }
 
   size_t size = configFile.size();
   if (size > 2048) {
     DPRINT("Za duży plik ");DPRINTLN(nazwaPliku);
-    return false;
+    return js;
   }
 
   // Allocate a buffer to store contents of the file.
@@ -46,15 +47,15 @@ void CConfig::begin()
   yield();
   const size_t bufferSize = JSON_ARRAY_SIZE(2) + 10*JSON_ARRAY_SIZE(6) + JSON_OBJECT_SIZE(1) + 80;
   
-  json = jsonBuffer.parseObject(buf.get());
+  JsonObject& json = jsonBuffer.parseObject(buf.get());
 
   if (!json.success()) {
     DPRINT("Blad parsowania json ");DPRINTLN(nazwaPliku);
-    return false;
+    return js;
   }
-  
+ 
   //uint8_t n = json["n"]; // progIle
-  return true;
+  return json;
  }
 
 bool CConfig::loadConfig() {
@@ -144,6 +145,18 @@ bool CConfig::saveConfig() {
   root.printTo(configFile);
   return true;
 }
+
+
+
+void CConfig::setSekcjaLbl(uint8_t id,const char* lbl)
+{
+  strcpy(sekcjeLbl[id],lbl);
+}
+const char* CConfig::getSekcjaLbl(uint8_t id)
+{
+  return sekcjeLbl[id];
+}
+
 
 //----------------------------------------------------
 void CConfig::setProg(Program &a,uint8_t dzien, uint8_t mies, uint16_t rok,  uint8_t h, uint8_t m,  uint8_t s,  unsigned long czas_trwania_s,uint8_t co_ile_dni,  uint8_t sekwencja, bool aktywny)

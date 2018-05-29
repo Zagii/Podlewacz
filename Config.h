@@ -18,6 +18,12 @@
 #define TRYB_AUTO 'a'
 #define TRYB_MANUAL 'm'
 
+#define PLIK_NTP "NPT.json"
+#define PLIK_MQTT "NPT.json"
+#define PLIK_LBL "LBL.json"
+#define PLIK_TRYB "TRYB.json"
+#define PLIK_WIFI "Wifi.json"
+
 typedef struct 
 {
   time_t dataOdKiedy; //dzien przedstawia date od kiedy podlewac dla godz 00:00:00, 
@@ -33,13 +39,13 @@ class CConfig
 {
   uint16_t progIle=0;
   Program prTab[MAX_PROGR];
-  char sekcjeLbl[8];
+  char sekcjeLbl[8][16];
   char tryb; 
   public:
-    CConfig(){for(int i=0;i<8;i++)sekcjeLbl[i]=0;};
+    CConfig(){for(int i=0;i<8;i++)strcpy(sekcjeLbl[i],"");};
     void begin();
     bool loadConfig();
-    bool loadJSON( JsonObject& json, DynamicJsonBuffer jsonBuffer, const char *nazwaPliku);
+    JsonObject& loadJSON( DynamicJsonBuffer jsonBuffer, const char *nazwaPliku);
     bool saveConfig();
     bool saveConfigStr(const char *nazwaPliku,const char * str);
 
@@ -55,6 +61,8 @@ class CConfig
     uint8_t wlaczoneSekcje(time_t sysczas_s);
     void setTryb(char t){tryb=t; DPRINT("nowy TRYB=");DPRINTLN(t);};
     char getTryb(){return tryb;};
+    void setSekcjaLbl(uint8_t id,const char* lbl);
+    const char* getSekcjaLbl(uint8_t id);
 };
 
 

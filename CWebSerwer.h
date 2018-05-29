@@ -36,6 +36,7 @@ class CWebSerwer
      void publikujStanSekcji(uint8_t stan);
      String getContentType(String filename);
      bool handleFileRead(String path);
+     void sendWebSocket(const char *str){ webSocket->broadcastTXT(str);};
   
 };
 #endif

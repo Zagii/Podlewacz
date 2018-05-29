@@ -56,6 +56,11 @@ bool czekaNaPublikacjeStanuMQTT=false;
 bool czekaNaPublikacjeStanuWS=false;
 bool czekaNaPublikacjeStanuHW=false;
 
+bool czekaNaPublikacjeLBL=false;
+bool czekaNaPublikacjePROG=false;
+bool czekaNaPublikacjeKONF=false;
+bool czekaNaPublikacjeSTAT=false;
+
 uint8_t publicID=0;
 unsigned long publicMillis=0;
 
@@ -312,6 +317,30 @@ void publikujStanSekcjiMQTT()
       czasLokalny=atoi(msg);
       return;
     }
+    ind=strstr(topic,"GET");
+    if(ind!=NULL)
+    {
+       ind=strstr(msg,"SLBL");
+       if(ind!=NULL)
+       {
+          czekaNaPublikacjeLBL=true;
+       }
+       ind=strstr(msg,"PROG");
+       if(ind!=NULL)
+       {
+        czekaNaPublikacjePROG=true;
+       }
+       ind=strstr(msg,"KONF");
+       if(ind!=NULL)
+       {
+        czekaNaPublikacjeKONF=true;
+       }
+       ind=strstr(msg,"STAT");
+       if(ind!=NULL)
+       {
+        czekaNaPublikacjeSTAT=true;
+       }
+    }
     //////////////////////// komendy ktore maja jsona jako msg /////////////////////////
     StaticJsonBuffer<200> jsonBuffer;
     JsonObject& json = jsonBuffer.parseObject(msg);
@@ -327,6 +356,7 @@ void publikujStanSekcjiMQTT()
       unsigned long offset=json["offset"];
       wifi.setNTP(host,offset);
       // zapisz do pliku
+      conf.saveConfigStr(PLIK_NTP,msg);
     }
     
     ind=strstr(topic,"Wifi");
@@ -338,6 +368,7 @@ void publikujStanSekcjiMQTT()
       if(strcmp(tryb,"STA")==0)
       {
         wifi.zmianaAP(ssid,pass);
+        conf.saveConfigStr(PLIK_WIFI,msg);
         // zapisz do pliku
       }else
       {/// utworzyc AP
@@ -353,17 +384,23 @@ void publikujStanSekcjiMQTT()
       const char* pwd=json["pwd"];
       wifi.setupMqtt(json["host"],json["port"],json["user"],json["pwd"]);
       // zapisz do pliku
+      conf.saveConfigStr(PLIK_NTP,msg);
     }
     ind=strstr(topic,"LBL");
     if(ind!=NULL)
     {
+      uint8_t id=json["id"];
+      const char* lbl=json["lbl"];
+      conf.setSekcjaLbl(id,lbl);
+      String str;
+      for(int i=0;i<8;i++)
+      {
+        str+="{\"id\":"+String(i)+",\"lbl\":\""+String(conf.getSekcjaLbl(i))+"\"}";
+      }
       
+      conf.saveConfigStr(PLIK_LBL,str.c_str());
     }
-    ind=strstr(topic,"GET");
-    if(ind!=NULL)
-    {
-      
-    }
+    
     ind=strstr(topic,"PROG");
     if(ind!=NULL)
     {
@@ -431,7 +468,32 @@ void loop()
         czekaNaPublikacjeStanuWS=false;     
     }
     
-   
+   if(czekaNaPublikacjeLBL)
+   {
+      String str;
+      for(int i=0;i<8;i++)
+      {
+        str="{\"id\":"+String(i)+",\"lbl\":\""+String(conf.getSekcjaLbl(i))+"\"}";
+        web.sendWebSocket(str.c_str());
+        char tmpTopic[MAX_TOPIC_LENGHT];
+        sprintf(tmpTopic,"%s/LBL/",wifi.getOutTopic());
+        wifi.RSpisz((const char*)tmpTopic,(char*)str.c_str());
+      }
+            
+      czekaNaPublikacjeLBL=false;
+   }
+   if(czekaNaPublikacjePROG)
+   {
+    czekaNaPublikacjePROG=false;
+   }
+   if(czekaNaPublikacjeKONF)
+   {
+    czekaNaPublikacjeKONF=false;
+   }
+   if(czekaNaPublikacjeSTAT)
+   {
+    czekaNaPublikacjeSTAT=false;
+   }
    
   ///////////////////// status LED /////////////////////////
             switch(wifi.getConStat())

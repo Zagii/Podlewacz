@@ -123,7 +123,7 @@
     //  a(w<<nr);
        // let jsonOb={ "SEKCJA/"+nr+"\"", "msg":w };
         //let msg=JSON.stringify(jsonOb);
-		let msg="{ \"SEKCJA/"+nr+"\", \"msg\":\""+w+"\" }";
+		let msg="{ \"SEKCJA/"+nr+"\":"+w+"}";
         console.log("sendStan msg="+msg );
     //  deb("sendStan msg="+msg);
         W.send(msg);   

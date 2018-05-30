@@ -1,5 +1,25 @@
 #include "Config.h"
 
+bool CConfig::loadConfigSekcjeLBL()
+{
+  //const size_t bufferSize = JSON_ARRAY_SIZE(2) + 10*JSON_ARRAY_SIZE(6) + JSON_OBJECT_SIZE(1) + 80;
+   DynamicJsonBuffer jsonBuffer;//(bufferSize);
+  // DynamicJsonBuffer* jB=*jsonBuffer;
+   JsonObject& js=loadJSON(&jsonBuffer, PLIK_LBL);
+   if(js.containsKey("LBL"))
+   {
+    JsonArray& ar = js["LBL"];
+    for (auto& j : ar) {
+       int id = j["id"];
+       const char* l = j["lbl"];
+       setSekcjaLbl(id,l);
+    }
+    return true;
+   }else
+   {
+    return false;
+    }
+}
 
 void CConfig::begin()
 {
@@ -20,11 +40,16 @@ void CConfig::begin()
   } else {
     DPRINTLN("Config loaded");
   }  
+  if(!loadConfigSekcjeLBL()) {
+    DPRINTLN("Failed to load config SekcjeLBL");
+  } else {
+    DPRINTLN("Config SekcjeLBL loaded");
+  }  
 }
 
- JsonObject& CConfig::loadJSON(  DynamicJsonBuffer jsonBuffer, const char *nazwaPliku)
+ JsonObject& CConfig::loadJSON(  DynamicJsonBuffer * jsonBuffer, const char *nazwaPliku)
  {
-  JsonObject& js=jsonBuffer.createObject();
+  JsonObject& js=jsonBuffer->createObject();
   File configFile = SPIFFS.open(nazwaPliku, "r");
   if (!configFile) {
      DPRINT("Blad odczytu pliku ");DPRINTLN(nazwaPliku);
@@ -45,9 +70,9 @@ void CConfig::begin()
   // use configFile.readString instead.
   configFile.readBytes(buf.get(), size);
   yield();
-  const size_t bufferSize = JSON_ARRAY_SIZE(2) + 10*JSON_ARRAY_SIZE(6) + JSON_OBJECT_SIZE(1) + 80;
   
-  JsonObject& json = jsonBuffer.parseObject(buf.get());
+  
+  JsonObject& json = jsonBuffer->parseObject(buf.get());
 
   if (!json.success()) {
     DPRINT("Blad parsowania json ");DPRINTLN(nazwaPliku);
@@ -111,6 +136,8 @@ bool CConfig::saveConfigStr(const char *nazwaPliku,const char * str) {
     return false;
   }
   configFile.println(str);
+  configFile.close();
+  DPRINTLN("save [OK]");
   return true;
 }
 
@@ -143,6 +170,7 @@ bool CConfig::saveConfig() {
   }
   root.printTo(Serial);
   root.printTo(configFile);
+  configFile.close();
   return true;
 }
 
@@ -150,6 +178,7 @@ bool CConfig::saveConfig() {
 
 void CConfig::setSekcjaLbl(uint8_t id,const char* lbl)
 {
+  DPRINT("SEKCJA id=");DPRINT(id);DPRINT("lbl=");DPRINTLN(lbl);
   strcpy(sekcjeLbl[id],lbl);
 }
 const char* CConfig::getSekcjaLbl(uint8_t id)

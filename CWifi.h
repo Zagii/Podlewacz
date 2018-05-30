@@ -63,6 +63,7 @@ const char* inTopic="Podlewacz/IN";
 const char* debugTopic="DebugTopic/Podlewacz";
 
 char ntp_server[50];
+unsigned long ntp_offset;
 
 char mqtt_server[50];// ="broker.hivemq.com"; //"m23.cloudmqtt.com";
 char mqtt_user[20];//"aigejtoh";
@@ -100,6 +101,7 @@ uint16_t mqtt_port=1883;
  void wifiScanNetworks();
   void wifiReconnect();
   void setNTP(const char* host,unsigned long offset);
+  String getNTPjsonStr(){ return String("{\"host\":"+String(ntp_server)+"\",\"offset\":"+String(ntp_offset)+"}");};
   void zmianaAP(const char* ssid,const char* pwd);
   void setupMqtt(const char* host, uint16_t port, const char * usr, const char* pwd);
 };

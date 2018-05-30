@@ -89,7 +89,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
     changeSekcja(1,"nowa");
     document.getElementById('godz').addEventListener('change', function() {
         const className = 'error-field';
-        const reg = new RegExp('^[a-zA-Z]{3,}$', 'g');
+        const reg = new RegExp('^[a-zA-Z]{3}$', 'g');
     
         if (!reg.test(this.value)) {
             this.classList.add(className); //dodaję klase do pola

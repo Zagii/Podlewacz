@@ -16,6 +16,7 @@ void CWifi::setNTP(const char* host,unsigned long offset)
   strcpy(ntp_server,host);
   timeClient->end();
   delete timeClient;
+  ntp_offset=offset;
   timeClient=new NTPClient(ntpUDP, ntp_server, offset, 60000);
   timeClient->begin();
 }

@@ -42,10 +42,11 @@ class CConfig
   char sekcjeLbl[8][16];
   char tryb; 
   public:
-    CConfig(){for(int i=0;i<8;i++)strcpy(sekcjeLbl[i],"");};
+    CConfig(){for(int i=0;i<8;i++){strcpy(sekcjeLbl[i],"Sekcja ");char r[3]; strcat(sekcjeLbl[i],itoa (i, r, 10));}};
     void begin();
     bool loadConfig();
-    JsonObject& loadJSON( DynamicJsonBuffer jsonBuffer, const char *nazwaPliku);
+    bool loadConfigSekcjeLBL();
+    JsonObject& loadJSON( DynamicJsonBuffer * jsonBuffer, const char *nazwaPliku);
     bool saveConfig();
     bool saveConfigStr(const char *nazwaPliku,const char * str);
 

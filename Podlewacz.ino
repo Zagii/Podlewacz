@@ -124,7 +124,9 @@ void wse(uint8_t num, WStype_t type, uint8_t * payload, size_t length)
     for (auto kv : root) {
        topic=(char*)kv.key;
        msg=(char*)kv.value.as<char*>();
+        JsonObject& jobj=root[topic];
        DPRINT(topic);DPRINT("=");DPRINTLN(msg);
+       jobj.printTo(Serial);
        
     
     //const char* topic = root["topic"];
@@ -392,12 +394,13 @@ void publikujStanSekcjiMQTT()
       uint8_t id=json["id"];
       const char* lbl=json["lbl"];
       conf.setSekcjaLbl(id,lbl);
-      String str;
+      String str="{\"LBL\":[";
       for(int i=0;i<8;i++)
       {
         str+="{\"id\":"+String(i)+",\"lbl\":\""+String(conf.getSekcjaLbl(i))+"\"}";
+        if(i<7)str+=",";
       }
-      
+      str+="]}";
       conf.saveConfigStr(PLIK_LBL,str.c_str());
     }
     
@@ -474,10 +477,12 @@ void loop()
       for(int i=0;i<8;i++)
       {
         str="{\"id\":"+String(i)+",\"lbl\":\""+String(conf.getSekcjaLbl(i))+"\"}";
-        web.sendWebSocket(str.c_str());
         char tmpTopic[MAX_TOPIC_LENGHT];
         sprintf(tmpTopic,"%s/LBL/",wifi.getOutTopic());
         wifi.RSpisz((const char*)tmpTopic,(char*)str.c_str());
+        String js=String("{\"LBL\":")+str+"}";
+        DPRINTLN(js);
+         web.sendWebSocket(js.c_str());
       }
             
       czekaNaPublikacjeLBL=false;
@@ -488,10 +493,21 @@ void loop()
    }
    if(czekaNaPublikacjeKONF)
    {
+    //ntp
+    String ntpStr=wifi.getNTPjsonStr();
+    char tmpTopic[MAX_TOPIC_LENGHT];
+    sprintf(tmpTopic,"%s/NTP/",wifi.getOutTopic());
+    wifi.RSpisz((const char*) tmpTopic,(char*)ntpStr.c_str());
+    String js=String("{\"NTP\":,")+ntpStr+"}";
+    web.sendWebSocket((const char*)js.c_str());
+    //Wifi
+    //Mqtt
     czekaNaPublikacjeKONF=false;
    }
    if(czekaNaPublikacjeSTAT)
-   {
+   {//tryb
+    //sekcja
+    //geo,temp,czas,cisn,deszcz
     czekaNaPublikacjeSTAT=false;
    }
    

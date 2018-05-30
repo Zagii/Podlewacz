@@ -138,7 +138,7 @@ void CWebSerwer::loop(unsigned long t_s, uint8_t stanSekcji, char* geo, double t
    yield();
    server.handleClient();
    yield();
-   if(clientConnected<=0)return;
+   //if(clientConnected<=0)return;
    if(ostatnioWyslanyCzas_s!=t_s)
    {
     StaticJsonBuffer<200> jsonBuffer;

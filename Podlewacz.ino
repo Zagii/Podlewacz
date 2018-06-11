@@ -123,10 +123,32 @@ void wse(uint8_t num, WStype_t type, uint8_t * payload, size_t length)
     char* msg="";
     for (auto kv : root) {
        topic=(char*)kv.key;
-       msg=(char*)kv.value.as<char*>();
-        JsonObject& jobj=root[topic];
+        DPRINT(topic);DPRINTLN("root[topic]=");//Serial.println(String(root[topic]));
+       if(root[topic].is<const char*>())
+       {
+        DPRINTLN("msg char*");
+          msg=(char*)kv.value.as<char*>();
+       }else 
+       { 
+         if(root[topic].is<JsonObject>())
+         {
+            DPRINTLN(" kv obj ");
+           JsonObject &jo=root[topic];
+           String str;
+           jo.printTo(str);
+           DPRINT("msg JSON: ");DPRINTLN(str);
+         
+           // root[topic].printTo(s);
+            strcpy(msg,str.c_str());
+         }else
+          if(root[topic].is<JsonArray>())
+         {
+          DPRINTLN(" kv array ");
+          }else
+         DPRINTLN(" kv undef... ");
+       }
        DPRINT(topic);DPRINT("=");DPRINTLN(msg);
-       jobj.printTo(Serial);
+      
        
     
     //const char* topic = root["topic"];
@@ -342,6 +364,7 @@ void publikujStanSekcjiMQTT()
        {
         czekaNaPublikacjeSTAT=true;
        }
+       return;
     }
     //////////////////////// komendy ktore maja jsona jako msg /////////////////////////
     StaticJsonBuffer<200> jsonBuffer;

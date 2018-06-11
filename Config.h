@@ -47,6 +47,7 @@ class CConfig
     bool loadConfig();
     bool loadConfigSekcjeLBL();
     JsonObject& loadJSON( DynamicJsonBuffer * jsonBuffer, const char *nazwaPliku);
+    String loadJsonStr(const char* nazwaPliku);
     bool saveConfig();
     bool saveConfigStr(const char *nazwaPliku,const char * str);
 

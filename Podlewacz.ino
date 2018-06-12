@@ -105,10 +105,9 @@ void wse(uint8_t num, WStype_t type, uint8_t * payload, size_t length)
     char* p = (char*)malloc(length+1);
     memcpy(p,payload,length);
     p[length]='\0';
-    DPRINT("wse if type==TEXT: ");DPRINTLN(p);
-    
-    char t[MAX_TOPIC_LENGHT];
-    StaticJsonBuffer<200> jsonBuffer;
+    DPRINT("webSocket TEXT: ");DPRINTLN(p);
+
+    DynamicJsonBuffer jsonBuffer;
     JsonObject& root = jsonBuffer.parseObject(p);
     if (!root.success()) 
     {
@@ -120,49 +119,31 @@ void wse(uint8_t num, WStype_t type, uint8_t * payload, size_t length)
     }
 
     char* topic="";
-    char* msg="";
+    char msg[200]="";
+    
     for (auto kv : root) {
        topic=(char*)kv.key;
         DPRINT(topic);DPRINTLN("root[topic]=");//Serial.println(String(root[topic]));
+     /*   kv.value.prettyPrintTo(Serial); Serial.println(" # ");kv.value.printTo(Serial);*/
        if(root[topic].is<const char*>())
        {
-        DPRINTLN("msg char*");
-          msg=(char*)kv.value.as<char*>();
+          DPRINTLN("msg char*");
+          strcpy(msg,(char*)kv.value.as<char*>());
        }else 
        { 
-         if(root[topic].is<JsonObject>())
-         {
+        if(kv.value.is<JsonObject>())
+        {
             DPRINTLN(" kv obj ");
-           JsonObject &jo=root[topic];
-           String str;
-           jo.printTo(str);
-           DPRINT("msg JSON: ");DPRINTLN(str);
-         
-           // root[topic].printTo(s);
-            strcpy(msg,str.c_str());
-         }else
-          if(root[topic].is<JsonArray>())
+            root[topic].printTo(msg);
+            DPRINT("msg JSON: ");DPRINTLN(msg);
+        }else if(kv.value.is<JsonArray>())
          {
-          DPRINTLN(" kv array ");
-          }else
-         DPRINTLN(" kv undef... ");
+           DPRINTLN(" kv array ");
+         }else DPRINTLN(" kv undef... ");
        }
        DPRINT(topic);DPRINT("=");DPRINTLN(msg);
-      
-       
-    
-    //const char* topic = root["topic"];
-    //const char* msg= root["msg"];
-    // if(topic){ DPRINT("topic: ");DPRINTLN(topic);
-     
-    // if(msg) {DPRINT("msg: ");DPRINTLN(msg);
-   //   if(strstr(topic,"SEKCJA")||strstr(topic,"TRYB"))//sekcja
-    //  {
-     //   strcpy(t,topic);
-       // parsujRozkaz(t,(char*)msg);
-        parsujRozkaz(topic,msg);
-     // }else DPRINTLN("nieznany rozkaz");
-    }
+       parsujRozkaz(topic,msg);
+     }
     free(p);
   }
 }
@@ -367,7 +348,7 @@ void publikujStanSekcjiMQTT()
        return;
     }
     //////////////////////// komendy ktore maja jsona jako msg /////////////////////////
-    StaticJsonBuffer<200> jsonBuffer;
+    DynamicJsonBuffer jsonBuffer;
     JsonObject& json = jsonBuffer.parseObject(msg);
 
     if (!json.success()) {
@@ -405,11 +386,20 @@ void publikujStanSekcjiMQTT()
     {     
       const char* host=json["host"];
       uint16_t port=json["port"];
-      const char* user=json["user"];
-      const char* pwd=json["pwd"];
+       char user[20]="";
+       char pwd[20]="";
+      if(json.containsKey("user"))
+      {
+        strcpy(user,json["user"]);
+      }
+      if(json.containsKey("pwd"))
+      {
+        strcpy(pwd,json["pwd"]);
+      }
       wifi.setupMqtt(json["host"],json["port"],json["user"],json["pwd"]);
       // zapisz do pliku
-      conf.saveConfigStr(PLIK_NTP,msg);
+      conf.saveConfigStr(PLIK_MQTT,msg);
+      czekaNaPublikacjeKONF=true;
     }
     ind=strstr(topic,"LBL");
     if(ind!=NULL)
@@ -425,6 +415,7 @@ void publikujStanSekcjiMQTT()
       }
       str+="]}";
       conf.saveConfigStr(PLIK_LBL,str.c_str());
+      czekaNaPublikacjeLBL=true;
     }
     
     ind=strstr(topic,"PROG");
@@ -517,14 +508,25 @@ void loop()
    if(czekaNaPublikacjeKONF)
    {
     //ntp
-    String ntpStr=wifi.getNTPjsonStr();
+    String tStr=wifi.getNTPjsonStr();
     char tmpTopic[MAX_TOPIC_LENGHT];
     sprintf(tmpTopic,"%s/NTP/",wifi.getOutTopic());
-    wifi.RSpisz((const char*) tmpTopic,(char*)ntpStr.c_str());
-    String js=String("{\"NTP\":,")+ntpStr+"}";
+    wifi.RSpisz((const char*) tmpTopic,(char*)tStr.c_str());
+    String js=String("{\"NTP\":,")+tStr+"}";
     web.sendWebSocket((const char*)js.c_str());
     //Wifi
+    tStr=wifi.getWifijsonStr(); 
+    sprintf(tmpTopic,"%s/Wifi/",wifi.getOutTopic());
+    wifi.RSpisz((const char*) tmpTopic,(char*)tStr.c_str());
+    js=String("{\"Wifi\":,")+tStr+"}";
+    web.sendWebSocket((const char*)js.c_str());
     //Mqtt
+    tStr=wifi.getMQTTjsonStr(); 
+    sprintf(tmpTopic,"%s/Mqtt/",wifi.getOutTopic());
+    wifi.RSpisz((const char*) tmpTopic,(char*)tStr.c_str());
+    js=String("{\"Mqtt\":,")+tStr+"}";
+    web.sendWebSocket((const char*)js.c_str());
+
     czekaNaPublikacjeKONF=false;
    }
    if(czekaNaPublikacjeSTAT)

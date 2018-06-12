@@ -19,7 +19,7 @@
 #define TRYB_MANUAL 'm'
 
 #define PLIK_NTP "NPT.json"
-#define PLIK_MQTT "NPT.json"
+#define PLIK_MQTT "MQTT.json"
 #define PLIK_LBL "LBL.json"
 #define PLIK_TRYB "TRYB.json"
 #define PLIK_WIFI "Wifi.json"
@@ -46,7 +46,7 @@ class CConfig
     void begin();
     bool loadConfig();
     bool loadConfigSekcjeLBL();
-    JsonObject& loadJSON( DynamicJsonBuffer * jsonBuffer, const char *nazwaPliku);
+  
     String loadJsonStr(const char* nazwaPliku);
     bool saveConfig();
     bool saveConfigStr(const char *nazwaPliku,const char * str);

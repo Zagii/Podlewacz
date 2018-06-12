@@ -68,7 +68,7 @@ void CWebSerwer::publikujStanSekcji(uint8_t stan)
  // stanSekcji=stan;
  if(clientConnected<=0)return;
   
-  StaticJsonBuffer<200> jsonBuffer;
+  DynamicJsonBuffer jsonBuffer;
   String jsStr="";
   JsonObject& root = jsonBuffer.createObject();
   root["SEKCJE"]=stan;
@@ -141,7 +141,7 @@ void CWebSerwer::loop(unsigned long t_s, uint8_t stanSekcji, char* geo, double t
    //if(clientConnected<=0)return;
    if(ostatnioWyslanyCzas_s!=t_s)
    {
-    StaticJsonBuffer<200> jsonBuffer;
+    DynamicJsonBuffer jsonBuffer;
     String jsStr="";
     JsonObject& root = jsonBuffer.createObject();
    

@@ -69,6 +69,11 @@ char mqtt_server[50];// ="broker.hivemq.com"; //"m23.cloudmqtt.com";
 char mqtt_user[20];//"aigejtoh";
 char mqtt_pass[20];//"ZFlzjMm4T-XH";
 uint16_t mqtt_port=1883;
+
+char wifi_ssid[50];
+char wifi_pwd[30];
+char wifi_ip[20];
+char wifi_tryb[5];
   
   int conStat=CONN_STAT_NO;
   unsigned long lastMQTTReconnectAttempt = 0;
@@ -101,7 +106,9 @@ uint16_t mqtt_port=1883;
  void wifiScanNetworks();
   void wifiReconnect();
   void setNTP(const char* host,unsigned long offset);
-  String getNTPjsonStr(){ return String("{\"host\":"+String(ntp_server)+"\",\"offset\":"+String(ntp_offset)+"}");};
+  String getNTPjsonStr(){ return  String("{\"host\":\""+String(ntp_server)+"\",\"offset\":"+String(ntp_offset)+"}");};
+  String getMQTTjsonStr(){ return String("{\"host\":\""+String(mqtt_server)+"\",\"port\":"+String(mqtt_port)+",\"user\":\""+String(mqtt_user)+"\",\"pwd\":\""+String(mqtt_pass)+"\"}");};
+  String getWifijsonStr(){ return String("{\"ssid\":\""+String(wifi_ssid)+"\",\"pwd\":"+String(wifi_pwd)+",\"ip\":\""+String(wifi_ip)+"\",\"tryb\":\""+String(wifi_tryb)+"\"}");};
   void zmianaAP(const char* ssid,const char* pwd);
   void setupMqtt(const char* host, uint16_t port, const char * usr, const char* pwd);
 };

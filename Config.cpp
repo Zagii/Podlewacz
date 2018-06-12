@@ -38,7 +38,7 @@ bool CConfig::loadConfigSekcjeLBL()
   // DynamicJsonBuffer* jB=*jsonBuffer;
   String s=loadJsonStr(PLIK_LBL);
   DPRINTLN(s);
-   JsonObject& js= jsonBuffer.parseObject(s);
+   JsonObject& js= jsonBuffer.parse(s);//parseObject(s);
    js.prettyPrintTo(Serial);
     
    if(js.containsKey("LBL"))
@@ -83,42 +83,8 @@ void CConfig::begin()
   }  
 }
 
- JsonObject& CConfig::loadJSON(  DynamicJsonBuffer * jsonBuffer, const char *nazwaPliku)
- {
-  DPRINT("CConfig::loadJSON ");DPRINTLN(nazwaPliku);
-  JsonObject& js=jsonBuffer->createObject();
-  File configFile = SPIFFS.open(nazwaPliku, "r");
-  if (!configFile) {
-     DPRINT("Blad odczytu pliku ");DPRINTLN(nazwaPliku);
-   return js;
-  }
 
-  size_t size = configFile.size();
-  if (size > 2048) {
-    DPRINT("Za duży plik ");DPRINTLN(nazwaPliku);
-    return js;
-  }
 
-  // Allocate a buffer to store contents of the file.
-  std::unique_ptr<char[]> buf(new char[size]);
-
-  // We don't use String here because ArduinoJson library requires the input
-  // buffer to be mutable. If you don't use ArduinoJson, you may as well
-  // use configFile.readString instead.
-  configFile.readBytes(buf.get(), size);
-  yield();
-  
-  
-  JsonObject& json = jsonBuffer->parseObject(buf.get());
-
-  if (!json.success()) {
-    DPRINT("Blad parsowania json ");DPRINTLN(nazwaPliku);
-    return js;
-  }
- json.prettyPrintTo(Serial);
-  //uint8_t n = json["n"]; // progIle
-  return json;
- }
 
 bool CConfig::loadConfig() {
   File configFile = SPIFFS.open(PROGRAM_CONFIG_FILE, "r");
@@ -141,9 +107,9 @@ bool CConfig::loadConfig() {
   // use configFile.readString instead.
   configFile.readBytes(buf.get(), size);
   yield();
-  const size_t bufferSize = JSON_ARRAY_SIZE(2) + 10*JSON_ARRAY_SIZE(6) + JSON_OBJECT_SIZE(1) + 80;
-  DynamicJsonBuffer jsonBuffer(bufferSize);
-  JsonObject& json = jsonBuffer.parseObject(buf.get());
+  //const size_t bufferSize = JSON_ARRAY_SIZE(2) + 10*JSON_ARRAY_SIZE(6) + JSON_OBJECT_SIZE(1) + 80;
+  DynamicJsonBuffer jsonBuffer;
+  JsonObject& json = jsonBuffer.parse(buf.get());
 
   if (!json.success()) {
     DPRINT("Blad parsowania json ");DPRINTLN(PROGRAM_CONFIG_FILE);
@@ -181,9 +147,9 @@ bool CConfig::saveConfigStr(const char *nazwaPliku,const char * str) {
 bool CConfig::saveConfig() {
 
   DPRINT(" saveConfig bufferSize=");
-  const size_t bufferSize = JSON_ARRAY_SIZE(2) + progIle*JSON_ARRAY_SIZE(5) + JSON_OBJECT_SIZE(1);
-  DPRINTLN(bufferSize);
-  DynamicJsonBuffer jsonBuffer(bufferSize);
+ // const size_t bufferSize = JSON_ARRAY_SIZE(2) + progIle*JSON_ARRAY_SIZE(5) + JSON_OBJECT_SIZE(1);
+  //DPRINTLN(bufferSize);
+  DynamicJsonBuffer jsonBuffer;
 
   JsonObject& root = jsonBuffer.createObject();
     root["n"] = progIle;

@@ -267,7 +267,7 @@ String CConfig::publishProgJsonStr(Program &p,uint16_t i)
 {
   DPRINT("publishProgJsonStr: ");
   //{"PROG":{id:x, dt="miliis", "okresS":s, "sekcja": n, "coIle":z, "aktywny":b }}
-  String w="{\"id\":"+i+",\"dt\":"+String(p.dataOdKiedy)+",\"okresS\":"+String(p.czas_trwania_s)+",\"coIle\":"+String(p.co_ile_dni)+",\"sekcja\":"+String(p.sekwencja)+",\"aktywny\":"+String(p.aktywny?1:0)+"}";
+  String w="{\"id\":"+String(i)+",\"dt\":"+String(p.dataOdKiedy)+",\"okresS\":"+String(p.czas_trwania_s)+",\"coIle\":"+String(p.co_ile_dni)+",\"sekcja\":"+String(p.sekwencja)+",\"aktywny\":"+String(p.aktywny?1:0)+"}";
   DPRINTLN(w.c_str());
   return w;
 }

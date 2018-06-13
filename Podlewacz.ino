@@ -505,7 +505,7 @@ void loop()
    {
      char tmpTopic[MAX_TOPIC_LENGHT];
      sprintf(tmpTopic,"%s/PROG/",wifi.getOutTopic());
-    for(uint16_t i=0;i<conf.getTabProgIle();i++)
+    for(uint16_t i=0;i<conf.getProgIle();i++)
     {
       String str=conf.publishTabProgJsonStr(i);
       wifi.RSpisz((const char*)tmpTopic,(char*)str.c_str());

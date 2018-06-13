@@ -350,7 +350,7 @@ void publikujStanSekcjiMQTT()
     //////////////////////// komendy ktore maja jsona jako msg /////////////////////////
     DynamicJsonBuffer jsonBuffer;
     JsonObject& json = jsonBuffer.parseObject(msg);
-
+DPRINT("msg=");DPRINTLN(msg);
     if (!json.success()) {
        DPRINTLN("Blad parsowania json !!!!");
       return;
@@ -396,7 +396,7 @@ void publikujStanSekcjiMQTT()
       {
         strcpy(pwd,json["pwd"]);
       }
-      wifi.setupMqtt(json["host"],json["port"],json["user"],json["pwd"]);
+      wifi.setupMqtt(host,port,user,pwd);
       // zapisz do pliku
       conf.saveConfigStr(PLIK_MQTT,msg);
       czekaNaPublikacjeKONF=true;
@@ -503,6 +503,17 @@ void loop()
    }
    if(czekaNaPublikacjePROG)
    {
+     char tmpTopic[MAX_TOPIC_LENGHT];
+     sprintf(tmpTopic,"%s/PROG/",wifi.getOutTopic());
+    for(uint16_t i=0;i<conf.getTabProgIle();i++)
+    {
+      String str=conf.publishTabProgJsonStr(i);
+      wifi.RSpisz((const char*)tmpTopic,(char*)str.c_str());
+      String js=String("{\"PROG\":")+str+"}";
+      DPRINTLN(js);
+      web.sendWebSocket(js.c_str());
+      delay(1);
+    }
     czekaNaPublikacjePROG=false;
    }
    if(czekaNaPublikacjeKONF)

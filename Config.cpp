@@ -27,6 +27,7 @@ String  CConfig::loadJsonStr(const char* nazwaPliku)
   
   s=configFile.readString();
   configFile.close();
+  DPRINTLN(s.c_str());
   return s;
   
 }
@@ -46,7 +47,8 @@ bool CConfig::loadConfigSekcjeLBL()
     JsonArray& ar = js["LBL"];
     for (auto& j : ar) {
        int id = j["id"];
-       const char* l = j["lbl"];
+       char l[20];
+       strcpy(l, j["lbl"]);
        setSekcjaLbl(id,l);
     }
     return true;
@@ -252,7 +254,7 @@ void CConfig::addProg(Program p)
 
 
 
-void CConfig::publishProg(Program &p,uint8_t i)
+void CConfig::publishProg(Program &p,uint16_t i)
 {
   DPRINT("ID="); DPRINT(i); DPRINT("; ");
   DPRINT("data="); DPRINT(day(p.dataOdKiedy)); DPRINT("-");DPRINT(month(p.dataOdKiedy)); DPRINT("-");DPRINT(year(p.dataOdKiedy)); 
@@ -261,7 +263,18 @@ void CConfig::publishProg(Program &p,uint8_t i)
   DPRINT(" sekwencja="); DPRINT(p.sekwencja); DPRINT(" aktywny=");DPRINTLN(p.aktywny);
   
 }
-
+String CConfig::publishProgJsonStr(Program &p,uint16_t i)
+{
+  DPRINT("publishProgJsonStr: ");
+  //{"PROG":{id:x, dt="miliis", "okresS":s, "sekcja": n, "coIle":z, "aktywny":b }}
+  String w="{\"id\":"+i+",\"dt\":"+String(p.dataOdKiedy)+",\"okresS\":"+String(p.czas_trwania_s)+",\"coIle\":"+String(p.co_ile_dni)+",\"sekcja\":"+String(p.sekwencja)+",\"aktywny\":"+String(p.aktywny?1:0)+"}";
+  DPRINTLN(w.c_str());
+  return w;
+}
+String CConfig::publishTabProgJsonStr(uint16_t i)
+{
+  return publishProgJsonStr(prTab[i],i);
+}
 void CConfig::printCzas(time_t t)
 {
   DPRINT("czas* time_t= ");DPRINT(t); 

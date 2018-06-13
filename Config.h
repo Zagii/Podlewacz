@@ -55,7 +55,10 @@ class CConfig
      void setProg(Program &a,time_t data,time_t godzina,  unsigned long czas_trwania_s,uint8_t co_ile_dni,  uint8_t sekwencja, bool aktywny);
     void setProg(Program &a, Program &b);
     void addProg(Program p);
-    void publishProg(Program &p,uint8_t i=-1);
+    uint16_t getProgIle(){return progIle;}
+    void publishProg(Program &p,uint16_t i=-1);
+    String publishProgJsonStr(Program &p,uint16_t i=-1);
+    String publishTabProgJsonStr(uint16_t i);
     void delProg(uint16_t id);
     void publishAllProg();
     bool checkRangeProg(Program &p,time_t sysczas_s);

@@ -22,6 +22,18 @@ ok in/out // {"TRYB":a/m} ustawienie trybu
   in/out  // {"PROG":{id:x, dt="miliis", "okresS":s, "sekcja": n, "coIle":z, "aktywny":b }}
 ///
 
+{"LBL":[
+                {"id":0,"lbl":"Sekcja 0"},
+                {"id":1,"lbl":"Sekcja nowa"},
+                {"id":2,"lbl":"Sekcja 2"},
+                {"id":3,"lbl":"Sekcja 3"},
+                {"id":4,"lbl":"Sekcja 4"},
+                {"id":5,"lbl":"Sekcja 5"},
+                {"id":6,"lbl":"Sekcja 6"},
+                {"id":7,"lbl":"Sekcja 7"}
+        ]
+}
+
 
 ///// MQTT 
 nodeMCUid="Podlewacz";

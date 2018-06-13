@@ -1,4 +1,5 @@
 let progN=0;
+let jestProg=[];
 let sLbl=["?"];
 
 
@@ -28,7 +29,7 @@ const con=function()
                 console.log(k + " -> " + j[k]);
                 if(["GEO","TEMP","CISN","DESZCZ"].indexOf(k)>=0)
                 {
-                    document.getElementById(k.toLowerCase()).innerHTML=j[k];
+                   // document.getElementById(k.toLowerCase()).innerHTML=j[k];
                 }
                 if(["Wifi","Mqtt","NTP","Time"].indexOf(k)>=0)
                 {
@@ -46,8 +47,7 @@ const con=function()
         }
         if(j.hasOwnProperty("LBL"))
         {
-                G.setLbl(j.LBL.id,j.LBL.lbl);
-                if(!G.getLbl(j.LBL.id))
+                if(G.getLbl(j.LBL.id).length<=0)
                 {
                     addSekcja(j.LBL.id,j.LBL.lbl);    
                 }else
@@ -60,6 +60,17 @@ const con=function()
             G.setCzas(j["CZAS"]);
             document.getElementById('czas').value=G.getGodz();
             document.getElementById('data').value=G.getDtStr();
+        }
+        if(j.hasOwnProperty("PROG"))
+        {
+            let js=j.PROG;
+            if(jestProg[js.id]==0)
+            {
+                progN=addProg(js.id,js.dt,js.okresS,js.coIle,js.sekcja,js.aktywny);
+            }else
+            {
+                ///zmien prog
+            }
         }      
     };
 
@@ -73,20 +84,20 @@ document.addEventListener("DOMContentLoaded", function(event) {
     W=new wsConn(con,dc,msg);
     G=new global();    
     W.begin(3);
-   
+    for(let i=0;i<7;i++)jestProg[i]=0;
     for(let i=0;i<7;i++)
     {
         progN=addProg(i,i*10000,i*100,i,i+1,i%2)
     }
-    for(let i=1;i<7;i++)
+    /*for(let i=1;i<7;i++)
     {
         
         G.setLbl(i,"Sek"+i);
         console.log("Dodaje: "+i);
         addSekcja(i,G.getLbl(i));
         changeSekcja(i,G.getLbl(i)+"opt");
-    }
-    changeSekcja(1,"nowa");
+    }*/
+  //  changeSekcja(1,"nowa");
     document.getElementById('godz').addEventListener('change', function() {
         const className = 'error-field';
         const reg = new RegExp('^[a-zA-Z]{3}$', 'g');
@@ -128,7 +139,7 @@ function addProgBtn()
 
 function addProg(i,dd,ile_s,coIle_d,sek,akt) {
     console.log("add: "+i);
-    
+    jestProg[i]=1;
     dt=new Date(dd);
     let w = document.createElement("div"); 
     w.className="w3-row w3-center w3-padding-16 w3-section";

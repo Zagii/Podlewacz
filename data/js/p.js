@@ -31,6 +31,10 @@ const con=function()
                 {
                    // document.getElementById(k.toLowerCase()).innerHTML=j[k];
                 }
+                if(["INIT_PROGS"].indexOf(k)>=0)
+                {
+                    initProgs();
+                }
                 if(["Wifi","Mqtt","NTP","Time"].indexOf(k)>=0)
                 {
                     let m=j[k];
@@ -64,12 +68,13 @@ const con=function()
         if(j.hasOwnProperty("PROG"))
         {
             let js=j.PROG;
-            if(jestProg[js.id]==0)
+            if(!jestProg[js.id]||jestProg[js.id]==0)
             {
                 progN=addProg(js.id,js.dt,js.okresS,js.coIle,js.sekcja,js.aktywny);
             }else
             {
                 ///zmien prog
+                changeProg(js.id,js.dt,js.okresS,js.coIle,js.sekcja,js.aktywny);
             }
         }      
     };
@@ -84,11 +89,11 @@ document.addEventListener("DOMContentLoaded", function(event) {
     W=new wsConn(con,dc,msg);
     G=new global();    
     W.begin(3);
-    for(let i=0;i<7;i++)jestProg[i]=0;
-    for(let i=0;i<7;i++)
+    for(let i=0;i<7;i++){jestProg[i]=0;}
+    /*for(let i=0;i<7;i++)
     {
         progN=addProg(i,i*10000,i*100,i,i+1,i%2)
-    }
+    }*/
     /*for(let i=1;i<7;i++)
     {
         
@@ -136,11 +141,40 @@ function addProgBtn()
   console.log(" po add: "+progN);
     
 }
-
+function changeProg(i,dd,ile_s,coIle_d,sek,akt) {
+    console.log("changeProg: "+i);
+  //  let w = document.getElementById("ProgW"+i);
+  let dt=new Date(dd);
+  document.getElementById("ProgDay"+i).innerHTML= G.getDzien(dt.getUTCDay());
+  document.getElementById("ProgGodz"+i).innerHTML= dt.getUTCHours().toString().padStart(2,"0")+":"+dt.getUTCMinutes().toString().padStart(2,"0")+":"+dt.getUTCSeconds().toString().padStart(2,"0")
+  document.getElementById("ProgIles"+i).innerHTML= ile_s;
+  document.getElementById("ProgCoIle"+i).innerHTML=coIle_d;
+  document.getElementById("prListSekLbl"+i).innerHTML=G.getLbl(sek);
+  changeProgAkt(i, akt);
+}
+function changeProgAkt(i, a)
+{
+    let el=document.getElementById("Prog"+i);
+    if(a==0)
+    {
+      el.className="fas fa-toggle-off w3-xlarge";
+      document.getElementById("ProgTXT"+i).innerHTML="Nieaktywny";
+      el.setAttribute('data-stan',0);
+      document.getElementById("ProgW"+i).classList.remove('w3-light-grey');
+      document.getElementById("ProgW"+i).classList.add('w3-dark-grey');
+    }else
+    {
+      el.className="fas fa-toggle-on w3-xlarge";
+      document.getElementById("ProgTXT"+i).innerHTML="Aktywny";
+      el.setAttribute('data-stan',1);
+      document.getElementById("ProgW"+i).classList.add('w3-light-grey');
+      document.getElementById("ProgW"+i).classList.remove('w3-dark-grey');
+    }
+}
 function addProg(i,dd,ile_s,coIle_d,sek,akt) {
     console.log("add: "+i);
     jestProg[i]=1;
-    dt=new Date(dd);
+    let dt=new Date(dd);
     let w = document.createElement("div"); 
     w.className="w3-row w3-center w3-padding-16 w3-section";
     if(akt)w.classList.add("w3-light-grey");
@@ -150,11 +184,11 @@ function addProg(i,dd,ile_s,coIle_d,sek,akt) {
     k.className="w3-third w3-section";
     c1a=document.createElement("div");
     c1a.className="w3-half w3-section";
-    c1a.innerHTML="<i>Dzień tygodnia</i><br><h4>"+G.getDzien(dt.getUTCDay())+"</h4>";
+    c1a.innerHTML="<i>Dzień tygodnia</i><br><h4 id=\"ProgDay"+i+"\">"+G.getDzien(dt.getUTCDay())+"</h4>";
     k.appendChild(c1a);
     c1b=document.createElement("div");
     c1b.className="w3-half w3-section";
-    c1b.innerHTML="<i>Start</i><br><h4>"+ dt.getUTCHours().toString().padStart(2,"0")+":"+dt.getUTCMinutes().toString().padStart(2,"0")+":"+dt.getUTCSeconds().toString().padStart(2,"0")+"</h4>";
+    c1b.innerHTML="<i>Start</i><br><h4 id=\"ProgGodz"+i+"\">"+ dt.getUTCHours().toString().padStart(2,"0")+":"+dt.getUTCMinutes().toString().padStart(2,"0")+":"+dt.getUTCSeconds().toString().padStart(2,"0")+"</h4>";
 
     k.appendChild(c1b);
     w.appendChild(k);
@@ -163,11 +197,11 @@ function addProg(i,dd,ile_s,coIle_d,sek,akt) {
     k.className="w3-third w3-section";
     c2a=document.createElement("div");
     c2a.className="w3-half w3-section";
-    c2a.innerHTML="<i>Długość[s]</i><br><h4>"+ ile_s+"</h4>";
+    c2a.innerHTML="<i>Długość[s]</i><br><h4 id=\"ProgIles"+i+"\">"+ ile_s+"</h4>";
     k.appendChild(c2a);
     c2b=document.createElement("div");
     c2b.className="w3-half w3-section";
-    c2b.innerHTML="<i>Cykliczność [x dni]</i><br><h4>"+ coIle_d+"</h4>";
+    c2b.innerHTML="<i>Cykliczność [x dni]</i><br><h4 id=\"ProgCoIle"+i+"\">"+ coIle_d+"</h4>";
     k.appendChild(c2b);
 	w.appendChild(k);
 	
@@ -187,6 +221,7 @@ function addProg(i,dd,ile_s,coIle_d,sek,akt) {
     c3b.innerHTML="<div class=\"w3-full\"><i>Opcje</i></div>";
     c3b1=document.createElement("div");
     c3b1.className="w3-half w3-section";
+    c3b1.id="ProgAkt"+i;
     if(akt)
     {
      c3b1.innerHTML="<i class=\"fas fa-toggle-on w3-xlarge\" id=\"Prog"+i+"\" data-stan='1'></i><br><i id=\"ProgTXT"+i+"\">Aktywny</i>";//<br>aktywny"; 
@@ -194,24 +229,8 @@ function addProg(i,dd,ile_s,coIle_d,sek,akt) {
     {
      c3b1.innerHTML="<i class=\"fas fa-toggle-off w3-xlarge\" id=\"Prog"+i+"\" data-stan='0'></i><br><i id=\"ProgTXT"+i+"\">Nieaktywny</i>";//<br>nieaktywny";  
     }
-   c3b1.addEventListener('click',function(){
-       let el=document.getElementById("Prog"+i);
-      if(el.getAttribute('data-stan')==1)
-      {
-        el.className="fas fa-toggle-off w3-xlarge";
-        document.getElementById("ProgTXT"+i).innerHTML="Nieaktywny";
-        el.setAttribute('data-stan',0);
-        document.getElementById("ProgW"+i).classList.remove('w3-light-grey');
-        document.getElementById("ProgW"+i).classList.add('w3-dark-grey');
-      }else
-      {
-        el.className="fas fa-toggle-on w3-xlarge";
-        document.getElementById("ProgTXT"+i).innerHTML="Aktywny";
-        el.setAttribute('data-stan',1);
-        document.getElementById("ProgW"+i).classList.add('w3-light-grey');
-        document.getElementById("ProgW"+i).classList.remove('w3-dark-grey');
-      }
-   });
+   c3b1.addEventListener('click',function(){changeProgAkt(i, akt) });
+
     c3b.appendChild(c3b1);
     c3b2=document.createElement("div");
     c3b2.className="w3-half w3-section";
@@ -223,10 +242,32 @@ function addProg(i,dd,ile_s,coIle_d,sek,akt) {
     foo.appendChild(w);
    return i;
   }
-  function delProg(i){
-    if(confirm("Czy chcesz usunąć program? "+i))
+  function initProgs()
+  {
+    for(let i=0;i<progN;i++)
     {
-        alert("usuwam");
+        jestProg[i]=0;
+        let w=document.getElementById("ProgW"+i);
+        if(w){ w.parentNode.removeChild(w);}
+    }
+    
+    progN=0;
+    
+  }
+  function delProg(i){
+      let str="Potwierdź usunięcie programu "+i+"\n";
+          str+="Dzień: "+ document.getElementById("ProgDay"+i).innerHTML+"\n";
+          str+="Godzina: " +document.getElementById("ProgGodz"+i).innerHTML+"\n";
+          str+="Czas trwania [s]: "+document.getElementById("ProgIles"+i).innerHTML+"\n";
+          str+="Częstotliwość [dni]: "+document.getElementById("ProgCoIle"+i).innerHTML+"\n";
+          str+="Sekcja: "+document.getElementById("prListSekLbl"+i).innerHTML+"\n";
+            
+    if(confirm(str))
+    {
+        let js="{\"DEL_PROG\":"+i+"}";
+        console.log(js);
+        W.send(js);       
+
     }
 }
 function delSekcje()

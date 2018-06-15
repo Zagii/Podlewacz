@@ -139,7 +139,11 @@ void wse(uint8_t num, WStype_t type, uint8_t * payload, size_t length)
         }else if(kv.value.is<JsonArray>())
          {
            DPRINTLN(" kv array ");
-         }else DPRINTLN(" kv undef... ");
+         }else  if(kv.value.is<unsigned int>())
+         {
+          DPRINTLN(" kv uint ");
+          itoa ((uint8_t)kv.value.as<unsigned int>(), msg, 10);
+          }else {   DPRINTLN(" kv undef... ");   }
        }
        DPRINT(topic);DPRINT("=");DPRINTLN(msg);
        parsujRozkaz(topic,msg);
@@ -458,7 +462,7 @@ void loop()
    if(d>3000)// max 3 sek
    {
      sLEDmillis=millis();
-     DPRINT( "[");DPRINT(wifi.getTimeString());DPRINT("] ");DPRINTLN(wifi.getEpochTime());
+    // DPRINT( "[");DPRINT(wifi.getTimeString());DPRINT("] ");DPRINTLN(wifi.getEpochTime());
      if(conf.getTryb()==TRYB_AUTO) // test czy programator każe wlączyć
      {
       uint8_t sekcjaProg=conf.wlaczoneSekcje(wifi.getEpochTime());

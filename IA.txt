@@ -1,4 +1,4 @@
-http://arduino-esp8266.readthedocs.io/en/latest/exception_causes.html
+  http://arduino-esp8266.readthedocs.io/en/latest/exception_causes.html
 
 in- przychodzi z serwera (nodeMCU)
 out - wysyłane na serwer (nodeMCU)

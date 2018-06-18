@@ -214,6 +214,15 @@ conf.publishAllProg();
 conf.saveConfig();
 */
 conf.publishAllProg();
+
+//////////////// odczyt WiFi
+String wifiJson=conf.loadJsonStr(PLIK_WIFI);
+DPRINT("Konfig wifi:");DPRINTLN(wifiJson);
+wifi.zmianaAP(wifiJson);
+String mqttJson=conf.loadJsonStr(PLIK_MQTT);
+DPRINT("Konfig mqtt:");DPRINTLN(mqttJson);
+wifi.setupMqtt(mqttJson);
+
 web.begin();
 WebSocketsServer * webSocket=web.getWebSocket();
 webSocket->onEvent(wse);
@@ -354,11 +363,17 @@ void publikujStanSekcjiMQTT()
     //////////////////////// komendy ktore maja jsona jako msg /////////////////////////
     DynamicJsonBuffer jsonBuffer;
     JsonObject& json = jsonBuffer.parseObject(msg);
-DPRINT("msg=");DPRINTLN(msg);
+    DPRINT("msg=");DPRINTLN(msg);
     if (!json.success()) {
        DPRINTLN("Blad parsowania json !!!!");
       return;
     }
+    DPRINTLN("Parsowanie zagniezdzonego jsona");
+    String jsS;
+    json.printTo(Serial);
+    Serial.println();
+    json.printTo(jsS);
+    DPRINTLN(jsS);
     ind=strstr(topic,"NTP");
     if(ind!=NULL)
     {
@@ -366,7 +381,7 @@ DPRINT("msg=");DPRINTLN(msg);
       unsigned long offset=json["offset"];
       wifi.setNTP(host,offset);
       // zapisz do pliku
-      conf.saveConfigStr(PLIK_NTP,msg);
+      conf.saveConfigStr(PLIK_NTP,jsS.c_str());
     }
     
     ind=strstr(topic,"Wifi");
@@ -378,7 +393,7 @@ DPRINT("msg=");DPRINTLN(msg);
       if(strcmp(tryb,"STA")==0)
       {
         wifi.zmianaAP(ssid,pass);
-        conf.saveConfigStr(PLIK_WIFI,msg);
+        conf.saveConfigStr(PLIK_WIFI,jsS.c_str());
         // zapisz do pliku
       }else
       {/// utworzyc AP
@@ -402,7 +417,7 @@ DPRINT("msg=");DPRINTLN(msg);
       }
       wifi.setupMqtt(host,port,user,pwd);
       // zapisz do pliku
-      conf.saveConfigStr(PLIK_MQTT,msg);
+      conf.saveConfigStr(PLIK_MQTT,jsS.c_str());
       czekaNaPublikacjeKONF=true;
     }
     ind=strstr(topic,"LBL");
@@ -492,7 +507,7 @@ void loop()
    if(czekaNaPublikacjeLBL)
    {
       String str;
-      for(int i=0;i<8;i++)
+      for(int i=1;i<7;i++)
       {
         str="{\"id\":"+String(i)+",\"lbl\":\""+String(conf.getSekcjaLbl(i))+"\"}";
         char tmpTopic[MAX_TOPIC_LENGHT];
@@ -527,19 +542,19 @@ void loop()
     char tmpTopic[MAX_TOPIC_LENGHT];
     sprintf(tmpTopic,"%s/NTP/",wifi.getOutTopic());
     wifi.RSpisz((const char*) tmpTopic,(char*)tStr.c_str());
-    String js=String("{\"NTP\":,")+tStr+"}";
+    String js=String("{\"NTP\":")+tStr+"}";
     web.sendWebSocket((const char*)js.c_str());
     //Wifi
     tStr=wifi.getWifijsonStr(); 
     sprintf(tmpTopic,"%s/Wifi/",wifi.getOutTopic());
     wifi.RSpisz((const char*) tmpTopic,(char*)tStr.c_str());
-    js=String("{\"Wifi\":,")+tStr+"}";
+    js=String("{\"Wifi\":")+tStr+"}";
     web.sendWebSocket((const char*)js.c_str());
     //Mqtt
     tStr=wifi.getMQTTjsonStr(); 
     sprintf(tmpTopic,"%s/Mqtt/",wifi.getOutTopic());
     wifi.RSpisz((const char*) tmpTopic,(char*)tStr.c_str());
-    js=String("{\"Mqtt\":,")+tStr+"}";
+    js=String("{\"Mqtt\":")+tStr+"}";
     web.sendWebSocket((const char*)js.c_str());
 
     czekaNaPublikacjeKONF=false;

@@ -7,7 +7,7 @@ class global
     constructor()
     {
         this.dTyg=["Niedziela","Poniedziałek","Wtorek","Środa","Czwarek","Piątek","Sobota"];
-        this.sLbl=[];
+        this.sLbl=["","","","","","","","","",""];
         this.dt=new Date();   
     }
     getDzien(i){return this.dTyg[i];}

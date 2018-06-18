@@ -1,6 +1,7 @@
 #ifndef CWIFI_h
 #define CWIFI_h
 
+#include <ArduinoJson.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266WiFiMulti.h>
 #include <PubSubClient.h>
@@ -108,8 +109,10 @@ char wifi_tryb[5];
   void setNTP(const char* host,unsigned long offset);
   String getNTPjsonStr(){ return  String("{\"host\":\""+String(ntp_server)+"\",\"offset\":"+String(ntp_offset)+"}");};
   String getMQTTjsonStr(){ return String("{\"host\":\""+String(mqtt_server)+"\",\"port\":"+String(mqtt_port)+",\"user\":\""+String(mqtt_user)+"\",\"pwd\":\""+String(mqtt_pass)+"\"}");};
-  String getWifijsonStr(){ return String("{\"ssid\":\""+String(wifi_ssid)+"\",\"pwd\":"+String(wifi_pwd)+",\"ip\":\""+String(wifi_ip)+"\",\"tryb\":\""+String(wifi_tryb)+"\"}");};
+  String getWifijsonStr(){ return String("{\"ssid\":\""+String(wifi_ssid)+"\",\"pwd\":\""+String(wifi_pwd)+"\",\"ip\":\""+String(wifi_ip)+"\",\"tryb\":\""+String(wifi_tryb)+"\"}");};
   void zmianaAP(const char* ssid,const char* pwd);
+  void zmianaAP(String jsonString);
+  void setupMqtt(String mqttJsonStr);
   void setupMqtt(const char* host, uint16_t port, const char * usr, const char* pwd);
 };
 

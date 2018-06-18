@@ -20,11 +20,34 @@ void CWifi::setNTP(const char* host,unsigned long offset)
   timeClient=new NTPClient(ntpUDP, ntp_server, offset, 60000);
   timeClient->begin();
 }
+
+void CWifi::zmianaAP(String jsonString)
+{
+  DynamicJsonBuffer jsonBuffer;
+  JsonObject& js= jsonBuffer.parse(jsonString);
+  if (!js.success()) 
+  {
+    DPRINTLN("Blad parsowania zmianyAP");
+    return;
+  }
+  if(js.containsKey("ssid"))
+  {
+    const char* s=js["ssid"];
+    if(js.containsKey("pwd"))
+    {
+      const char* p=js["pwd"];
+      zmianaAP(s,p);
+    }
+  }
+}
 void CWifi::zmianaAP(const char* ssid,const char* pwd)
 {
+  strcpy(wifi_ssid,ssid);
+  strcpy(wifi_pwd,pwd);
   if(wifiMulti) delete wifiMulti;
   wifiMulti=new ESP8266WiFiMulti();
   wifiMulti->addAP(ssid,pwd);
+  delay(10);
   
 }
 void CWifi::begin()
@@ -34,7 +57,7 @@ void CWifi::begin()
  strcpy(mqtt_server,"broker.hivemq.com");
 
 
-uint16_t mqtt_port=1883;
+
   
   WiFi.mode(WIFI_STA);
   wifiReconnect();
@@ -101,6 +124,28 @@ bool CWifi::wifiConnected()
 // if (WiFi.status()==WL_CONNECTED)return true; else return false;
  if (wifiMulti->run()==WL_CONNECTED)return true; else return false;
 }
+void CWifi::setupMqtt(String mqttJsonStr)
+{
+  DynamicJsonBuffer jsonBuffer;
+  JsonObject& js= jsonBuffer.parse(mqttJsonStr);
+  if (!js.success()) 
+  {
+    DPRINTLN("Blad parsowania zmianyMQTT");
+    return;
+  }
+  if(js.containsKey("host")&&js.containsKey("port"))
+  {
+    const char* ho=js["host"];
+    uint16_t po=js["port"];
+  
+    const char* ur=js["user"];
+    const char* ha=js["pwd"];
+    if(ha&&ur)
+      setupMqtt(ho,po,ur,ha);
+     else if(ur)setupMqtt(ho,po,ur,"");
+      else setupMqtt(ho,po,"","");
+  }
+}
 void CWifi::setupMqtt(const char* host, uint16_t port,const char * usr,const char* pwd)
 {
   client.disconnect();
@@ -110,6 +155,7 @@ void CWifi::setupMqtt(const char* host, uint16_t port,const char * usr,const cha
   strcpy(mqtt_pass,pwd);
   client.setServer(mqtt_server, mqtt_port);
   reconnectMQTT();
+  delay(10);
   
 }
 

@@ -42,7 +42,8 @@ const con=function()
                     for(let k1 in m)
                     {
                         console.log('key ='+k1+', val ='+m[k1]); 
-                        fe[k1].value=m[k1];
+                        if(m[k1])
+                             fe[k1].value=m[k1];
                     }
                     
                 }
@@ -51,7 +52,8 @@ const con=function()
         }
         if(j.hasOwnProperty("LBL"))
         {
-                if(G.getLbl(j.LBL.id).length<=0)
+            let tmp=G.getLbl(j.LBL.id);
+            if(tmp.length<=0)
                 {
                     addSekcja(j.LBL.id,j.LBL.lbl);    
                 }else
@@ -322,7 +324,7 @@ function addSekList(v,n)
     c1b=document.createElement("div");
     c1b.className="w3-col m5 w3-section";
     c1b.innerHTML="<input class=\"w3-input\" style=\"width:90%\" type=\"text\" "+
-            " id=\"sekLi"+v+"\" name=\"Lbl"+v+"\" value=\"\" placeholder=\"Sekcja "+v+"\" required/>";
+            " id=\"sekLi"+v+"\" name=\"Lbl"+v+"\" value=\""+v+"\" placeholder=\"Sekcja "+v+"\" required/>";
 
     c1c=document.createElement("div");
     c1c.className="w3-col m1 w3-section ";

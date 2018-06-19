@@ -370,8 +370,6 @@ void publikujStanSekcjiMQTT()
     }
     DPRINTLN("Parsowanie zagniezdzonego jsona");
     String jsS;
-    json.printTo(Serial);
-    Serial.println();
     json.printTo(jsS);
     DPRINTLN(jsS);
     ind=strstr(topic,"NTP");
@@ -440,7 +438,24 @@ void publikujStanSekcjiMQTT()
     ind=strstr(topic,"PROG");
     if(ind!=NULL)
     {
-      
+       if(json.containsKey("id"))
+      {
+        uint16_t i=json["id"];
+        Program a;
+        conf.getProg(a,i);
+        if(json.containsKey("dt"))
+        {
+          /////////// tu przeba przeliczyc
+          a.dataOdKiedy=json["dt"];
+          a.godzinaStartu=json["dt"];
+        }
+        if(json.containsKey("okresS"))a.czas_trwania_s=json["okresS"];
+        if(json.containsKey("sekcja"))a.sekwencja=json["sekcja"];
+        if(json.containsKey("coIle"))a.co_ile_dni=json["coIle"];
+        if(json.containsKey("aktywny"))a.aktywny=json["aktywny"];
+        ///////////////
+        //set progr tab
+      }
     }
  }
 

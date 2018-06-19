@@ -55,6 +55,7 @@ class CConfig
      void setProg(Program &a,time_t data,time_t godzina,  unsigned long czas_trwania_s,uint8_t co_ile_dni,  uint8_t sekwencja, bool aktywny);
     void setProg(Program &a, Program &b);
     void addProg(Program p);
+    void getProg(Program &a, uint16_t progRefID);
     uint16_t getProgIle(){return progIle;}
     void publishProg(Program &p,uint16_t i=-1);
     String publishProgJsonStr(Program &p,uint16_t i=-1);

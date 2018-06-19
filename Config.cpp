@@ -87,7 +87,6 @@ void CConfig::begin()
 
 
 
-
 bool CConfig::loadConfig() {
   File configFile = SPIFFS.open(PROGRAM_CONFIG_FILE, "r");
   if (!configFile) {
@@ -241,6 +240,10 @@ void CConfig::setProg(Program &a, Program &b)
   a.aktywny=b.aktywny;
 }
 
+void CConfig::getProg(Program &a, uint16_t progRefID)
+{
+  setProg(a,prTab[progRefID]);
+}
 
 void CConfig::addProg(Program p)
 {

@@ -19,6 +19,7 @@ const con=function()
         console.log("DC");
         document.getElementById("plug").style.color="darkred";
         document.getElementById("plugm").style.color="darkred";
+        
     delete W; 
     };
     const msg=function(j)
@@ -138,8 +139,9 @@ function addProgBtn()
   let co=f["co_ile"].value;
   let s=f["sekcja"].value;
   console.log("przed add: "+progN);
-    
-  progN=addProg(progN+1,d1,dl,co,s,false);
+  let js={"PROG":{"id":"","dt":d1.getTime(),"okresS":dl,"coIle":co,"sekcja":s,"aktywny":0}};  
+  W.send(JSON.stringify(js));
+ // progN=addProg(progN+1,d1,dl,co,s,false);
   console.log(" po add: "+progN);
     
 }
@@ -153,6 +155,13 @@ function changeProg(i,dd,ile_s,coIle_d,sek,akt) {
   document.getElementById("ProgCoIle"+i).innerHTML=coIle_d;
   document.getElementById("prListSekLbl"+i).innerHTML=G.getLbl(sek);
   changeProgAkt(i, akt);
+}
+function changeProgSend(i, a)
+{
+    let el=document.getElementById("Prog"+i);
+    let js={"PROG":{"id":i,"aktywny":el.getAttribute('data-stan')==0?1:0}};
+    console.log(JSON.stringify(js));
+    W.send(JSON.stringify(js));
 }
 function changeProgAkt(i, a)
 {
@@ -172,6 +181,7 @@ function changeProgAkt(i, a)
       document.getElementById("ProgW"+i).classList.add('w3-light-grey');
       document.getElementById("ProgW"+i).classList.remove('w3-dark-grey');
     }
+    
 }
 function addProg(i,dd,ile_s,coIle_d,sek,akt) {
     console.log("add: "+i);
@@ -231,7 +241,7 @@ function addProg(i,dd,ile_s,coIle_d,sek,akt) {
     {
      c3b1.innerHTML="<i class=\"fas fa-toggle-off w3-xlarge\" id=\"Prog"+i+"\" data-stan='0'></i><br><i id=\"ProgTXT"+i+"\">Nieaktywny</i>";//<br>nieaktywny";  
     }
-   c3b1.addEventListener('click',function(){changeProgAkt(i, akt) });
+   c3b1.addEventListener('click',function(){changeProgSend(i, akt) });
 
     c3b.appendChild(c3b1);
     c3b2=document.createElement("div");

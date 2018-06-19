@@ -135,6 +135,7 @@ class wsConn
         this.ws.onerror = function (error) 
         { 
             console.log('WebSocket Error ', error); 
+            ws.close();
             delete this.ws; 
             me.fDc();
 	    }; 
@@ -148,7 +149,10 @@ class wsConn
     }
     send(m)
     {
-        if(this.ws) this.ws.send(m);
+        if(this.ws)
+        {
+            if(this.ws.readyState==WebSocket.OPEN) this.ws.send(m);
+        }
     }
     sendtest()
     {

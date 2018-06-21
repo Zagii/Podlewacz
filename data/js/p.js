@@ -1,5 +1,5 @@
 let progN=0;
-let jestProg=[];
+let jestProg=[0];
 let sLbl=["?"];
 
 
@@ -73,7 +73,8 @@ const con=function()
             let js=j.PROG;
             if(!jestProg[js.id]||jestProg[js.id]==0)
             {
-                progN=addProg(js.id,js.dt,js.okresS,js.coIle,js.sekcja,js.aktywny);
+                addProg(js.id,js.dt,js.okresS,js.coIle,js.sekcja,js.aktywny);
+                progN++;
             }else
             {
                 ///zmien prog
@@ -92,7 +93,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
     W=new wsConn(con,dc,msg);
     G=new global();    
     W.begin(3);
-    for(let i=0;i<7;i++){jestProg[i]=0;}
+   // for(let i=0;i<7;i++){jestProg[i]=0;}
     /*for(let i=0;i<7;i++)
     {
         progN=addProg(i,i*10000,i*100,i,i+1,i%2)
@@ -256,13 +257,12 @@ function addProg(i,dd,ile_s,coIle_d,sek,akt) {
   }
   function initProgs()
   {
-    for(let i=0;i<progN;i++)
-    {
-        jestProg[i]=0;
-        let w=document.getElementById("ProgW"+i);
-        if(w){ w.parentNode.removeChild(w);}
+    let myNode=document.getElementById("prog");
+    while (myNode.firstChild) {
+        myNode.removeChild(myNode.firstChild);
     }
-    
+    delete jestProg;
+    jestProg=[0];   
     progN=0;
     
   }

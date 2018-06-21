@@ -335,6 +335,14 @@ void publikujStanSekcjiMQTT()
       czasLokalny=atoi(msg);
       return;
     }
+    ind=strstr(topic,"DEL_PROG");
+    if(ind!=NULL)
+    {
+      uint16_t delID=atoi(msg);
+      conf.delProg(delID);
+      conf.saveConfig();  
+      czekaNaPublikacjePROG=true;
+    }
     ind=strstr(topic,"GET");
     if(ind!=NULL)
     {
@@ -358,6 +366,7 @@ void publikujStanSekcjiMQTT()
        {
         czekaNaPublikacjeSTAT=true;
        }
+      
        return;
     }
     //////////////////////// komendy ktore maja jsona jako msg /////////////////////////
@@ -455,6 +464,24 @@ void publikujStanSekcjiMQTT()
         if(json.containsKey("aktywny"))a.aktywny=json["aktywny"];
         ///////////////
         //set progr tab
+        conf.changeProg(a,i);
+        conf.saveConfig();
+        czekaNaPublikacjePROG=true;
+      }else
+      {
+        DPRINTLN("Nowy program");
+        if(json.containsKey("dt")&&json.containsKey("okresS")&&json.containsKey("sekcja")&&json.containsKey("coIle")&&json.containsKey("aktywny"))
+        {
+          Program a;
+          a.dataOdKiedy=json["dt"];
+          a.godzinaStartu=json["dt"];
+          a.czas_trwania_s=json["okresS"];
+          a.sekwencja=json["sekcja"];
+          a.co_ile_dni=json["coIle"];
+          a.aktywny=json["aktywny"];
+          conf.addProg(a);
+        }else
+          {DPRINTLN("Za mało parametrów by dodać program.");}
       }
     }
  }
@@ -537,7 +564,17 @@ void loop()
    }
    if(czekaNaPublikacjePROG)
    {
+    DPRINTLN("PublikacjaPROG");
      char tmpTopic[MAX_TOPIC_LENGHT];
+     sprintf(tmpTopic,"%s/INIT_PROGS/",wifi.getOutTopic());
+      DPRINTLN(tmpTopic);
+      String jjs=String(conf.getProgIle());
+      DPRINTLN(jjs);
+     wifi.RSpisz(String(tmpTopic),jjs);
+     jjs=String("{\"INIT_PROGS\":")+String(conf.getProgIle())+"}";
+     DPRINTLN(jjs);
+     web.sendWebSocket(jjs.c_str());
+      
      sprintf(tmpTopic,"%s/PROG/",wifi.getOutTopic());
     for(uint16_t i=0;i<conf.getProgIle();i++)
     {

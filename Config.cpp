@@ -123,7 +123,7 @@ bool CConfig::loadConfig() {
     yield();
     JsonArray& prog = json["Programy"][i];
     Program pp;
-    setProg(pp,prog[0],prog[1],prog[2], prog[3], prog[4],prog[5]);
+    setProg(pp,prog[0],prog[1],prog[2], prog[3], prog[4],prog[5],prog[6]);
     addProg(pp);
   }
   DPRINT("progIle=");DPRINTLN(n);
@@ -159,6 +159,7 @@ bool CConfig::saveConfig() {
   {
     yield();
     JsonArray& pr = Programy.createNestedArray();
+    pr.add(prTab[i].dzienTyg);
     pr.add(prTab[i].dataOdKiedy);
     pr.add(prTab[i].godzinaStartu);
     pr.add(prTab[i].czas_trwania_s);
@@ -200,6 +201,8 @@ void CConfig::setProg(Program &a,uint8_t dzien, uint8_t mies, uint16_t rok,  uin
   t.Month = mies;  t.Day = dzien;
   t.Hour = 0;  t.Minute = 0;  t.Second = 0;
   a.dataOdKiedy=makeTime(t);
+
+  a.dzienTyg=dzien;
   
   t.Year = CalendarYrToTm(1970);
   t.Month = 1;  t.Day = 1;
@@ -213,9 +216,10 @@ void CConfig::setProg(Program &a,uint8_t dzien, uint8_t mies, uint16_t rok,  uin
   publishProg(a,progIle);
 }
 
-void CConfig::setProg(Program &a,time_t data,time_t godzina,  unsigned long czas_trwania_s,uint8_t co_ile_dni,  uint8_t sekwencja,bool aktywny)
+void CConfig::setProg(Program &a,uint8_t dzien, time_t data,time_t godzina,  unsigned long czas_trwania_s,uint8_t co_ile_dni,  uint8_t sekwencja,bool aktywny)
 { 
   DPRINT("setProg time_t #->");
+  a.dzienTyg=dzien;
   a.dataOdKiedy=data;
   a.godzinaStartu=godzina;
   a.czas_trwania_s=czas_trwania_s; 
@@ -232,6 +236,7 @@ void CConfig::setProg(Program &a, Program &b)
 //  tmElements_t t;
  // breakTime(b.dataOdKiedy, t); 
  // a.dataOdKiedy=makeTime(t);
+  a.dzienTyg=b.dzienTyg;
   a.dataOdKiedy=b.dataOdKiedy;
   a.godzinaStartu=b.godzinaStartu;
   a.co_ile_dni=b.co_ile_dni;
@@ -245,6 +250,13 @@ void CConfig::getProg(Program &a, uint16_t progRefID)
   setProg(a,prTab[progRefID]);
 }
 
+void CConfig::changeProg(Program a, uint16_t progRefID)
+{
+  DPRINT("changeProg #");
+  publishProg(a,progIle);
+  if(progRefID >=progIle)return;
+  setProg(prTab[progRefID],a);
+}
 void CConfig::addProg(Program p)
 {
   DPRINT("addProg #");
@@ -260,6 +272,7 @@ void CConfig::addProg(Program p)
 void CConfig::publishProg(Program &p,uint16_t i)
 {
   DPRINT("ID="); DPRINT(i); DPRINT("; ");
+  DPRINT("dzienTyg=");DPRINT(p.dzienTyg);
   DPRINT("data="); DPRINT(day(p.dataOdKiedy)); DPRINT("-");DPRINT(month(p.dataOdKiedy)); DPRINT("-");DPRINT(year(p.dataOdKiedy)); 
   DPRINT("; godz="); DPRINT(hour(p.godzinaStartu)); DPRINT(":");DPRINT(minute(p.godzinaStartu)); DPRINT(":");DPRINT(second(p.godzinaStartu)); 
   DPRINT(" czas_trwania_s="); DPRINT(p.czas_trwania_s); DPRINT("; ");DPRINT("co_ile_dni="); DPRINT(p.co_ile_dni); DPRINT("; ");
@@ -270,7 +283,7 @@ String CConfig::publishProgJsonStr(Program &p,uint16_t i)
 {
   DPRINT("publishProgJsonStr: ");
   //{"PROG":{id:x, dt="miliis", "okresS":s, "sekcja": n, "coIle":z, "aktywny":b }}
-  String w="{\"id\":"+String(i)+",\"dt\":"+String(p.dataOdKiedy)+",\"okresS\":"+String(p.czas_trwania_s)+",\"coIle\":"+String(p.co_ile_dni)+",\"sekcja\":"+String(p.sekwencja)+",\"aktywny\":"+String(p.aktywny?1:0)+"}";
+  String w="{\"id\":"+String(i)+",\"dzienTyg\":"+p.dzienTyg+",\"dt\":"+String(p.dataOdKiedy)+",\"okresS\":"+String(p.czas_trwania_s)+",\"coIle\":"+String(p.co_ile_dni)+",\"sekcja\":"+String(p.sekwencja)+",\"aktywny\":"+String(p.aktywny?1:0)+"}";
   DPRINTLN(w.c_str());
   return w;
 }
@@ -287,9 +300,10 @@ void CConfig::printCzas(time_t t)
 
 void CConfig::delProg(uint16_t id)
 {
-  DPRINT("delProg #");
+  DPRINT("delProg #"); DPRINT(id);DPRINT(" / ");DPRINTLN(progIle);
+  if(id>progIle|| progIle==0)return;
   publishProg(prTab[id],id);
-  if(id>=progIle)return;
+  if(id==progIle){progIle--;return;};
   for(uint16_t i=id;i<progIle;i++)
   {
     yield();

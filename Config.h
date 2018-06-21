@@ -26,6 +26,7 @@
 
 typedef struct 
 {
+  uint8_t dzienTyg;
   time_t dataOdKiedy; //dzien przedstawia date od kiedy podlewac dla godz 00:00:00, 
   time_t godzinaStartu; //a godzina o której godzinie wzgledem daty
 
@@ -52,9 +53,10 @@ class CConfig
     bool saveConfigStr(const char *nazwaPliku,const char * str);
 
     void setProg(Program &a,uint8_t dzien, uint8_t mies, uint16_t rok,  uint8_t h, uint8_t m,  uint8_t s,  unsigned long czas_trwania_s,uint8_t co_ile_dni,  uint8_t sekwencja, bool aktywny);
-     void setProg(Program &a,time_t data,time_t godzina,  unsigned long czas_trwania_s,uint8_t co_ile_dni,  uint8_t sekwencja, bool aktywny);
+     void setProg(Program &a,uint8_t dzien,time_t data,time_t godzina,  unsigned long czas_trwania_s,uint8_t co_ile_dni,  uint8_t sekwencja, bool aktywny);
     void setProg(Program &a, Program &b);
     void addProg(Program p);
+    void changeProg(Program a, uint16_t progRefID);
     void getProg(Program &a, uint16_t progRefID);
     uint16_t getProgIle(){return progIle;}
     void publishProg(Program &p,uint16_t i=-1);

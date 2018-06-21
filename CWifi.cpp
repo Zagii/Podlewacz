@@ -175,6 +175,11 @@ bool CWifi::reconnectMQTT()
   }
   return client.connected();
 }
+void CWifi::RSpisz(String topic,String msg)
+{
+    DPRINT("Debug String RSpisz, topic=");  DPRINT(topic); DPRINT(", msg=");  DPRINT(msg);
+  RSpisz((const char*)topic.c_str(),(char*)msg.c_str());
+}
 void CWifi::RSpisz(const char* topic,char* msg)
 {
    

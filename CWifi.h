@@ -96,6 +96,7 @@ char wifi_tryb[5];
   bool getWifiStatusString(char *b);
   bool reconnectMQTT();
   void RSpisz(const char* topic,char* msg);
+  void RSpisz(String topic,String msg);
   char * TimeToString(unsigned long t);
   void setWDmillis(unsigned long m){WDmillis=m;};
   unsigned long getWDmillis(){return WDmillis;};

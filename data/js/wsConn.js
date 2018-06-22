@@ -1,6 +1,6 @@
 var W;
 var G;
-
+var wsSerw="192.168.43.144"
 
 class global
 {
@@ -149,10 +149,18 @@ class wsConn
     }
     send(m)
     {
+        console.log("WS.send->"+m);
         if(this.ws)
         {
-            if(this.ws.readyState==WebSocket.OPEN) this.ws.send(m);
-        }
+            if(this.ws.readyState==WebSocket.OPEN) 
+            {
+                    this.ws.send(m);
+                    console.log("[ok]")
+            }else
+            {
+                console.log("[statErr]");
+            }
+        }else console.log("[ws-null]");
     }
     sendtest()
     {

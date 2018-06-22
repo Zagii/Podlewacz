@@ -73,12 +73,12 @@ const con=function()
             let js=j.PROG;
             if(!jestProg[js.id]||jestProg[js.id]==0)
             {
-                addProg(js.id,js.dt,js.okresS,js.coIle,js.sekcja,js.aktywny);
+                addProg(js.id,js.dzienTyg,js.ms,js.okresS,js.coIle,js.sekcja,js.aktywny);
                 progN++;
             }else
             {
                 ///zmien prog
-                changeProg(js.id,js.dt,js.okresS,js.coIle,js.sekcja,js.aktywny);
+                changeProg(js.id,js.dzienTyg,js.ms,js.okresS,js.coIle,js.sekcja,js.aktywny);
             }
         }      
     };
@@ -139,18 +139,18 @@ function addProgBtn()
   let dl=f["dlug"].value;
   let co=f["co_ile"].value;
   let s=f["sekcja"].value;
-  console.log("przed add: "+progN);
-  let js={"PROG":{"id":"","dt":d1.getTime(),"okresS":dl,"coIle":co,"sekcja":s,"aktywny":0}};  
+ // console.log("przed add: "+progN);
+  let js={"PROG":{/*"id":"",*/"dzienTyg":f["dzien"].value,"ms":d1.getTime(),"okresS":dl,"coIle":co,"sekcja":s,"aktywny":0}};  
   W.send(JSON.stringify(js));
  // progN=addProg(progN+1,d1,dl,co,s,false);
-  console.log(" po add: "+progN);
+ // console.log(" po add: "+progN);
     
 }
-function changeProg(i,dd,ile_s,coIle_d,sek,akt) {
+function changeProg(i,dzienT,ms,ile_s,coIle_d,sek,akt) {
     console.log("changeProg: "+i);
   //  let w = document.getElementById("ProgW"+i);
-  let dt=new Date(dd);
-  document.getElementById("ProgDay"+i).innerHTML= G.getDzien(dt.getUTCDay());
+  let dt=new Date(ms);
+  document.getElementById("ProgDay"+i).innerHTML= G.getDzien(dzienT);//G.getDzien(dt.getUTCDay());
   document.getElementById("ProgGodz"+i).innerHTML= dt.getUTCHours().toString().padStart(2,"0")+":"+dt.getUTCMinutes().toString().padStart(2,"0")+":"+dt.getUTCSeconds().toString().padStart(2,"0")
   document.getElementById("ProgIles"+i).innerHTML= ile_s;
   document.getElementById("ProgCoIle"+i).innerHTML=coIle_d;
@@ -184,10 +184,10 @@ function changeProgAkt(i, a)
     }
     
 }
-function addProg(i,dd,ile_s,coIle_d,sek,akt) {
+function addProg(i,dzienT,ms,ile_s,coIle_d,sek,akt) {
     console.log("add: "+i);
     jestProg[i]=1;
-    let dt=new Date(dd);
+    let dt=new Date(ms);
     let w = document.createElement("div"); 
     w.className="w3-row w3-center w3-padding-16 w3-section";
     if(akt)w.classList.add("w3-light-grey");
@@ -197,7 +197,7 @@ function addProg(i,dd,ile_s,coIle_d,sek,akt) {
     k.className="w3-third w3-section";
     c1a=document.createElement("div");
     c1a.className="w3-half w3-section";
-    c1a.innerHTML="<i>Dzień tygodnia</i><br><h4 id=\"ProgDay"+i+"\">"+G.getDzien(dt.getUTCDay())+"</h4>";
+    c1a.innerHTML="<i>Dzień tygodnia</i><br><h4 id=\"ProgDay"+i+"\">"+G.getDzien(dzienT)/*dt.getUTCDay())*/+"</h4>";
     k.appendChild(c1a);
     c1b=document.createElement("div");
     c1b.className="w3-half w3-section";
@@ -309,14 +309,14 @@ function changeSekcja(s,str)
     } 
   }
 }
-function addSekcja(v,n)
+function addSekcja(ind,str)
 {
-    G.setLbl(v,n);
+    G.setLbl(ind,str);
     let o = document.createElement("option");
-    o.text = n;
-    o.value=v;
+    o.text = str;
+    o.value=ind;
     document.getElementById("addProgForm").elements["sekcja"].add(o);
-    addSekList(v,n);
+    addSekList(ind,str);
 }
 function addSekList(v,n)
 {
@@ -334,7 +334,7 @@ function addSekList(v,n)
     c1b=document.createElement("div");
     c1b.className="w3-col m5 w3-section";
     c1b.innerHTML="<input class=\"w3-input\" style=\"width:90%\" type=\"text\" "+
-            " id=\"sekLi"+v+"\" name=\"Lbl"+v+"\" value=\""+v+"\" placeholder=\"Sekcja "+v+"\" required/>";
+            " id=\"sekLi"+v+"\" name=\"Lbl"+v+"\" value=\""+n+"\" placeholder=\"Sekcja "+v+"\" required/>";
 
     c1c=document.createElement("div");
     c1c.className="w3-col m1 w3-section ";

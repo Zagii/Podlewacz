@@ -340,7 +340,7 @@ void publikujStanSekcjiMQTT()
     {
       uint16_t delID=atoi(msg);
       conf.delProg(delID);
-      conf.saveConfig();  
+      conf.saveProgs();  
       czekaNaPublikacjePROG=true;
     }
     ind=strstr(topic,"GET");
@@ -452,34 +452,32 @@ void publikujStanSekcjiMQTT()
         uint16_t i=json["id"];
         Program a;
         conf.getProg(a,i);
-        if(json.containsKey("dt"))
+        if(json.containsKey("ms")&&json.containsKey("dzienTyg"))
         {
           /////////// tu przeba przeliczyc
-          a.dataOdKiedy=json["dt"];
-          a.godzinaStartu=json["dt"];
+          //a.dataOdKiedy=json["dt"];
+          a.dzienTyg=json["dzienTyg"];
+          a.godzinaStartu=json["ms"];
         }
         if(json.containsKey("okresS"))a.czas_trwania_s=json["okresS"];
-        if(json.containsKey("sekcja"))a.sekwencja=json["sekcja"];
+        if(json.containsKey("sekcja"))a.sekcja=json["sekcja"];
         if(json.containsKey("coIle"))a.co_ile_dni=json["coIle"];
         if(json.containsKey("aktywny"))a.aktywny=json["aktywny"];
         ///////////////
         //set progr tab
         conf.changeProg(a,i);
-        conf.saveConfig();
+        conf.saveProgs();
         czekaNaPublikacjePROG=true;
       }else
       {
         DPRINTLN("Nowy program");
-        if(json.containsKey("dt")&&json.containsKey("okresS")&&json.containsKey("sekcja")&&json.containsKey("coIle")&&json.containsKey("aktywny"))
+        if(json.containsKey("dzienTyg")&&json.containsKey("ms")&&json.containsKey("okresS")&&json.containsKey("sekcja")&&json.containsKey("coIle")&&json.containsKey("aktywny"))
         {
           Program a;
-          a.dataOdKiedy=json["dt"];
-          a.godzinaStartu=json["dt"];
-          a.czas_trwania_s=json["okresS"];
-          a.sekwencja=json["sekcja"];
-          a.co_ile_dni=json["coIle"];
-          a.aktywny=json["aktywny"];
+          conf.setProg(a,json["dzienTyg"],0,json["ms"],json["okresS"],json["coIle"],json["sekcja"],json["aktywny"]);
           conf.addProg(a);
+          conf.saveProgs();
+          czekaNaPublikacjePROG=true;
         }else
           {DPRINTLN("Za mało parametrów by dodać program.");}
       }
@@ -533,17 +531,20 @@ void loop()
     {
         pcf8574.write8(stanSekcji);
         czekaNaPublikacjeStanuHW=false;
+        delay(5);
     }
     /////////// publikowanie ///////////////
     if(czekaNaPublikacjeStanuMQTT)
     {
         publikujStanSekcjiMQTT();  // na podstawie pcf8574
         czekaNaPublikacjeStanuMQTT=false;   
+        delay(10);
     }
     if(czekaNaPublikacjeStanuWS)
     {
         web.publikujStanSekcji(stanSekcji);
         czekaNaPublikacjeStanuWS=false;     
+        delay(10);
     }
     
    if(czekaNaPublikacjeLBL)
@@ -559,7 +560,7 @@ void loop()
         DPRINTLN(js);
          web.sendWebSocket(js.c_str());
       }
-            
+      delay(10);      
       czekaNaPublikacjeLBL=false;
    }
    if(czekaNaPublikacjePROG)
@@ -574,7 +575,7 @@ void loop()
      jjs=String("{\"INIT_PROGS\":")+String(conf.getProgIle())+"}";
      DPRINTLN(jjs);
      web.sendWebSocket(jjs.c_str());
-      
+      delay(5);
      sprintf(tmpTopic,"%s/PROG/",wifi.getOutTopic());
     for(uint16_t i=0;i<conf.getProgIle();i++)
     {
@@ -586,6 +587,7 @@ void loop()
       delay(1);
     }
     czekaNaPublikacjePROG=false;
+    delay(10);
    }
    if(czekaNaPublikacjeKONF)
    {
@@ -610,12 +612,14 @@ void loop()
     web.sendWebSocket((const char*)js.c_str());
 
     czekaNaPublikacjeKONF=false;
+    delay(10);
    }
    if(czekaNaPublikacjeSTAT)
    {//tryb
     //sekcja
     //geo,temp,czas,cisn,deszcz
     czekaNaPublikacjeSTAT=false;
+    delay(5);
    }
    
   ///////////////////// status LED /////////////////////////

@@ -23,6 +23,7 @@
 #define PLIK_LBL "LBL.json"
 #define PLIK_TRYB "TRYB.json"
 #define PLIK_WIFI "Wifi.json"
+#define PLIK_PROG "PROG.json"
 
 typedef struct 
 {
@@ -31,7 +32,7 @@ typedef struct
   time_t godzinaStartu; //a godzina o której godzinie wzgledem daty
 
   unsigned long czas_trwania_s;    //czas trwania
-  uint8_t sekwencja;
+  uint8_t sekcja;
   uint8_t co_ile_dni;
   bool aktywny;
 }Program;
@@ -46,10 +47,11 @@ class CConfig
     CConfig(){for(int i=0;i<8;i++){strcpy(sekcjeLbl[i],"Sekcja ");char r[3]; strcat(sekcjeLbl[i],itoa (i, r, 10));}};
     void begin();
     bool loadConfig();
+       bool loadProgs();
     bool loadConfigSekcjeLBL();
   
     String loadJsonStr(const char* nazwaPliku);
-    bool saveConfig();
+    bool saveProgs();
     bool saveConfigStr(const char *nazwaPliku,const char * str);
 
     void setProg(Program &a,uint8_t dzien, uint8_t mies, uint16_t rok,  uint8_t h, uint8_t m,  uint8_t s,  unsigned long czas_trwania_s,uint8_t co_ile_dni,  uint8_t sekwencja, bool aktywny);

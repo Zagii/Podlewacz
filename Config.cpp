@@ -101,7 +101,7 @@ bool CConfig::loadProgs()
     Program a;
     for (auto& json : ar)
     {
-       setProg(a,json["dzienTyg"],0,json["ms"],json["okresS"],json["coIle"],json["sekcja"],json["aktywny"]);
+       setProg(a,json["dzienTyg"],json["tStr"],json["ms"],json["okresS"],json["coIle"],json["sekcja"],json["aktywny"]);
        addProg(a);
     }
     return true;
@@ -151,7 +151,8 @@ return loadProgs();
     yield();
     JsonArray& prog = json["Programy"][i];
     Program pp;
-    setProg(pp,prog[0],prog[1],prog[2], prog[3], prog[4],prog[5],prog[6]);
+    setProg(pp,json["dzienTyg"],json["tStr"],json["ms"],json["okresS"],json["coIle"],json["sekcja"],json["aktywny"]);
+   // setProg(pp,prog[0],prog[1],prog[2], prog[3], prog[4],prog[5],prog[6]);
     addProg(pp);
   }
   DPRINT("progIle=");DPRINTLN(n);
@@ -220,12 +221,12 @@ bool CConfig::saveProgs() {
 
 
 
-void CConfig::setSekcjaLbl(uint8_t id,const char* lbl)
+void CConfig::setSekcjaLbl(uint8_t id,String lbl)
 {
   DPRINT("SEKCJA id=");DPRINT(id);DPRINT("lbl=");DPRINTLN(lbl);
-  strcpy(sekcjeLbl[id],lbl);
+  sekcjeLbl[id]=lbl;
 }
-const char* CConfig::getSekcjaLbl(uint8_t id)
+String CConfig::getSekcjaLbl(uint8_t id)
 {
   return sekcjeLbl[id];
 }
@@ -236,13 +237,13 @@ void CConfig::setProg(Program &a,uint8_t dzien, uint8_t mies, uint16_t rok,  uin
 {
   DPRINT("setProg #->");
   tmElements_t t;
-  t.Year = CalendarYrToTm(rok);
+/*  t.Year = CalendarYrToTm(rok);
   t.Month = mies;  t.Day = dzien;
   t.Hour = 0;  t.Minute = 0;  t.Second = 0;
   a.dataOdKiedy=makeTime(t);
-
+*/
   a.dzienTyg=dzien;
-  
+  a.tStr=String(h)+":"+String(m)+":"+String(s);
   t.Year = CalendarYrToTm(1970);
   t.Month = 1;  t.Day = 1;
   t.Hour = h;  t.Minute = m;  t.Second = s;
@@ -255,12 +256,13 @@ void CConfig::setProg(Program &a,uint8_t dzien, uint8_t mies, uint16_t rok,  uin
   publishProg(a,progIle);
 }
 
-void CConfig::setProg(Program &a,uint8_t dzien, time_t data,time_t godzina,  unsigned long czas_trwania_s,uint8_t co_ile_dni,  uint8_t sekcja,bool aktywny)
+void CConfig::setProg(Program &a,uint8_t dzien,String timeStr,time_t godzina,  unsigned long czas_trwania_s,uint8_t co_ile_dni,  uint8_t sekcja,bool aktywny)
 { 
   DPRINT("setProg time_t #->");
   a.dzienTyg=dzien;
-  a.dataOdKiedy=data;
+ // a.dataOdKiedy=data;
   a.godzinaStartu=godzina;
+  a.tStr=timeStr;
   a.czas_trwania_s=czas_trwania_s; 
   a.sekcja=sekcja; 
   a.co_ile_dni=co_ile_dni;
@@ -275,8 +277,9 @@ void CConfig::setProg(Program &a, Program &b)
 //  tmElements_t t;
  // breakTime(b.dataOdKiedy, t); 
  // a.dataOdKiedy=makeTime(t);
+  a.tStr=b.tStr;
   a.dzienTyg=b.dzienTyg;
-  a.dataOdKiedy=b.dataOdKiedy;
+ // a.dataOdKiedy=b.dataOdKiedy;
   a.godzinaStartu=b.godzinaStartu;
   a.co_ile_dni=b.co_ile_dni;
   a.czas_trwania_s=b.czas_trwania_s;
@@ -312,8 +315,8 @@ void CConfig::publishProg(Program &p,uint16_t i)
 {
   DPRINT("ID="); DPRINT(i); DPRINT("; ");
   DPRINT(" dzienTyg=");DPRINT(p.dzienTyg);
-  DPRINT(" data="); DPRINT(day(p.dataOdKiedy)); DPRINT("-");DPRINT(month(p.dataOdKiedy)); DPRINT("-");DPRINT(year(p.dataOdKiedy)); 
-  DPRINT("; godz="); DPRINT(hour(p.godzinaStartu)); DPRINT(":");DPRINT(minute(p.godzinaStartu)); DPRINT(":");DPRINT(second(p.godzinaStartu)); 
+  DPRINT(" tStr"); DPRINT(p.tStr.c_str());
+  DPRINT("; ms="); DPRINT(hour(p.godzinaStartu)); DPRINT(":");DPRINT(minute(p.godzinaStartu)); DPRINT(":");DPRINT(second(p.godzinaStartu)); 
   DPRINT(" czas_trwania_s="); DPRINT(p.czas_trwania_s); DPRINT("; ");DPRINT(" co_ile_dni="); DPRINT(p.co_ile_dni); DPRINT("; ");
   DPRINT(" sekcja="); DPRINT(p.sekcja); DPRINT(" aktywny=");DPRINTLN(p.aktywny);
   
@@ -321,8 +324,8 @@ void CConfig::publishProg(Program &p,uint16_t i)
 String CConfig::publishProgJsonStr(Program &p,uint16_t i)
 {
   DPRINT("publishProgJsonStr: ");
-  //{"PROG":{id:x, dt="miliis", "okresS":s, "sekcja": n, "coIle":z, "aktywny":b }}
-  String w="{\"id\":"+String(i)+",\"dzienTyg\":"+p.dzienTyg+",\"ms\":"+String(p.godzinaStartu)+",\"okresS\":"+String(p.czas_trwania_s)+",\"coIle\":"+String(p.co_ile_dni)+",\"sekcja\":"+String(p.sekcja)+",\"aktywny\":"+String(p.aktywny?1:0)+"}";
+  //{"PROG":{id:x, dzienTyg=1, tStr="00:33:22", ms="miliis", "okresS":s, "sekcja": n, "coIle":z, "aktywny":b }}
+  String w="{\"id\":"+String(i)+",\"dzienTyg\":"+p.dzienTyg+",\"tStr\":\""+p.tStr+"\",\"ms\":"+String(p.godzinaStartu)+",\"okresS\":"+String(p.czas_trwania_s)+",\"coIle\":"+String(p.co_ile_dni)+",\"sekcja\":"+String(p.sekcja)+",\"aktywny\":"+String(p.aktywny?1:0)+"}";
   DPRINTLN(w.c_str());
   return w;
 }
@@ -396,12 +399,12 @@ return false;
  // publishProg(p);
   if(!p.aktywny) return false;
   
-  if(p.dataOdKiedy>sysczas_t)
+ /* if(p.dataOdKiedy>sysczas_t)
   {
     DPRINTLN(" Program z przyszlosci");
     return false;
-  }
-  time_t  czasSysOdKiedy = sysczas_t - p.dataOdKiedy;
+  }*/
+ /* time_t  czasSysOdKiedy = sysczas_t - p.dataOdKiedy;
   uint8_t deltaDni=czasSysOdKiedy/SEK_W_DNIU;
   if(deltaDni%p.co_ile_dni!=0)
   {
@@ -424,7 +427,7 @@ return false;
   { 
   //  DPRINTLN(" poza zakresem ]");
     return false;
-  }
+  }*/
 }
 uint8_t  CConfig::wlaczoneSekcje(time_t sysczas_s)
 {

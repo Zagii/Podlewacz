@@ -431,12 +431,13 @@ void publikujStanSekcjiMQTT()
     if(ind!=NULL)
     {
       uint8_t id=json["id"];
-      const char* lbl=json["lbl"];
+     
+      String lbl=json["lbl"];
       conf.setSekcjaLbl(id,lbl);
       String str="{\"LBL\":[";
       for(int i=0;i<8;i++)
       {
-        str+="{\"id\":"+String(i)+",\"lbl\":\""+String(conf.getSekcjaLbl(i))+"\"}";
+        str+="{\"id\":"+String(i)+",\"lbl\":\""+conf.getSekcjaLbl(i)+"\"}";
         if(i<7)str+=",";
       }
       str+="]}";
@@ -459,6 +460,7 @@ void publikujStanSekcjiMQTT()
           a.dzienTyg=json["dzienTyg"];
           a.godzinaStartu=json["ms"];
         }
+        if(json.containsKey("tStr"))a.tStr=String(json["tStr"].as<char*>());
         if(json.containsKey("okresS"))a.czas_trwania_s=json["okresS"];
         if(json.containsKey("sekcja"))a.sekcja=json["sekcja"];
         if(json.containsKey("coIle"))a.co_ile_dni=json["coIle"];
@@ -474,7 +476,7 @@ void publikujStanSekcjiMQTT()
         if(json.containsKey("dzienTyg")&&json.containsKey("ms")&&json.containsKey("okresS")&&json.containsKey("sekcja")&&json.containsKey("coIle")&&json.containsKey("aktywny"))
         {
           Program a;
-          conf.setProg(a,json["dzienTyg"],0,json["ms"],json["okresS"],json["coIle"],json["sekcja"],json["aktywny"]);
+          conf.setProg(a,json["dzienTyg"],json["tStr"],json["ms"],json["okresS"],json["coIle"],json["sekcja"],json["aktywny"]);
           conf.addProg(a);
           conf.saveProgs();
           czekaNaPublikacjePROG=true;
@@ -552,7 +554,7 @@ void loop()
       String str;
       for(int i=1;i<7;i++)
       {
-        str="{\"id\":"+String(i)+",\"lbl\":\""+String(conf.getSekcjaLbl(i))+"\"}";
+        str="{\"id\":"+String(i)+",\"lbl\":\""+conf.getSekcjaLbl(i)+"\"}";
         char tmpTopic[MAX_TOPIC_LENGHT];
         sprintf(tmpTopic,"%s/LBL/",wifi.getOutTopic());
         wifi.RSpisz((const char*)tmpTopic,(char*)str.c_str());

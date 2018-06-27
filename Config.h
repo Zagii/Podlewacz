@@ -30,7 +30,7 @@ typedef struct
   uint8_t dzienTyg;
   time_t dataOdKiedy; //dzien przedstawia date od kiedy podlewac dla godz 00:00:00, 
   time_t godzinaStartu; //a godzina o której godzinie wzgledem daty
-
+  String tStr; //czas ms UTC z godzina startu wyrazony jako str, READONLY
   unsigned long czas_trwania_s;    //czas trwania
   uint8_t sekcja;
   uint8_t co_ile_dni;
@@ -41,10 +41,10 @@ class CConfig
 {
   uint16_t progIle=0;
   Program prTab[MAX_PROGR];
-  char sekcjeLbl[8][16];
+  String sekcjeLbl[8];
   char tryb; 
   public:
-    CConfig(){for(int i=0;i<8;i++){strcpy(sekcjeLbl[i],"Sekcja ");char r[3]; strcat(sekcjeLbl[i],itoa (i, r, 10));}};
+    CConfig(){for(int i=0;i<8;i++){sekcjeLbl[i]="Sekcja "+String(i);}};
     void begin();
     bool loadConfig();
        bool loadProgs();
@@ -55,7 +55,7 @@ class CConfig
     bool saveConfigStr(const char *nazwaPliku,const char * str);
 
     void setProg(Program &a,uint8_t dzien, uint8_t mies, uint16_t rok,  uint8_t h, uint8_t m,  uint8_t s,  unsigned long czas_trwania_s,uint8_t co_ile_dni,  uint8_t sekwencja, bool aktywny);
-     void setProg(Program &a,uint8_t dzien,time_t data,time_t godzina,  unsigned long czas_trwania_s,uint8_t co_ile_dni,  uint8_t sekwencja, bool aktywny);
+     void setProg(Program &a,uint8_t dzien,String timeStr,time_t godzina,  unsigned long czas_trwania_s,uint8_t co_ile_dni,  uint8_t sekwencja, bool aktywny);
     void setProg(Program &a, Program &b);
     void addProg(Program p);
     void changeProg(Program a, uint16_t progRefID);
@@ -71,8 +71,8 @@ class CConfig
     uint8_t wlaczoneSekcje(time_t sysczas_s);
     void setTryb(char t){tryb=t; DPRINT("nowy TRYB=");DPRINTLN(t);};
     char getTryb(){return tryb;};
-    void setSekcjaLbl(uint8_t id,const char* lbl);
-    const char* getSekcjaLbl(uint8_t id);
+    void setSekcjaLbl(uint8_t id,String lbl);
+    String getSekcjaLbl(uint8_t id);
 };
 
 

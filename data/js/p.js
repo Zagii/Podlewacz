@@ -130,7 +130,7 @@ function addProgBtn()
 
   console.log(f["dzien"].value);
  
-  d1.setUTCDate(parseInt(f["dzien"].value)+4);
+  //d1.setUTCDate(parseInt(f["dzien"].value)+4);
   console.log(d1.toDateString());
   let h=f["godz"].value.split(":");
   console.log(h);
@@ -140,7 +140,7 @@ function addProgBtn()
   let co=f["co_ile"].value;
   let s=f["sekcja"].value;
  // console.log("przed add: "+progN);
-  let js={"PROG":{/*"id":"",*/"dzienTyg":f["dzien"].value,"ms":d1.getTime(),"okresS":dl,"coIle":co,"sekcja":s,"aktywny":0}};  
+  let js={"PROG":{/*"id":"",*/"dzienTyg":f["dzien"].value,"tStr":f["godz"].value,"ms":d1.getTime()/1000,"okresS":dl,"coIle":co,"sekcja":s,"aktywny":0}};  
   W.send(JSON.stringify(js));
  // progN=addProg(progN+1,d1,dl,co,s,false);
  // console.log(" po add: "+progN);
@@ -187,7 +187,8 @@ function changeProgAkt(i, a)
 function addProg(i,dzienT,ms,ile_s,coIle_d,sek,akt) {
     console.log("add: "+i);
     jestProg[i]=1;
-    let dt=new Date(ms);
+    let dt=new Date();
+    dt.setTime(ms*1000);
     let w = document.createElement("div"); 
     w.className="w3-row w3-center w3-padding-16 w3-section";
     if(akt)w.classList.add("w3-light-grey");

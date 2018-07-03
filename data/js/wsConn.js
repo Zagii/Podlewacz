@@ -1,6 +1,6 @@
 var W;
 var G;
-var wsSerw="192.168.43.144"
+var wsSerw;//="192.168.43.144"
 
 class global
 {

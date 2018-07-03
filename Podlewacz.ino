@@ -64,6 +64,12 @@ bool czekaNaPublikacjeSTAT=false;
 uint8_t publicID=0;
 unsigned long publicMillis=0;
 
+/////////////// czujnik wilgoci ///////////////////////
+int stanCzujnikaWilgoci;             // the current reading from the input pin
+int lastButtonState = LOW;   // the previous reading from the input pin
+unsigned long lastDebounceTime = 0;  // the last time the output pin was toggled
+unsigned long debounceDelay = 50;    // the debounce time; increase if the output flickers
+////////////////////// czujnik wilgoci koniec //////////
 
 void(* resetFunc) (void) = 0; //declare reset function @ address 0
 
@@ -171,7 +177,7 @@ void setup()
   pinMode(PIN_WILGOC, INPUT_PULLUP); //czujnik wilgoci
 
   pcf8574.begin( 0x00 ); //8 pin output
-  pcf8574.resetInterruptPin();
+ // pcf8574.resetInterruptPin();
   wylaczWszystko();
   //
 
@@ -231,8 +237,10 @@ webSocket->onEvent(wse);
 
 void wylaczWszystko()
 {
-  stanSekcji=0;
-  czekaNaPublikacjeStanuMQTT=true;
+  zmienStanSekcjiAll(0);
+     czekaNaPublikacjeStanuMQTT=true;
+   czekaNaPublikacjeStanuWS=true;
+   czekaNaPublikacjeStanuHW=true;
 }
 void zmienStanSekcjiAll(uint8_t stan)
 {
@@ -266,7 +274,8 @@ void publikujStanSekcjiMQTT()
 {
    if(wifi.getConStat()!=CONN_STAT_WIFIMQTT_OK)return;
    
-   byte b = pcf8574.read8();
+   byte b = stanSekcji;//pcf8574.read8();
+   DPRINT("publikujStanSekcjiMQTT ");DPRINT(b);DPRINT(", ");DPRINTLN(stanSekcji);
    for(int i=SEKCJA_MIN;i<=SEKCJA_MAX;i++)
    {
       //if(b&(1<<i))
@@ -493,6 +502,20 @@ unsigned long d=0;
 String millisTimeStr;
 void loop()
 {
+
+  /////////////// czujnik wilgoci //////////////////
+   int reading = digitalRead(PIN_WILGOC);
+    if (reading != lastButtonState) {
+    lastDebounceTime = millis();
+  }
+
+  if ((millis() - lastDebounceTime) > debounceDelay) {
+    if (reading != stanCzujnikaWilgoci) {
+      stanCzujnikaWilgoci = reading;
+    }
+  }
+  lastButtonState = reading;
+/////////////// czujnik wilgoci koniec //////////////////   
   String infoStr;
    if(millis()-czasLokalnyMillis>1000)
   {
@@ -519,13 +542,13 @@ void loop()
     root["GEO"]="Duchnice";
     root["TEMP"]=20.1f;
     root["CISN"]=1023.34f;
-    root["DESZCZ"]=0;
+    root["DESZCZ"]=stanCzujnikaWilgoci;
     root["SYSTIME"]=millisTimeStr;
     root.printTo(infoStr); 
     char tmpTopic[MAX_TOPIC_LENGHT];
     sprintf(tmpTopic,"%s/INFO/",wifi.getOutTopic());
     
-    wifi.RSpisz(String(tmpTopic),infoStr);
+    wifi.RSpisz(String(tmpTopic),infoStr,true);
   ////////////
   }
  delay(5);
@@ -547,15 +570,20 @@ void loop()
      if(conf.getTryb()==TRYB_AUTO) // test czy programator każe wlączyć
      {
       uint8_t sekcjaProg=conf.wlaczoneSekcje(wifi.getEpochTime());
-      //  Serial.println(sekcjaProg,BIN);
+        Serial.println(sekcjaProg,BIN);
       zmienStanSekcjiAll(sekcjaProg);
      }
-   
+    if(stanCzujnikaWilgoci==LOW);
+    {
+      //DPRINTLN("WYLACZANIE Z POWODU DESZCZU !!!!");
+   //   zmienStanSekcjiAll(0);
+    }
    }
    /////////////////// obsluga hardware //////////////////////
     if(czekaNaPublikacjeStanuHW)
     {
-        pcf8574.write8(stanSekcji);
+      
+        pcf8574.write8(~stanSekcji);
         czekaNaPublikacjeStanuHW=false;
         delay(5);
     }

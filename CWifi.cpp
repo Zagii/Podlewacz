@@ -175,23 +175,28 @@ bool CWifi::reconnectMQTT()
   }
   return client.connected();
 }
-void CWifi::RSpisz(String topic,String msg)
+void CWifi::RSpisz(String topic,String msg,bool cisza)
 {
+  if(!cisza){
     DPRINT("Debug String RSpisz, topic=");  DPRINT(topic); DPRINT(", msg=");  DPRINT(msg);
-  RSpisz((const char*)topic.c_str(),(char*)msg.c_str());
+  }
+  RSpisz((const char*)topic.c_str(),(char*)msg.c_str(),cisza);
 }
-void CWifi::RSpisz(const char* topic,char* msg)
+void CWifi::RSpisz(const char* topic,char* msg,bool cisza)
 {
-   
-   DPRINT("Debug RSpisz, topic=");  DPRINT(topic); DPRINT(", msg=");  DPRINT(msg);
-   DPRINT(", wynik=");
+   if(!cisza){
+   DPRINT("Debug RSpisz, topic=");  DPRINT(topic); DPRINT(", msg=");  DPRINTLN(msg);
+ //  DPRINT(", wynik=");
+   }
    if(conStat==CONN_STAT_WIFIMQTT_OK)
    {
-	    DPRINTLN(client.publish(topic,msg));
-      DPRINT( "[");DPRINT(timeClient->getFormattedTime());DPRINT("] ");DPRINTLN(timeClient->getEpochTime());
+	    client.publish(topic,msg);
+      if(!cisza){
+        DPRINT( "[");DPRINT(timeClient->getFormattedTime());DPRINT("] ");DPRINTLN(timeClient->getEpochTime());
+        }
    }else
    {
-	   DPRINTLN(" nie wysylam, brak polaczenia");
+	   if(!cisza){DPRINTLN(" nie wysylam, brak polaczenia");}
    }
 }
 

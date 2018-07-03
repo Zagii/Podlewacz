@@ -11,13 +11,13 @@ void CWifi::wifiReconnect()
  // delay(1000);
  // DPRINTLN("  Debug CWifi::wifiReconnect end"); 
 }
-void CWifi::setNTP(const char* host,unsigned long offset)
+void CWifi::setNTP(String host,unsigned long offset)
 {
-  strcpy(ntp_server,host);
+  ntp_server=host;
   timeClient->end();
   delete timeClient;
   ntp_offset=offset;
-  timeClient=new NTPClient(ntpUDP, ntp_server, offset, 60000);
+  timeClient=new NTPClient(ntpUDP, ntp_server.c_str(), offset*3600, 60000);
   timeClient->begin();
 }
 
@@ -32,21 +32,21 @@ void CWifi::zmianaAP(String jsonString)
   }
   if(js.containsKey("ssid"))
   {
-    const char* s=js["ssid"];
+    String s=js["ssid"];
     if(js.containsKey("pwd"))
     {
-      const char* p=js["pwd"];
+      String p=js["pwd"];
       zmianaAP(s,p);
     }
   }
 }
-void CWifi::zmianaAP(const char* ssid,const char* pwd)
+void CWifi::zmianaAP(String ssid,String pwd)
 {
-  strcpy(wifi_ssid,ssid);
-  strcpy(wifi_pwd,pwd);
+  wifi_ssid=ssid;
+  wifi_pwd=pwd;
   if(wifiMulti) delete wifiMulti;
   wifiMulti=new ESP8266WiFiMulti();
-  wifiMulti->addAP(ssid,pwd);
+  wifiMulti->addAP(ssid.c_str(),pwd.c_str());
   delay(10);
   
 }
@@ -54,7 +54,7 @@ void CWifi::begin()
 {
   DPRINTLN("Debug CWifi::begin start"); 
  
- strcpy(mqtt_server,"broker.hivemq.com");
+ mqtt_server="broker.hivemq.com";
 
 
 
@@ -67,7 +67,7 @@ void CWifi::begin()
   wifiMulti->addAP("InstalujWirusa", "BlaBlaBla123");
 
   client.setClient(espClient);
-  client.setServer(mqtt_server, mqtt_port);
+  client.setServer(mqtt_server.c_str(), mqtt_port);
  // client.setCallback(callback);
   timeClient=new NTPClient(ntpUDP, "europe.pool.ntp.org", 2*3600, 60000);// new NTPClient(ntpUDP);
   timeClient->begin();
@@ -135,25 +135,25 @@ void CWifi::setupMqtt(String mqttJsonStr)
   }
   if(js.containsKey("host")&&js.containsKey("port"))
   {
-    const char* ho=js["host"];
+    String ho=js["host"];
     uint16_t po=js["port"];
   
-    const char* ur=js["user"];
-    const char* ha=js["pwd"];
+    String ur=js["user"];
+    String ha=js["pwd"];
     if(ha&&ur)
       setupMqtt(ho,po,ur,ha);
      else if(ur)setupMqtt(ho,po,ur,"");
       else setupMqtt(ho,po,"","");
   }
 }
-void CWifi::setupMqtt(const char* host, uint16_t port,const char * usr,const char* pwd)
+void CWifi::setupMqtt(String host, uint16_t port,String usr,String pwd)
 {
   client.disconnect();
-  strcpy(mqtt_server,host); 
+  mqtt_server=host; 
   mqtt_port=port; 
-  strcpy(mqtt_user, usr);
-  strcpy(mqtt_pass,pwd);
-  client.setServer(mqtt_server, mqtt_port);
+  mqtt_user= usr;
+  mqtt_pass=pwd;
+  client.setServer(mqtt_server.c_str(), mqtt_port);
   reconnectMQTT();
   delay(10);
   
@@ -161,7 +161,7 @@ void CWifi::setupMqtt(const char* host, uint16_t port,const char * usr,const cha
 
 bool CWifi::reconnectMQTT()
 {
-  if (client.connect(nodeMCUid,mqtt_user,mqtt_pass)) 
+  if (client.connect(nodeMCUid,mqtt_user.c_str(),mqtt_pass.c_str())) 
   {
     char s[MAX_TOPIC_LENGHT];
     strcpy(s,inTopic);

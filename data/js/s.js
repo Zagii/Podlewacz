@@ -49,6 +49,10 @@
             document.getElementById('godz').innerHTML=G.getGodz();
             document.getElementById('dX').innerHTML=G.getDtStr();
         }
+        if(j.hasOwnProperty("SYSTIME"))
+        {
+            document.getElementById("SYSTIME").innerHTML="Czas od restartu: "+j.SYSTIME;
+        }
         if(j.hasOwnProperty("TRYB"))
         { 
 				let s=document.getElementById("trSw");

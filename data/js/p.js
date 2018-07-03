@@ -62,6 +62,10 @@ const con=function()
                     changeSekcja(j.LBL.id,j.LBL.lbl);
                 }
         }
+        if(j.hasOwnProperty("SYSTIME"))
+        {
+            document.getElementById("SYSTIME").innerHTML="Czas od restartu: "+j.SYSTIME;
+        }
         if(j.hasOwnProperty("CZAS"))
         {
             G.setCzas(j["CZAS"]);

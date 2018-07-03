@@ -17,6 +17,7 @@ ok in/__ // {"MQTTstat":"ok/err",
            "DESZCZ":0,
            "SEKCJE":3,
            "INIT_PROGS":x       //info ze bedzie przesylac komplet programow
+           "SYSTIME":timestr // od restartu
            } odbiera status 
 ok __/out // GET {"GET:"SLBL/PROG,KONF,STAT"} - pytanie o wartosc na serwerze
 ok in/out // {"SEKCJA/d":0/1} ustawienie sekcji
@@ -49,6 +50,7 @@ debugTopic="DebugTopic/Podlewacz";
 OUT
 topic:  %inTopic%/watchdog       msg: millis -- wysyłka info o watchdog
        %outTopic%/SEKCJA/1/      msg: 0/1  -- publikacja zmiany stanu sekcji
+       %outTopic%/INFO/         msg: {json ze statusem}
 todo...        
        %outTopic%/NTP          msg:{host:adr, offset:h} publikuje parametry zegara NTP        
        %outTopic%/Time        msg:{dzien:x;czas:str} publikuje parametry zegara

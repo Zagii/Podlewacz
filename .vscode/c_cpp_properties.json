@@ -1,64 +1,30 @@
 {
+    "env": {
+        "myDefaultIncludePath": [
+            "${workspaceFolder}",
+            "${workspaceFolder}/include"
+        ],
+        "myCompilerPath": [
+            "C:\\Program Files (x86)\\Arduino\\libraries",
+            "C:\\Users\\kzagawa\\AppData\\Local\\Arduino15"
+        ],
+        "myArduinoDocPath": "C:\\Users\\kzagawa\\Documents\\Arduino\\libraries",
+        "myProjPath": "C:\\MojeRzeczy\\Reku\\Podlewacz"
+    },
     "configurations": [
-        {
-            "name": "Mac",
-            "includePath": [
-                "/usr/include",
-                "/usr/local/include",
-                "${workspaceFolder}",
-                "D:/Documents and Settings/kzagawa/Reku/Podlewacz/Podlewacz",
-                "D:/Documents and Settings/kzagawa/My Documents/Arduino/libraries"
-            ],
-            "defines": [],
-            "intelliSenseMode": "clang-x64",
-            "browse": {
-                "path": [
-                    "/usr/include",
-                    "/usr/local/include",
-                    "${workspaceFolder}",
-                    "D:/Documents and Settings/kzagawa/Reku/Podlewacz/Podlewacz",
-                    "D:/Documents and Settings/kzagawa/My Documents/Arduino/libraries"
-                ],
-                "limitSymbolsToIncludedHeaders": true,
-                "databaseFilename": ""
-            },
-            "macFrameworkPath": [
-                "/System/Library/Frameworks",
-                "/Library/Frameworks"
-            ]
-        },
-        {
-            "name": "Linux",
-            "includePath": [
-                "/usr/include",
-                "/usr/local/include",
-                "${workspaceFolder}"
-            ],
-            "defines": [],
-            "intelliSenseMode": "clang-x64",
-            "browse": {
-                "path": [
-                    "/usr/include",
-                    "/usr/local/include",
-                    "${workspaceFolder}"
-                ],
-                "limitSymbolsToIncludedHeaders": true,
-                "databaseFilename": ""
-            }
-        },
         {
             "name": "Win32",
             "includePath": [
+                "C:\\Users\\kzagawa\\AppData\\Local\\Arduino15\\packages\\esp8266\\hardware\\esp8266\\2.4.1\\cores\\esp8266",
                 "${workspaceFolder}",
+                "${myCompilerPath}",
+                "${myArduinoDocPath}",
+                "${myProjPath}",
+                "C:/MojeRzeczy/Reku/Podlewacz/",
                 "C:/Program Files/Windows Kits/8.1/Include/um",
                 "C:/Program Files/Windows Kits/8.1/Include/shared",
                 "C:/Program Files/Windows Kits/8.1/Include/winrt",
-                "D:/Documents and Settings/kzagawa/Reku/Podlewacz/Podlewacz",
-                "D:/Documents and Settings/kzagawa/My Documents/Arduino/libraries",
-                "D:/Documents and Settings/kzagawa/My Documents/Arduino/libraries/PubSubClient/src",
-                "D:/Documents and Settings/kzagawa/My Documents/Arduino/libraries/PubSubClient/tests/src/lib",
-                "D:/Documents and Settings/kzagawa/My Documents/Arduino/libraries/PCF8574_ESP-master",
-                "D:/Documents and Settings/kzagawa/arduino-1.8.2/"
+                "C:/Users/kzagawa/AppData/Local/Arduino15/packages/esp8266/hardware/esp8266/2.4.1/libraries/ESP8266WiFi/src"
             ],
             "defines": [
                 "_DEBUG",
@@ -68,14 +34,17 @@
             "intelliSenseMode": "msvc-x64",
             "browse": {
                 "path": [
+                    "C:\\Users\\kzagawa\\AppData\\Local\\Arduino15\\packages\\esp8266\\hardware\\esp8266\\2.4.1\\cores\\esp8266",
                     "${workspaceFolder}",
+                    "${myCompilerPath}",
+                    "${myArduinoDocPath}",
+                    "${myProjPath}",
+                    "C:/Users/kzagawa/Documents/Arduino/libraries/",
                     "C:/Program Files/Windows Kits/8.1/Include/um",
                     "C:/Program Files/Windows Kits/8.1/Include/shared",
-                    "C:/Program Files/Windows Kits/8.1/Include/winrt",
-                    "D:/Documents and Settings/kzagawa/Reku/Podlewacz/Podlewacz",
-                    "D:/Documents and Settings/kzagawa/My Documents/Arduino/libraries"
+                    "C:/Program Files/Windows Kits/8.1/Include/winrt"
                 ],
-                "limitSymbolsToIncludedHeaders": true,
+                "limitSymbolsToIncludedHeaders": false,
                 "databaseFilename": ""
             },
             "cStandard": "c11",

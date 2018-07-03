@@ -1,1 +1,1 @@
-{"Mqtt":{"host":"","port":1884, "user":"", "pwd":""}}
+{"host":"broker.hivemq.com","port":"1883"}

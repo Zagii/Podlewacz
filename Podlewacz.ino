@@ -86,7 +86,8 @@ void callback(char* topic, byte* payload, unsigned int length)
     
 
   }
-
+ if(topic[strlen(topic)-1]=='/')
+    {topic[strlen(topic)-1] = '\0';}
  DPRINT("Debug: callback topic=");
  DPRINT(topic);
  DPRINT(" msg=");
@@ -384,7 +385,7 @@ void publikujStanSekcjiMQTT()
     ind=strstr(topic,"NTP");
     if(ind!=NULL)
     {
-      const char* host=json["host"];
+      String host=json["host"];
       unsigned long offset=json["offset"];
       wifi.setNTP(host,offset);
       // zapisz do pliku
@@ -394,10 +395,10 @@ void publikujStanSekcjiMQTT()
     ind=strstr(topic,"Wifi");
     if(ind!=NULL)
     {
-      const char* tryb=json["tryb"];
-       const char* ssid=json["ssid"];
-       const char* pass=json["pass"];
-      if(strcmp(tryb,"STA")==0)
+     String tryb=json["tryb"];
+      String ssid=json["ssid"];
+       String pass=json["pass"];
+      if(tryb=="STA")
       {
         wifi.zmianaAP(ssid,pass);
         conf.saveConfigStr(PLIK_WIFI,jsS.c_str());
@@ -406,21 +407,22 @@ void publikujStanSekcjiMQTT()
       {/// utworzyc AP
         
       }
+      czekaNaPublikacjeKONF=true;
     }
     ind=strstr(topic,"Mqtt");
     if(ind!=NULL)
     {     
-      const char* host=json["host"];
+     String host=json["host"];
       uint16_t port=json["port"];
-       char user[20]="";
-       char pwd[20]="";
+       String user="";
+       String pwd="";
       if(json.containsKey("user"))
       {
-        strcpy(user,json["user"]);
+       user=String((const char*)json["user"]);
       }
       if(json.containsKey("pwd"))
       {
-        strcpy(pwd,json["pwd"]);
+        pwd=String((const char*)json["pwd"]);
       }
       wifi.setupMqtt(host,port,user,pwd);
       // zapisz do pliku
@@ -488,28 +490,50 @@ void publikujStanSekcjiMQTT()
 
 unsigned long d=0;
 
-
+String millisTimeStr;
 void loop()
 {
+  String infoStr;
    if(millis()-czasLokalnyMillis>1000)
   {
     czasLokalnyMillis=millis();
     czasLokalny++;
+    millisTimeStr=String(wifi.TimeToString(millis()/1000));
+    //// przygotowanie ogólnego statusu
+    DynamicJsonBuffer jsonBuffer;
+    JsonObject& root = jsonBuffer.createObject();
+     /*
+    *  1 styczen 2010 to
+    *  Epoch timestamp: 1262304000
+    *  Timestamp in milliseconds: 1262304000000
+    */
+    if(wifi.getEpochTime()<1262304000)// czyli brak polaczenia z NTP
+    {
+       root["CZAS"]=czasLokalny; 
+    }else
+    {
+      root["CZAS"]= wifi.getEpochTime();
+    }
+    root["SEKCJE"]=stanSekcji;
+    root["TRYB"]=String(conf.getTryb());
+    root["GEO"]="Duchnice";
+    root["TEMP"]=20.1f;
+    root["CISN"]=1023.34f;
+    root["DESZCZ"]=0;
+    root["SYSTIME"]=millisTimeStr;
+    root.printTo(infoStr); 
+    char tmpTopic[MAX_TOPIC_LENGHT];
+    sprintf(tmpTopic,"%s/INFO/",wifi.getOutTopic());
+    
+    wifi.RSpisz(String(tmpTopic),infoStr);
+  ////////////
   }
  delay(5);
   wifi.loop();
  delay(5);
- /*
-  *  1 styczen 2010 to
-  *  Epoch timestamp: 1262304000
-  *  Timestamp in milliseconds: 1262304000000
-  */
-  if(wifi.getEpochTime()<1262304000)// czyli brak polaczenia z NTP
-  {
-    web.loop(czasLokalny, stanSekcji,"Duchnice",20.1f,1023.34f,0,conf.getTryb());
-  }else{
-    web.loop(wifi.getEpochTime(), stanSekcji,"Duchnice",20.1f,1023.34f,0,conf.getTryb());
-  }
+
+    web.loop(czasLokalny, infoStr);
+  
  delay(5);
 
  

@@ -31,7 +31,7 @@ class CWebSerwer
     CWebSerwer(){};
      void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length);
      void begin();
-     void loop(unsigned long t_s, uint8_t stanSekcji, char* geo, double temp,double p, bool deszcz,char tryb);
+     void loop(unsigned long t_s, String info);
      WebSocketsServer *getWebSocket(){return webSocket;};
      void publikujStanSekcji(uint8_t stan);
      String getContentType(String filename);

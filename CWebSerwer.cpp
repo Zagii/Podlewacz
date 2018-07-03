@@ -132,57 +132,20 @@ String CWebSerwer::getContentType(String filename){
   // Content-Encoding: gzip
 }
 
-void CWebSerwer::loop(unsigned long t_s, uint8_t stanSekcji, char* geo, double temp,double p, bool deszcz,char tryb)
+void CWebSerwer::loop(unsigned long t_s, String infoStr)
 {
    webSocket->loop();
    yield();
    server.handleClient();
    yield();
 
-   return; //////////////////////////////<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<    debug tylko 
+   //return; //////////////////////////////<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<    debug tylko 
    //if(clientConnected<=0)return;
    if(ostatnioWyslanyCzas_s!=t_s)
    {
-    DynamicJsonBuffer jsonBuffer;
-    String jsStr="";
-    JsonObject& root = jsonBuffer.createObject();
-   
-    ostatnioWyslanyCzas_s=t_s;
-    root["CZAS"]=t_s; 
-    root["SEKCJE"]=stanSekcji;
-     // if(Tryb!=tryb)
-    // { 
-        Tryb=tryb;
-        root["TRYB"]=String(tryb);
-        
-     //}
-     
-    //if(strcmp(geo,geoLok)!=0)
-    //{
-       strcpy(geoLok,geo);
-       root["GEO"]=geo;
-    //}
-    //if(Temperatura!=temp)
-    //{ 
-        Temperatura=temp;
-        root["TEMP"]=temp;
-    //}
-    //if(Cisnienie!=p)
-    //{ 
-      Cisnienie=p;
-      root["CISN"]=p;
-    //}
-    //if(czujnikDeszczu!=deszcz)
-    //{ 
-      czujnikDeszczu=deszcz;
-      root["DESZCZ"]=deszcz;
-    //}
-   
-    yield();
-    root.printTo(jsStr); 
- //   Serial.println(jsStr);
-    webSocket->broadcastTXT(jsStr);
-    }
+     ostatnioWyslanyCzas_s=t_s;
+     webSocket->broadcastTXT(infoStr);
+   }
    
 }
 

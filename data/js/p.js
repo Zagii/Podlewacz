@@ -2,9 +2,15 @@ let progN=0;
 let jestProg=[0];
 let sLbl=["?"];
 
+let bylSLbl=false;
+let bylProg=false;
+let bylKonf=false;
 
 const con=function()
     {
+        bylSLbl=false;
+        bylProg=false;
+        bylKonf=false;
         console.log("connected");
         let o=document.getElementById("pol");
         document.getElementById("plug").style.color="lime";
@@ -34,10 +40,12 @@ const con=function()
                 }
                 if(["INIT_PROGS"].indexOf(k)>=0)
                 {
+                    bylPLbl
                     initProgs();
                 }
                 if(["Wifi","Mqtt","NTP","Time"].indexOf(k)>=0)
                 {
+                    bylKonf=true;
                     let m=j[k];
                     let fe=document.getElementById(k).elements;
                     for(let k1 in m)
@@ -53,6 +61,7 @@ const con=function()
         }
         if(j.hasOwnProperty("LBL"))
         {
+            bylSLbl=true;
             let tmp=G.getLbl(j.LBL.id);
             if(tmp.length<=0)
                 {
@@ -74,6 +83,7 @@ const con=function()
         }
         if(j.hasOwnProperty("PROG"))
         {
+            bylProg=true;
             let js=j.PROG;
             if(!jestProg[js.id]||jestProg[js.id]==0)
             {
@@ -84,7 +94,21 @@ const con=function()
                 ///zmien prog
                 changeProg(js.id,js.dzienTyg,js.ms,js.okresS,js.coIle,js.sekcja,js.aktywny);
             }
-        }      
+        }     
+        if(!bylSLbl)
+        {
+            setTimeout(()=>{if(!bylSLbl) W.getSekLbl();},3000);
+        } 
+        if(!bylProg)
+        {
+            setTimeout(()=>{if(!bylProg)  W.getProgs();},7000);
+        } 
+        if(!bylKonf)
+        {
+            setTimeout(()=>{if(!bylKonf)  W.getKonf();},5000);
+        } 
+       
+       
     };
 
 

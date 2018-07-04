@@ -1,6 +1,7 @@
-
+    let bylSLbl=false;
     const con=function()
     {
+        bylSLbl=false;
         console.log("connected");
         let o=document.getElementById("pol");
         o.textContent="on-line"
@@ -41,6 +42,7 @@
         {
                 G.setLbl(j.LBL.id,j.LBL.lbl);
                 document.getElementById("Lbl"+j.LBL.id).innerHTML=j.LBL.lbl;
+                bylSLbl=true;
         }
        
         if(j.hasOwnProperty("CZAS"))
@@ -73,6 +75,12 @@
         if(j.hasOwnProperty("SEKCJE"))
         { 
                 setStany(j["SEKCJE"]);
+                document.getElementById("SEKCJELOG").innerHTML="["+new Date().toLocaleString()+"] zmiana sekcji na stan:"+j["SEKCJE"].toString(2);
+              
+        }
+        if(!bylSLbl)
+        {
+            setTimeout(()=>{if(!bylSLbl) W.getSekLbl();},5000);
         }
     };
 
@@ -95,7 +103,7 @@
             add(i);
             console.log("Dodaje: "+i);
         }
-        
+      
     });
     function setStany(sekcje)
     {

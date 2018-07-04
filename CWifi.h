@@ -66,6 +66,8 @@ const char* debugTopic="DebugTopic/Podlewacz";
 String ntp_server;
 unsigned long ntp_offset;
 
+String MQTT_def_Host="broker.hivemq.com";
+uint16_t MQTT_def_port=1883;
 String mqtt_server;// ="broker.hivemq.com"; //"m23.cloudmqtt.com";
 String mqtt_user;//"aigejtoh";
 String mqtt_pass;//"ZFlzjMm4T-XH";
@@ -85,13 +87,13 @@ String wifi_tryb;
 
   ESP8266WiFiMulti *wifiMulti;
   WiFiClient espClient;
-  PubSubClient client;
+  PubSubClient clientMqtt;
   
   public:
   CWifi(){};
   void begin();
   void loop();
-  PubSubClient *getMQTTClient(){return &client;};
+  PubSubClient *getMQTTClient(){return &clientMqtt;};
   bool wifiConnected();
   bool getWifiStatusString(char *b);
   bool reconnectMQTT();

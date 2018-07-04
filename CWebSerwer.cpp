@@ -132,20 +132,20 @@ String CWebSerwer::getContentType(String filename){
   // Content-Encoding: gzip
 }
 
-void CWebSerwer::loop(unsigned long t_s, String infoStr)
+void CWebSerwer::loop()//unsigned long t_s, String infoStr)
 {
    webSocket->loop();
-   yield();
+   delay(3);
    server.handleClient();
-   yield();
+   delay(3);
 
    //return; //////////////////////////////<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<    debug tylko 
    //if(clientConnected<=0)return;
-   if(ostatnioWyslanyCzas_s!=t_s)
-   {
-     ostatnioWyslanyCzas_s=t_s;
-     webSocket->broadcastTXT(infoStr);
-   }
+  // if(ostatnioWyslanyCzas_s!=t_s)
+  // {
+  //   ostatnioWyslanyCzas_s=t_s;
+    // webSocket->broadcastTXT(infoStr);
+  // }
    
 }
 

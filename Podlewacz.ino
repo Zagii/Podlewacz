@@ -499,24 +499,22 @@ void publikujStanSekcjiMQTT()
 
 unsigned long d=0;
 
-String millisTimeStr;
+String millisTimeStr="0m";
+  String infoStr="nic";
+  String infoStrPop="nicP";
 void loop()
 {
 
   /////////////// czujnik wilgoci //////////////////
    int reading = digitalRead(PIN_WILGOC);
-    if (reading != lastButtonState) {
-    lastDebounceTime = millis();
-  }
-
-  if ((millis() - lastDebounceTime) > debounceDelay) {
-    if (reading != stanCzujnikaWilgoci) {
-      stanCzujnikaWilgoci = reading;
-    }
-  }
-  lastButtonState = reading;
+   if (reading != lastButtonState) { lastDebounceTime = millis(); }
+   if ((millis() - lastDebounceTime) > debounceDelay) 
+   {
+    if (reading != stanCzujnikaWilgoci) { stanCzujnikaWilgoci = reading; }
+   }
+   lastButtonState = reading;
 /////////////// czujnik wilgoci koniec //////////////////   
-  String infoStr;
+
    if(millis()-czasLokalnyMillis>1000)
   {
     czasLokalnyMillis=millis();
@@ -525,6 +523,7 @@ void loop()
     //// przygotowanie ogólnego statusu
     DynamicJsonBuffer jsonBuffer;
     JsonObject& root = jsonBuffer.createObject();
+    unsigned long tmpTime=wifi.getEpochTime();
      /*
     *  1 styczen 2010 to
     *  Epoch timestamp: 1262304000
@@ -532,11 +531,10 @@ void loop()
     */
     if(wifi.getEpochTime()<1262304000)// czyli brak polaczenia z NTP
     {
-       root["CZAS"]=czasLokalny; 
-    }else
-    {
-      root["CZAS"]= wifi.getEpochTime();
+      tmpTime=czasLokalny; 
     }
+    tmpTime=(tmpTime/1000)*1000; //zaokraglanie czasu co x sek
+    root["CZAS"]=tmpTime;
     root["SEKCJE"]=stanSekcji;
     root["TRYB"]=String(conf.getTryb());
     root["GEO"]="Duchnice";
@@ -544,18 +542,21 @@ void loop()
     root["CISN"]=1023.34f;
     root["DESZCZ"]=stanCzujnikaWilgoci;
     root["SYSTIME"]=millisTimeStr;
+    infoStr="";
     root.printTo(infoStr); 
-    char tmpTopic[MAX_TOPIC_LENGHT];
-    sprintf(tmpTopic,"%s/INFO/",wifi.getOutTopic());
-    
-    wifi.RSpisz(String(tmpTopic),infoStr,true);
+  
+
+    if(infoStrPop!=infoStr) // wysyłanie info tylko gdy zmieniło się coś
+    {
+      czekaNaPublikacjeSTAT=true;      
+    }
   ////////////
   }
  delay(5);
   wifi.loop();
  delay(5);
 
-    web.loop(czasLokalny, infoStr);
+    web.loop();//czasLokalny, infoStr);
   
  delay(5);
 
@@ -570,12 +571,12 @@ void loop()
      if(conf.getTryb()==TRYB_AUTO) // test czy programator każe wlączyć
      {
       uint8_t sekcjaProg=conf.wlaczoneSekcje(wifi.getEpochTime());
-        Serial.println(sekcjaProg,BIN);
+      //  Serial.println(sekcjaProg,BIN);
       zmienStanSekcjiAll(sekcjaProg);
      }
-    if(stanCzujnikaWilgoci==LOW);
+    if(stanCzujnikaWilgoci==HIGH);
     {
-      //DPRINTLN("WYLACZANIE Z POWODU DESZCZU !!!!");
+     // DPRINTLN("WYLACZANIE Z POWODU DESZCZU !!!!");
    //   zmienStanSekcjiAll(0);
     }
    }
@@ -669,10 +670,15 @@ void loop()
     delay(10);
    }
    if(czekaNaPublikacjeSTAT)
-   {//tryb
-    //sekcja
-    //geo,temp,czas,cisn,deszcz
-    czekaNaPublikacjeSTAT=false;
+   {//tryb  //sekcja  //geo,temp,czas,cisn,deszcz
+     // char tmpTopic[MAX_TOPIC_LENGHT];
+      String tt=String(wifi.getOutTopic())+"/INFO/";
+      //sprintf(tmpTopic,"%s/INFO/",wifi.getOutTopic());
+      //wifi.RSpisz(String(tmpTopic),infoStr);//,true);
+      wifi.RSpisz(tt,infoStr);//,true);
+      web.sendWebSocketStr(infoStr);
+      infoStrPop=infoStr;
+      czekaNaPublikacjeSTAT=false;
     delay(5);
    }
    

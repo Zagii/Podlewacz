@@ -66,9 +66,9 @@ void CWifi::begin()
   wifiMulti->addAP("open1.t-mobile.pl");
   wifiMulti->addAP("InstalujWirusa", "BlaBlaBla123");
 
-  client.setClient(espClient);
-  client.setServer(mqtt_server.c_str(), mqtt_port);
- // client.setCallback(callback);
+  clientMqtt.setClient(espClient);
+  clientMqtt.setServer(mqtt_server.c_str(), mqtt_port);
+ // clientMqtt.setCallback(callback);
   timeClient=new NTPClient(ntpUDP, "europe.pool.ntp.org", 2*3600, 60000);// new NTPClient(ntpUDP);
   timeClient->begin();
   
@@ -120,8 +120,6 @@ bool CWifi::getWifiStatusString(char *b)
 
 bool CWifi::wifiConnected()
 {
- // return wifiMulti.run() == WL_CONNECTED;
-// if (WiFi.status()==WL_CONNECTED)return true; else return false;
  if (wifiMulti->run()==WL_CONNECTED)return true; else return false;
 }
 void CWifi::setupMqtt(String mqttJsonStr)
@@ -135,68 +133,93 @@ void CWifi::setupMqtt(String mqttJsonStr)
   }
   if(js.containsKey("host")&&js.containsKey("port"))
   {
-    String ho=js["host"];
-    uint16_t po=js["port"];
+    String host=js["host"];
+    uint16_t port=js["port"];
   
-    String ur=js["user"];
-    String ha=js["pwd"];
-    if(ha&&ur)
-      setupMqtt(ho,po,ur,ha);
-     else if(ur)setupMqtt(ho,po,ur,"");
-      else setupMqtt(ho,po,"","");
-  }
+    String usr="";
+    if(js.containsKey("user"))usr=String((const char*)js["user"]);
+    String pwd="";
+    if(js.containsKey("pwd"))pwd=String((const char*)js["pwd"]);
+    
+    setupMqtt(host,port,usr,pwd);
+    
+  }else
+  setupMqtt(MQTT_def_Host,MQTT_def_port,"","");
 }
 void CWifi::setupMqtt(String host, uint16_t port,String usr,String pwd)
 {
-  client.disconnect();
+  DPRINT("setupMqtt host:");DPRINT(host);DPRINT("; port:");DPRINT(port);DPRINT("; user:");DPRINT(usr);DPRINT(", pass:");DPRINTLN(pwd);
+ // clientMqtt.disconnect();
   mqtt_server=host; 
   mqtt_port=port; 
   mqtt_user= usr;
   mqtt_pass=pwd;
-  client.setServer(mqtt_server.c_str(), mqtt_port);
-  reconnectMQTT();
-  delay(10);
   
+  clientMqtt.setServer(mqtt_server.c_str(), mqtt_port);
+  delay(30);
+  reconnectMQTT(); 
 }
 
 bool CWifi::reconnectMQTT()
 {
-  if (client.connect(nodeMCUid,mqtt_user.c_str(),mqtt_pass.c_str())) 
+  DPRINT("reconnectMQTT()");DPRINTLN(clientMqtt.state());
+  bool cliConStat=false;
+  DPRINT(" host:");DPRINT(mqtt_server);DPRINT(" port:");DPRINT(mqtt_port);DPRINT(" user:");DPRINT(mqtt_user);DPRINT(", pass:");DPRINTLN(mqtt_pass);
+  if(mqtt_user.length()>0)
+  {
+    if(mqtt_pass.length()>0)  
+      {cliConStat=clientMqtt.connect(nodeMCUid,mqtt_user.c_str(),mqtt_pass.c_str());DPRINTLN("z userem i haslem");}
+    else
+     { cliConStat=clientMqtt.connect(nodeMCUid,mqtt_user.c_str(),NULL);DPRINTLN("bez hasla");}
+  }else
+  {
+    cliConStat=clientMqtt.connect(nodeMCUid);
+    DPRINTLN("bez usera");
+  }
+  delay(200);
+  DPRINT("cliConState=");DPRINTLN(clientMqtt.state());
+  if(cliConStat) 
   {
     char s[MAX_TOPIC_LENGHT];
     strcpy(s,inTopic);
     strcat(s,"\/#");  
-    client.subscribe(s);
+    clientMqtt.subscribe(s);
     const char *t="reconnectMQTT, subskrybcja do: ";
     char b[MAX_TOPIC_LENGHT+strlen(t)];
     sprintf(b,"%s%s",t,s);
     RSpisz(debugTopic,b);
    
   }
-  return client.connected();
+  return clientMqtt.connected();
 }
 void CWifi::RSpisz(String topic,String msg,bool cisza)
 {
-  if(!cisza){
+  if(!cisza)
+  {
     DPRINT("Debug String RSpisz, topic=");  DPRINT(topic); DPRINT(", msg=");  DPRINT(msg);
   }
   RSpisz((const char*)topic.c_str(),(char*)msg.c_str(),cisza);
 }
 void CWifi::RSpisz(const char* topic,char* msg,bool cisza)
 {
-   if(!cisza){
+   if(!cisza)
+   {
    DPRINT("Debug RSpisz, topic=");  DPRINT(topic); DPRINT(", msg=");  DPRINTLN(msg);
  //  DPRINT(", wynik=");
    }
-   if(conStat==CONN_STAT_WIFIMQTT_OK)
+   if(clientMqtt.connected())//conStat==CONN_STAT_WIFIMQTT_OK)
    {
-	    client.publish(topic,msg);
+	    bool publ=clientMqtt.publish(topic,msg);
       if(!cisza){
+        DPRINT("wyslano MQTT");
         DPRINT( "[");DPRINT(timeClient->getFormattedTime());DPRINT("] ");DPRINTLN(timeClient->getEpochTime());
         }
    }else
    {
-	   if(!cisza){DPRINTLN(" nie wysylam, brak polaczenia");}
+	   if(!cisza)
+	   {
+	    DPRINT(clientMqtt.state());
+	    DPRINTLN(" nie wysylam, brak polaczenia");}
    }
 }
 
@@ -237,16 +260,17 @@ void CWifi::loop()
  }else
  {
  
-     if (!client.connected()) 
+     if (!clientMqtt.connected()) 
     {
-     conStat=CONN_STAT_WIFIMQTT_CONNECTING;
+      conStat=CONN_STAT_WIFIMQTT_CONNECTING;
       if (millis() - lastMQTTReconnectAttempt > 5000)
       {
         lastMQTTReconnectAttempt = millis();
-        if (reconnectMQTT())
+        if(reconnectMQTT())
         {
+          delay(100);
            RSpisz(debugTopic,"MQTT=ok");
-           conStat=CONN_STAT_WIFIMQTT_OK;
+          conStat=CONN_STAT_WIFIMQTT_OK;
           lastMQTTReconnectAttempt = 0;
          char t[100];
          sprintf(t,"Polaczono SSID=%s, IP=%d.%d.%d.%d",WiFi.SSID().c_str(),WiFi.localIP()[0],WiFi.localIP()[1],WiFi.localIP()[2],WiFi.localIP()[3]);
@@ -255,14 +279,14 @@ void CWifi::loop()
         else
         {
              RSpisz(debugTopic,"MQTT=Err");
-             DPRINT("Err MQTTstat= ");DPRINTLN(client.state());
+             DPRINT("Err MQTTstat= ");DPRINTLN(clientMqtt.state());
              DPRINT("WIFI ip= ");DPRINTLN(WiFi.localIP());
         }
       }
     } else
     {
-          client.loop();     
-          yield();
+          clientMqtt.loop();     
+          delay(5);
           timeClient->update();
          
            if(loopMillis%600000==0) //10 min wysyłaj pingi watchdoga cyklicznie 

@@ -20,23 +20,24 @@ class CWebSerwer
  //   unsigned long lastLongPubl;
   //  uint8_t stanSekcji;
 
-    unsigned long ostatnioWyslanyCzas_s;
-    char geoLok[30];
-    double Temperatura;
-    double Cisnienie;
-    bool czujnikDeszczu;
-    char Tryb;
+ //   unsigned long ostatnioWyslanyCzas_s;
+ //   char geoLok[30];
+ //   double Temperatura;
+ //   double Cisnienie;
+ //   bool czujnikDeszczu;
+ //   char Tryb;
     
     public: 
     CWebSerwer(){};
      void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length);
      void begin();
-     void loop(unsigned long t_s, String info);
+     void loop();//unsigned long t_s, String info);
      WebSocketsServer *getWebSocket(){return webSocket;};
      void publikujStanSekcji(uint8_t stan);
      String getContentType(String filename);
      bool handleFileRead(String path);
-     void sendWebSocket(const char *str){ webSocket->broadcastTXT(str);};
+     void sendWebSocket(const char *str){ if(clientConnected>0)webSocket->broadcastTXT(str);};
+     void sendWebSocketStr(String s){if(clientConnected>0)webSocket->broadcastTXT(s.c_str());};
   
 };
 #endif

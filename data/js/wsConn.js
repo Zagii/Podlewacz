@@ -97,7 +97,7 @@ class wsConn
     }
     begin(d)
     {
-        startWS();
+        this.startWS();
         setInterval(this.checkWS.bind(this), d*5000);
     }
     checkWS()

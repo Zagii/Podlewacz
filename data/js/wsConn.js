@@ -1,6 +1,6 @@
 var W;
 var G;
-var wsSerw;//="192.168.43.144"
+//var wsSerw;//="192.168.43.144"
 
 class global
 {
@@ -25,6 +25,10 @@ class global
         return  this.dt.getUTCHours().toString().padStart(2,"0")+":"+
         this.dt.getUTCMinutes().toString().padStart(2,"0")+":"+
         this.dt.getUTCSeconds().toString().padStart(2,"0");       
+    }
+    getGodzBezS(){
+        return  this.dt.getUTCHours().toString().padStart(2,"0")+":"+
+        this.dt.getUTCMinutes().toString().padStart(2,"0");       
     }
     getDtStr()
     {
@@ -93,7 +97,8 @@ class wsConn
     }
     begin(d)
     {
-        setInterval(this.checkWS.bind(this), d*1000);
+        startWS();
+        setInterval(this.checkWS.bind(this), d*5000);
     }
     checkWS()
     {
@@ -114,6 +119,13 @@ class wsConn
         
         }else
         {*/
+        if(this.ws!=null)
+        { 
+             if(this.ws.readyState==WebSocket.CLOSED)
+                            this.ws.onerror("no connection");
+           
+
+        }else 
          this.startWS();
         //}
         return this.ws.readyState;
@@ -122,8 +134,17 @@ class wsConn
     startWS()
     {
         if(this.ws){ if(this.ws.readyState==WebSocket.OPEN) return; }
+      
+        
         console.log("startWS");
-        this.ws = new WebSocket('ws://'+wsSerw+':81/'); 
+        if(typeof wsSerw === 'undefined' || wsSerw==null)
+        {
+            console.log("ws ip: 192.168.43.144");
+            this.ws = new WebSocket('ws://192.168.43.144:81/'); 
+        }else
+        {
+            this.ws = new WebSocket('ws://'+wsSerw+':81/'); 
+        }
       //  this.ws =new WebSocket("wss://echo.websocket.org/");
         let me=this;
         this.ws.onopen = function () 
@@ -135,8 +156,11 @@ class wsConn
         this.ws.onerror = function (error) 
         { 
             console.log('WebSocket Error ', error); 
-            ws.close();
-            delete this.ws; 
+            if(this.ws)
+            {
+                ws.close();
+                delete this.ws; 
+            }
             me.fDc();
 	    }; 
         this.ws.onmessage = function (e) 

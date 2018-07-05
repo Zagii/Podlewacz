@@ -19,11 +19,12 @@
         o.style="color:darkred";
         document.getElementById("plug").style.color="darkred";
         document.getElementById("plugm").style.color="darkred";
-    delete W; 
+    if(W)delete W; 
     };
     const msg=function(j)
     {
-        console.log(j);
+      console.log(j);
+        document.getElementById("LASTMSG").innerHTML="["+new Date().toLocaleString()+"] ostatni msg:"+JSON.stringify(j);
         for (let k in j) {
             if (j.hasOwnProperty(k)) {
                 console.log(k + " -> " + j[k]);

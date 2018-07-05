@@ -18,6 +18,7 @@
 #include <ESP8266WebServer.h>
 #include <ESP8266mDNS.h>
 
+
 #include <pcf8574_esp.h>
 #include <ArduinoJson.h>
 #include <Time.h>
@@ -337,6 +338,7 @@ void publikujStanSekcjiMQTT()
        {
             conf.setTryb(TRYB_MANUAL);
        }
+       czekaNaPublikacjeSTAT=true;
         return;
     }
     ind=strstr(topic,"CZAS");
@@ -502,6 +504,8 @@ unsigned long d=0;
 String millisTimeStr="0m";
   String infoStr="nic";
   String infoStrPop="nicP";
+ // String infoStrP2="nic";
+ // String infoStrPopP2="nicP";
 void loop()
 {
 
@@ -533,7 +537,7 @@ void loop()
     {
       tmpTime=czasLokalny; 
     }
-    tmpTime=(tmpTime/1000)*1000; //zaokraglanie czasu co x sek
+    tmpTime=(tmpTime/10)*10; //zaokraglanie czasu co x sek
     root["CZAS"]=tmpTime;
     root["SEKCJE"]=stanSekcji;
     root["TRYB"]=String(conf.getTryb());
@@ -626,7 +630,7 @@ void loop()
       DPRINTLN(tmpTopic);
       String jjs=String(conf.getProgIle());
       DPRINTLN(jjs);
-     wifi.RSpisz(String(tmpTopic),jjs);
+     wifi.RSpiszStr(String(tmpTopic),jjs);
      jjs=String("{\"INIT_PROGS\":")+String(conf.getProgIle())+"}";
      DPRINTLN(jjs);
      web.sendWebSocket(jjs.c_str());
@@ -671,11 +675,12 @@ void loop()
    }
    if(czekaNaPublikacjeSTAT)
    {//tryb  //sekcja  //geo,temp,czas,cisn,deszcz
-     // char tmpTopic[MAX_TOPIC_LENGHT];
+    //  char tmpTopic[MAX_TOPIC_LENGHT];
+    //  sprintf(tmpTopic,"%s/INFO/",wifi.getOutTopic());
+    //  wifi.RSpisz((const char*)tmpTopic,(char*)infoStr.c_str());//,true);
+      
       String tt=String(wifi.getOutTopic())+"/INFO/";
-      //sprintf(tmpTopic,"%s/INFO/",wifi.getOutTopic());
-      //wifi.RSpisz(String(tmpTopic),infoStr);//,true);
-      wifi.RSpisz(tt,infoStr);//,true);
+      wifi.RSpiszStr(tt,infoStr,true);
       web.sendWebSocketStr(infoStr);
       infoStrPop=infoStr;
       czekaNaPublikacjeSTAT=false;

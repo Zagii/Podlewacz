@@ -50,6 +50,7 @@ void CWifi::zmianaAP(String ssid,String pwd)
   delay(10);
   
 }
+
 void CWifi::begin()
 {
   DPRINTLN("Debug CWifi::begin start"); 
@@ -58,12 +59,18 @@ void CWifi::begin()
 
 
 
+  WiFi.hostname(WiFiHostname);
+  WiFi.mode(WIFI_AP_STA);
+//  WiFi.mode(WIFI_STA);
+
+  WiFi.softAPConfig(apIP, apIP, IPAddress(255, 255, 255, 0));
+  WiFi.softAP(APssid, APpassword); //|| reset();             // Start the access point
+  DPRINTLN("AP uruchomiony");
   
-  WiFi.mode(WIFI_STA);
   wifiReconnect();
   wifiMulti=new ESP8266WiFiMulti();
   wifiMulti->addAP("DOrangeFreeDom", "KZagaw01_ruter_key");
-  wifiMulti->addAP("open1.t-mobile.pl");
+  wifiMulti->addAP("open.t-mobile.pl");
   wifiMulti->addAP("InstalujWirusa", "BlaBlaBla123");
 
   clientMqtt.setClient(espClient);
@@ -192,11 +199,11 @@ bool CWifi::reconnectMQTT()
   }
   return clientMqtt.connected();
 }
-void CWifi::RSpisz(String topic,String msg,bool cisza)
+void CWifi::RSpiszStr(String topic,String msg,bool cisza)
 {
   if(!cisza)
   {
-    DPRINT("Debug String RSpisz, topic=");  DPRINT(topic); DPRINT(", msg=");  DPRINT(msg);
+    DPRINT(">>>>Debug String RSpisz, topic=");  DPRINT(topic); DPRINT(", msg=");  DPRINTLN(msg);
   }
   RSpisz((const char*)topic.c_str(),(char*)msg.c_str(),cisza);
 }
@@ -204,7 +211,7 @@ void CWifi::RSpisz(const char* topic,char* msg,bool cisza)
 {
    if(!cisza)
    {
-   DPRINT("Debug RSpisz, topic=");  DPRINT(topic); DPRINT(", msg=");  DPRINTLN(msg);
+   DPRINT(">>Debug RSpisz, topic=");  DPRINT(topic); DPRINT(", msg=");  DPRINTLN(msg);
  //  DPRINT(", wynik=");
    }
    if(clientMqtt.connected())//conStat==CONN_STAT_WIFIMQTT_OK)
@@ -212,14 +219,15 @@ void CWifi::RSpisz(const char* topic,char* msg,bool cisza)
 	    bool publ=clientMqtt.publish(topic,msg);
       if(!cisza){
         DPRINT("wyslano MQTT");
-        DPRINT( "[");DPRINT(timeClient->getFormattedTime());DPRINT("] ");DPRINTLN(timeClient->getEpochTime());
+        DPRINT( "[");DPRINT(timeClient->getFormattedTime());DPRINT("# ");DPRINT(publ);DPRINT("] ");DPRINTLN(timeClient->getEpochTime());
         }
    }else
    {
 	   if(!cisza)
 	   {
-	    DPRINT(clientMqtt.state());
-	    DPRINTLN(" nie wysylam, brak polaczenia");}
+      DPRINTLN(" nie wysylam, brak polaczenia");
+	    DPRINTLN(clientMqtt.state());
+      } 
    }
 }
 

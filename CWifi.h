@@ -8,6 +8,7 @@
 #include <NTPClient.h>
 #include <WiFiUdp.h>
 
+
 //#include "Defy.h"
 
 /*
@@ -43,7 +44,7 @@ typedef enum {
 #define MAX_TOPIC_LENGHT 50
 #define MAX_MSG_LENGHT 20
 
-
+//#define MQTT_MAX_PACKET_SIZE 256 /// definicja z pubsub<<<<<<<<<<<<< zmienić w bibliotece
 
 class CWifi
 {
@@ -58,10 +59,16 @@ NTPClient *timeClient;
 // NTPClient timeClient(ntpUDP, "europe.pool.ntp.org", 3600, 60000);
 
 //////////////////////////////
-const char* nodeMCUid="Podlewacz";
-const char* outTopic="Podlewacz/OUT";
-const char* inTopic="Podlewacz/IN";
-const char* debugTopic="DebugTopic/Podlewacz";
+const char* nodeMCUid="AqTouch_test";
+const char* outTopic="AqTouch_test/OUT";
+const char* inTopic="AqTouch_test/IN";
+const char* debugTopic="DebugTopic/AqTouch_test";
+
+const char *APssid= "AqTouch_testAP";
+const char *APpassword = "qwerty";
+const char* WiFiHostname = "AqTouch_test";      // Host name of the device
+IPAddress apIP=(192,168,1,1);             // The IP address of the access point
+
 
 String ntp_server;
 unsigned long ntp_offset;
@@ -98,7 +105,7 @@ String wifi_tryb;
   bool getWifiStatusString(char *b);
   bool reconnectMQTT();
   void RSpisz(const char* topic,char* msg,bool cisza=false);
-  void RSpisz(String topic,String msg,bool cisza=false);
+  void RSpiszStr(String topic,String msg,bool cisza=false);
   char * TimeToString(unsigned long t);
   void setWDmillis(unsigned long m){WDmillis=m;};
   unsigned long getWDmillis(){return WDmillis;};

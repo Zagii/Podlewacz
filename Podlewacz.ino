@@ -51,7 +51,7 @@ unsigned long czasLokalny=0;
 
 unsigned long sLEDmillis=0;
 
-byte stanSekcji=0;
+uint8_t stanSekcji=0;
 bool czekaNaPublikacjeStanuMQTT=false;
 bool czekaNaPublikacjeStanuWS=false;
 bool czekaNaPublikacjeStanuHW=false;
@@ -61,8 +61,8 @@ bool czekaNaPublikacjePROG=false;
 bool czekaNaPublikacjeKONF=false;
 bool czekaNaPublikacjeSTAT=false;
 
-uint8_t publicID=0;
-unsigned long publicMillis=0;
+uint8_t ID=0;
+unsigned long Millis=0;
 
 /////////////// czujnik wilgoci ///////////////////////
 int stanCzujnikaWilgoci;             // the current reading from the input pin
@@ -238,16 +238,11 @@ webSocket->onEvent(wse);
 void wylaczWszystko()
 {
   zmienStanSekcjiAll(0);
-     czekaNaPublikacjeStanuMQTT=true;
-   czekaNaPublikacjeStanuWS=true;
-   czekaNaPublikacjeStanuHW=true;
 }
 void zmienStanSekcjiAll(uint8_t stan)
 {
   if(stanSekcji==stan) return;
    stanSekcji=stan;
-   czekaNaPublikacjeStanuMQTT=true;
-   czekaNaPublikacjeStanuWS=true;
    czekaNaPublikacjeStanuHW=true;
 }
 void zmienStanSekcji(uint8_t sekcjanr,uint8_t stan)
@@ -265,16 +260,13 @@ void zmienStanSekcji(uint8_t sekcjanr,uint8_t stan)
     bitClear(stanSekcji,sekcjanr);
   }
    DPRINT("zmienStanSekcji koniec nr=");DPRINT(sekcjanr);DPRINT(", stan=");DPRINT(stan);DPRINT(", stanSekcji=");DPRINTLN(stanSekcji);
-  //web.zmienStanSekcji(stanSekcji);
-  czekaNaPublikacjeStanuMQTT=true;
-  czekaNaPublikacjeStanuWS=true;
-  czekaNaPublikacjeStanuHW=true;
+   czekaNaPublikacjeStanuHW=true;
 }
 void publikujStanSekcjiMQTT()
 {
    if(wifi.getConStat()!=CONN_STAT_WIFIMQTT_OK)return;
    
-   byte b = stanSekcji;//pcf8574.read8();
+   uint8_t b = stanSekcji;//pcf8574.read8();
    DPRINT("publikujStanSekcjiMQTT ");DPRINT(b);DPRINT(", ");DPRINTLN(stanSekcji);
    for(int i=SEKCJA_MIN;i<=SEKCJA_MAX;i++)
    {
@@ -570,7 +562,8 @@ void loop()
      if(conf.getTryb()==TRYB_AUTO) // test czy programator każe wlączyć
      {
       uint8_t sekcjaProg=conf.wlaczoneSekcje(wifi.getEpochTime());
-        Serial.println(sekcjaProg,BIN);
+      Serial.println("Tryb auto: ");
+      Serial.println(sekcjaProg,BIN);
       zmienStanSekcjiAll(sekcjaProg);
      }
     if(stanCzujnikaWilgoci==LOW);
@@ -584,6 +577,8 @@ void loop()
     {
       
         pcf8574.write8(~stanSekcji);
+        czekaNaPublikacjeStanuMQTT=true;
+        czekaNaPublikacjeStanuWS=true;
         czekaNaPublikacjeStanuHW=false;
         delay(5);
     }
@@ -592,13 +587,13 @@ void loop()
     {
         publikujStanSekcjiMQTT();  // na podstawie pcf8574
         czekaNaPublikacjeStanuMQTT=false;   
-        delay(10);
+        delay(5);
     }
     if(czekaNaPublikacjeStanuWS)
     {
         web.publikujStanSekcji(stanSekcji);
         czekaNaPublikacjeStanuWS=false;     
-        delay(10);
+        delay(5);
     }
     
    if(czekaNaPublikacjeLBL)

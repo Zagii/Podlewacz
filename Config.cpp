@@ -434,7 +434,7 @@ uint8_t  CConfig::wlaczoneSekcje(time_t sysczas_s)
   uint8_t stan=0;
   for(uint16_t i=0;i<progIle;i++)
   {
-    yield();
+    
    // DPRINT("test programu:");DPRINTLN(i);
       if(checkRangeProg(prTab[i], sysczas_s))
       {

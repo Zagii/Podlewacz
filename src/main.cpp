@@ -21,14 +21,16 @@
 #include <pcf8574_esp.h>
 #include <ArduinoJson.h>
 #include <Time.h>
-#include <TimeLib.h>
+//#include <TimeLib.h>
 #include "Defy.h"
-#include "CWifi.h"
+#include "CWifi.h" 
 #include "Config.h"
 #include "CWebSerwer.h"
 
 
-
+bool isNumber(char * tmp);
+void parsujRozkaz(char *topic, char *msg);
+void wylaczWszystko();
 ////////////pcf
 PCF857x pcf8574(0b00111000, &Wire);
 ////////////////
@@ -114,43 +116,50 @@ void wse(uint8_t num, WStype_t type, uint8_t * payload, size_t length)
     p[length]='\0';
     DPRINT("webSocket TEXT: ");DPRINTLN(p);
 
-    DynamicJsonBuffer jsonBuffer;
-    JsonObject& root = jsonBuffer.parseObject(p);
-    if (!root.success()) 
+    DynamicJsonDocument doc(200);
+    DeserializationError error= deserializeJson(doc,p);
+
+    if (error) 
     {
-      Serial.println("parseObject() failed");
+      Serial.print(F("deserializeJson failed: "));
+      Serial.println(p);
+      Serial.print(doc.memoryUsage());Serial.print(F(" bytes. "));
+      Serial.println(error.c_str());
       Serial.println(p);
       free(p);
       DPRINTLN("return");
       return;
     }
 
-    char* topic="";
+    char topic[200]="";
     char msg[200]="";
+    JsonObject root = doc.as<JsonObject>();
     
-    for (auto kv : root) {
-       topic=(char*)kv.key;
+    for (JsonPair p : root) {
+       strcpy(topic,p.key().c_str());
         DPRINT(topic);DPRINTLN("root[topic]=");//Serial.println(String(root[topic]));
      /*   kv.value.prettyPrintTo(Serial); Serial.println(" # ");kv.value.printTo(Serial);*/
        if(root[topic].is<const char*>())
        {
           DPRINTLN("msg char*");
-          strcpy(msg,(char*)kv.value.as<char*>());
+          strcpy(msg,(char*)p.value().as<char*>());
        }else 
        { 
-        if(kv.value.is<JsonObject>())
+        if(p.value().is<JsonObject>())
         {
-            DPRINTLN(" kv obj ");
-            root[topic].printTo(msg);
+            DPRINTLN(" p obj ");
+           // root[topic].printTo(msg);
+           String s=p.value().as<String>();
+            strcpy(msg,s.c_str());
             DPRINT("msg JSON: ");DPRINTLN(msg);
-        }else if(kv.value.is<JsonArray>())
+        }else if(p.value().is<JsonArray>())
          {
-           DPRINTLN(" kv array ");
-         }else  if(kv.value.is<unsigned int>())
+           DPRINTLN(" p array ");
+         }else  if(p.value().is<unsigned int>())
          {
-          DPRINTLN(" kv uint ");
-          itoa ((uint8_t)kv.value.as<unsigned int>(), msg, 10);
-          }else {   DPRINTLN(" kv undef... ");   }
+          DPRINTLN(" p uint ");
+          itoa ((uint8_t)p.value().as<unsigned int>(), msg, 10);
+          }else {   DPRINTLN(" p undef... ");   }
        }
        DPRINT(topic);DPRINT("=");DPRINTLN(msg);
        parsujRozkaz(topic,msg);
@@ -235,15 +244,16 @@ WebSocketsServer * webSocket=web.getWebSocket();
 webSocket->onEvent(wse);
 }
 
-void wylaczWszystko()
-{
-  zmienStanSekcjiAll(0);
-}
+
 void zmienStanSekcjiAll(uint8_t stan)
 {
   if(stanSekcji==stan) return;
    stanSekcji=stan;
    czekaNaPublikacjeStanuHW=true;
+}
+void wylaczWszystko()
+{
+  zmienStanSekcjiAll(0);
 }
 void zmienStanSekcji(uint8_t sekcjanr,uint8_t stan)
 {
@@ -329,6 +339,7 @@ void publikujStanSekcjiMQTT()
        {
             conf.setTryb(TRYB_MANUAL);
        }
+
         return;
     }
     ind=strstr(topic,"CZAS");
@@ -372,17 +383,25 @@ void publikujStanSekcjiMQTT()
        return;
     }
     //////////////////////// komendy ktore maja jsona jako msg /////////////////////////
-    DynamicJsonBuffer jsonBuffer;
-    JsonObject& json = jsonBuffer.parseObject(msg);
-    DPRINT("msg=");DPRINTLN(msg);
-    if (!json.success()) {
-       DPRINTLN("Blad parsowania json !!!!");
+    DynamicJsonDocument doc(200);
+    DeserializationError error= deserializeJson(doc,msg);
+
+    if (error) 
+    {
+      Serial.print(F("Blad parsowania json !!!!"));
+      Serial.println(msg);
+       Serial.print(doc.memoryUsage());Serial.print(F(" bytes. "));
+      Serial.println(error.c_str());
+      Serial.println(msg);
+      DPRINTLN("return");
       return;
     }
+    JsonObject json = doc.as<JsonObject>();
+    String jsonStr;
+    serializeJson(json,jsonStr); 
+   
     DPRINTLN("Parsowanie zagniezdzonego jsona");
-    String jsS;
-    json.printTo(jsS);
-    DPRINTLN(jsS);
+  
     ind=strstr(topic,"NTP");
     if(ind!=NULL)
     {
@@ -390,7 +409,7 @@ void publikujStanSekcjiMQTT()
       unsigned long offset=json["offset"];
       wifi.setNTP(host,offset);
       // zapisz do pliku
-      conf.saveConfigStr(PLIK_NTP,jsS.c_str());
+      conf.saveConfigStr(PLIK_NTP,jsonStr.c_str());
     }
     
     ind=strstr(topic,"Wifi");
@@ -402,7 +421,7 @@ void publikujStanSekcjiMQTT()
       if(tryb=="STA")
       {
         wifi.zmianaAP(ssid,pass);
-        conf.saveConfigStr(PLIK_WIFI,jsS.c_str());
+        conf.saveConfigStr(PLIK_WIFI,jsonStr.c_str());
         // zapisz do pliku
       }else
       {/// utworzyc AP
@@ -427,7 +446,7 @@ void publikujStanSekcjiMQTT()
       }
       wifi.setupMqtt(host,port,user,pwd);
       // zapisz do pliku
-      conf.saveConfigStr(PLIK_MQTT,jsS.c_str());
+      conf.saveConfigStr(PLIK_MQTT,jsonStr.c_str());
       czekaNaPublikacjeKONF=true;
     }
     ind=strstr(topic,"LBL");
@@ -489,8 +508,44 @@ void publikujStanSekcjiMQTT()
     }
  }
 
-unsigned long d=0;
+void createStatusJson(char* bufJson)
+{
+ //// przygotowanie ogólnego statusu
+    DynamicJsonDocument root(1024);
+     Serial.print(F(", jsonDocument: ")); Serial.print(system_get_free_heap_size());
 
+   //JsonObject root = doc.as<JsonObject>();
+     Serial.print(F(", parse: ")); Serial.print(system_get_free_heap_size());
+
+     /*
+    *  1 styczen 2010 to
+    *  Epoch timestamp: 1262304000
+    *  Timestamp in milliseconds: 1262304000000
+    */
+    if(wifi.getEpochTime()<1262304000)// czyli brak polaczenia z NTP
+    {
+       root["CZAS"]=czasLokalny; 
+    }else
+    {
+     root["CZAS"]= wifi.getEpochTime();
+    }
+    root["SEKCJE"]=stanSekcji;
+    root["TRYB"]=String(conf.getTryb());
+    root["GEO"]="Duchnice";
+    root["TEMP"]=20.1f;
+    root["CISN"]=1023.34f;
+    root["DESZCZ"]=1;//stanCzujnikaWilgoci;
+    root["SYSTIME"]=wifi.TimeToString(millis()/1000);
+    String tmpStr;
+    
+    serializeJson(root,tmpStr);
+   // serializeJson(root,Serial);
+    strcpy(bufJson,tmpStr.c_str()); 
+   
+}
+
+unsigned long d=0;
+char tmpTxt[300];
 String millisTimeStr;
 void loop()
 {
@@ -508,46 +563,29 @@ void loop()
   }
   lastButtonState = reading;
 /////////////// czujnik wilgoci koniec //////////////////   
-  String infoStr;
+ 
    if(millis()-czasLokalnyMillis>1000)
   {
     czasLokalnyMillis=millis();
     czasLokalny++;
-    millisTimeStr=String(wifi.TimeToString(millis()/1000));
-    //// przygotowanie ogólnego statusu
-    DynamicJsonBuffer jsonBuffer;
-    JsonObject& root = jsonBuffer.createObject();
-     /*
-    *  1 styczen 2010 to
-    *  Epoch timestamp: 1262304000
-    *  Timestamp in milliseconds: 1262304000000
-    */
-    if(wifi.getEpochTime()<1262304000)// czyli brak polaczenia z NTP
-    {
-       root["CZAS"]=czasLokalny; 
-    }else
-    {
-      root["CZAS"]= wifi.getEpochTime();
-    }
-    root["SEKCJE"]=stanSekcji;
-    root["TRYB"]=String(conf.getTryb());
-    root["GEO"]="Duchnice";
-    root["TEMP"]=20.1f;
-    root["CISN"]=1023.34f;
-    root["DESZCZ"]=stanCzujnikaWilgoci;
-    root["SYSTIME"]=millisTimeStr;
-    root.printTo(infoStr); 
+  //  millisTimeStr=String(wifi.TimeToString(millis()/1000));
+    Serial.print(F("Heap size: ")); Serial.print(system_get_free_heap_size());
+ //   Serial.print(F(" Flash size map: ")); Serial.println( system_get_flash_size_map());
+    createStatusJson(tmpTxt);
+    
     char tmpTopic[MAX_TOPIC_LENGHT];
     sprintf(tmpTopic,"%s/INFO/",wifi.getOutTopic());
-    
-    wifi.RSpisz(String(tmpTopic),infoStr,true);
+    Serial.println(tmpTxt);
+    wifi.RSpisz(String(tmpTopic),String(tmpTxt),true);
+     Serial.print(F(", end: ")); Serial.println(system_get_free_heap_size());
+
   ////////////
   }
  delay(5);
   wifi.loop();
  delay(5);
 
-    web.loop(czasLokalny, infoStr);
+    web.loop(czasLokalny, String(tmpTxt));
   
  delay(5);
 
@@ -558,11 +596,13 @@ void loop()
    if(d>3000)// max 3 sek
    {
      sLEDmillis=millis();
+     wifi.getWifiStatusString(tmpTxt);
+     Serial.print(tmpTxt);
     // DPRINT( "[");DPRINT(wifi.getTimeString());DPRINT("] ");DPRINTLN(wifi.getEpochTime());
      if(conf.getTryb()==TRYB_AUTO) // test czy programator każe wlączyć
      {
       uint8_t sekcjaProg=conf.wlaczoneSekcje(wifi.getEpochTime());
-      Serial.println("Tryb auto: ");
+      Serial.print(F("Tryb: "));
       Serial.println(sekcjaProg,BIN);
       zmienStanSekcjiAll(sekcjaProg);
      }
@@ -709,7 +749,7 @@ bool isFloatString(String tString) {
   if(tString.charAt(0) == '+' || tString.charAt(0) == '-') tBuf = &tString[1];
   else tBuf = tString; 
 
-  for(int x=0;x<tBuf.length();x++)
+  for(uint16_t x=0;x<tBuf.length();x++)
   {
     if(tBuf.charAt(x) == '.') {
       if(decPt) return false;
@@ -753,7 +793,7 @@ bool isFloatChars(char * ctab) {
 }
 bool isNumber(char * tmp)
 {
-   int j=0;
+   uint16_t j=0;
    while(j<strlen(tmp))
   {
     if(tmp[j] > '9' || tmp[j] < '0')

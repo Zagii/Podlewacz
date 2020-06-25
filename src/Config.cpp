@@ -27,6 +27,7 @@ String  CConfig::loadJsonStr(const char* nazwaPliku)
   
   s=configFile.readString();
   configFile.close();
+  DPRINTLN(F("Zawartosc pliku:"));
   DPRINTLN(s.c_str());
   return s;
   
@@ -35,17 +36,29 @@ String  CConfig::loadJsonStr(const char* nazwaPliku)
 bool CConfig::loadConfigSekcjeLBL()
 {
   //const size_t bufferSize = JSON_ARRAY_SIZE(2) + 10*JSON_ARRAY_SIZE(6) + JSON_OBJECT_SIZE(1) + 80;
-   DynamicJsonBuffer jsonBuffer;//(bufferSize);
+   DynamicJsonDocument doc(2048); //(bufferSize);
   // DynamicJsonBuffer* jB=*jsonBuffer;
+  
   String s=loadJsonStr(PLIK_LBL);
   DPRINTLN(s);
-   JsonObject& js= jsonBuffer.parse(s);//parseObject(s);
-   js.prettyPrintTo(Serial);
+  DeserializationError error= deserializeJson(doc,s);
+  if (error) 
+  {
+    Serial.print(F("deserializeJson failed: "));
+    Serial.println(s);
+     Serial.print(doc.memoryUsage());Serial.print(F(" bytes. "));
+    Serial.println(error.c_str());
+    DPRINTLN("return");
+    return "ConfErr";
+  }
+
+  JsonObject js = doc.as<JsonObject>();
+  serializeJson(js,Serial);
     
    if(js.containsKey("LBL"))
    {
-    JsonArray& ar = js["LBL"];
-    for (auto& j : ar) {
+    JsonArray ar = js["LBL"].as<JsonArray>();
+    for (JsonVariant j : ar) {
        int id = j["id"];
        char l[20];
        strcpy(l, j["lbl"]);
@@ -71,35 +84,56 @@ void CConfig::begin()
   } else {
    DPRINTLN("Config saved");
   }*/
-
+  String str="";
+  Dir dir=SPIFFS.openDir("/");
+  Serial.println(F("Zawartosc FS:"));
+  while (dir.next()){
+    str="|-";
+    str+=dir.fileName();
+    str+=" -> ";
+    str+= dir.fileSize();
+    str+=" bytes.";
+    Serial.println(str);
+  }
+  
   
   if (!loadConfig()) {
     DPRINTLN("Failed to load config");
   } else {
     DPRINTLN("Config loaded");
-  }  
+  } 
+ // TRACE(); 
   if(!loadConfigSekcjeLBL()) {
     DPRINTLN("Failed to load config SekcjeLBL");
   } else {
     DPRINTLN("Config SekcjeLBL loaded");
   }  
+ // TRACE();
 }
 
 
 bool CConfig::loadProgs() 
 {
-  DynamicJsonBuffer jsonBuffer;//(bufferSize);
+  DynamicJsonDocument doc(4096 );///(bufferSize);
   String s=loadJsonStr(PLIK_PROG);
-  DPRINTLN(s);
-   JsonObject& js= jsonBuffer.parse(s);//parseObject(s);
-   js.printTo(Serial);
-   if(!js.success())return false;
+  DeserializationError error= deserializeJson(doc,s);
+  if (error) 
+    {
+      Serial.print(F("Blad parsowania loadProgs"));
+      Serial.println(s);
+      Serial.print(doc.memoryUsage());Serial.print(F(" bytes. "));
+      Serial.println(error.c_str());
+      DPRINTLN("return");
+      return false;
+    }
+  JsonObject js = doc.as<JsonObject>();
     
    if(js.containsKey("PROG"))
    {
-    JsonArray& ar = js["PROG"];
+    JsonArray ar = js["PROG"].as<JsonArray>();
+   
     Program a;
-    for (auto& json : ar)
+    for (JsonVariant json : ar) 
     {
        setProg(a,json["dzienTyg"],json["tStr"],json["ms"],json["okresS"],json["coIle"],json["sekcja"],json["aktywny"]);
        addProg(a);
@@ -118,6 +152,7 @@ return loadProgs();
   ////////////////////////////////<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< usunac
   File configFile = SPIFFS.open(PROGRAM_CONFIG_FILE, "r");
   if (!configFile) {
+    TRACE();
      DPRINT("Blad odczytu pliku ");DPRINTLN(PROGRAM_CONFIG_FILE);
    return false;
   }
@@ -137,23 +172,27 @@ return loadProgs();
   configFile.readBytes(buf.get(), size);
   yield();
   //const size_t bufferSize = JSON_ARRAY_SIZE(2) + 10*JSON_ARRAY_SIZE(6) + JSON_OBJECT_SIZE(1) + 80;
-  DynamicJsonBuffer jsonBuffer;
-  JsonObject& json = jsonBuffer.parse(buf.get());
-
-  if (!json.success()) {
+  DynamicJsonDocument doc(2048);
+  DeserializationError error= deserializeJson(doc,buf.get());
+ if (error)  {
     DPRINT("Blad parsowania json ");DPRINTLN(PROGRAM_CONFIG_FILE);
+    Serial.println(buf.get());
+    Serial.print(doc.memoryUsage());Serial.print(F(" bytes. "));
+    Serial.println(error.c_str());
     return false;
   }
-  
-  uint8_t n = json["n"]; // progIle
-  for(uint8_t i=0;i<n;i++)
+   JsonObject json = doc.as<JsonObject>();
+  uint8_t n = 0;//json["n"].as<uint8_t>(); // progIle
+  JsonArray programy = json["PROG"].as<JsonArray>();
+  for(JsonVariant prog: programy)
   {
     yield();
-    JsonArray& prog = json["Programy"][i];
+
     Program pp;
-    setProg(pp,json["dzienTyg"],json["tStr"],json["ms"],json["okresS"],json["coIle"],json["sekcja"],json["aktywny"]);
+    setProg(pp,prog["dzienTyg"],prog["tStr"],prog["ms"],prog["okresS"],prog["coIle"],prog["sekcja"],prog["aktywny"]);
    // setProg(pp,prog[0],prog[1],prog[2], prog[3], prog[4],prog[5],prog[6]);
     addProg(pp);
+    n++;
   }
   DPRINT("progIle=");DPRINTLN(n);
   return true;
@@ -315,7 +354,7 @@ void CConfig::publishProg(Program &p,uint16_t i)
 {
   DPRINT("ID="); DPRINT(i); DPRINT("; ");
   DPRINT(" dzienTyg=");DPRINT(p.dzienTyg);
-  DPRINT(" tStr"); DPRINT(p.tStr.c_str());
+  DPRINT(" tStr-"); DPRINT(p.tStr.c_str());
   DPRINT("; ms="); DPRINT(hour(p.godzinaStartu)); DPRINT(":");DPRINT(minute(p.godzinaStartu)); DPRINT(":");DPRINT(second(p.godzinaStartu)); 
   DPRINT(" czas_trwania_s="); DPRINT(p.czas_trwania_s); DPRINT("; ");DPRINT(" co_ile_dni="); DPRINT(p.co_ile_dni); DPRINT("; ");
   DPRINT(" sekcja="); DPRINT(p.sekcja); DPRINT(" aktywny=");DPRINTLN(p.aktywny);

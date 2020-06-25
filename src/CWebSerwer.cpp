@@ -68,11 +68,11 @@ void CWebSerwer::publikujStanSekcji(uint8_t stan)
  // stanSekcji=stan;
  if(clientConnected<=0)return;
   
-  DynamicJsonBuffer jsonBuffer;
+  DynamicJsonDocument doc(200);
   String jsStr="";
-  JsonObject& root = jsonBuffer.createObject();
+  JsonObject  root = doc.createNestedObject("SEKCJE");
   root["SEKCJE"]=stan;
-  root.printTo(jsStr); 
+  serializeJson(root,jsStr); 
   webSocket->broadcastTXT(jsStr);
   
 }

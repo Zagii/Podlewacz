@@ -3,7 +3,8 @@
 
 #include <ArduinoJson.h>
 #include <Time.h>
-#include <TimeLib.h>
+#include <ArduinoTrace.h>
+//#include <TimeLib.h>
 #include "FS.h"
 #include "Defy.h"
 
@@ -18,12 +19,12 @@
 #define TRYB_AUTO 'a'
 #define TRYB_MANUAL 'm'
 
-#define PLIK_NTP "NPT.json"
-#define PLIK_MQTT "MQTT.json"
-#define PLIK_LBL "LBL.json"
-#define PLIK_TRYB "TRYB.json"
-#define PLIK_WIFI "Wifi.json"
-#define PLIK_PROG "PROG.json"
+#define PLIK_NTP "/NPT.json"
+#define PLIK_MQTT "/Mqtt.json"
+#define PLIK_LBL "/LBL.json"
+#define PLIK_TRYB "/TRYB.json"
+#define PLIK_WIFI "/Wifi.json"
+#define PLIK_PROG "/programy.json" //"PROG.json"
 
 typedef struct 
 {

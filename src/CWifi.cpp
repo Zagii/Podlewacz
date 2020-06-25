@@ -23,13 +23,19 @@ void CWifi::setNTP(String host,unsigned long offset)
 
 void CWifi::zmianaAP(String jsonString)
 {
-  DynamicJsonBuffer jsonBuffer;
-  JsonObject& js= jsonBuffer.parse(jsonString);
-  if (!js.success()) 
-  {
-    DPRINTLN("Blad parsowania zmianyAP");
-    return;
-  }
+  DynamicJsonDocument doc(2048);
+  DeserializationError error= deserializeJson(doc,jsonString);
+
+  if (error) 
+    {
+      Serial.print(F("Blad parsowania zmianyAP "));
+      Serial.println(jsonString);
+      Serial.print(doc.memoryUsage());Serial.print(F(" bytes. "));
+      Serial.println(error.c_str());
+      DPRINTLN("return");
+      return;
+    }
+  JsonObject js = doc.as<JsonObject>();
   if(js.containsKey("ssid"))
   {
     String s=js["ssid"];
@@ -126,13 +132,17 @@ bool CWifi::wifiConnected()
 }
 void CWifi::setupMqtt(String mqttJsonStr)
 {
-  DynamicJsonBuffer jsonBuffer;
-  JsonObject& js= jsonBuffer.parse(mqttJsonStr);
-  if (!js.success()) 
+  DynamicJsonDocument doc(2048);
+  DeserializationError error= deserializeJson(doc,mqttJsonStr);
+ if (error) 
   {
     DPRINTLN("Blad parsowania zmianyMQTT");
+    Serial.println(mqttJsonStr);
+    Serial.print(doc.memoryUsage());Serial.print(F(" bytes. "));
+    Serial.println(error.c_str());
     return;
   }
+  JsonObject js = doc.as<JsonObject>();
   if(js.containsKey("host")&&js.containsKey("port"))
   {
     String ho=js["host"];

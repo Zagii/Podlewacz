@@ -52,12 +52,27 @@ void CWebSerwer::webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, s
             clientConnected++;
             // send message to client
             webSocket->sendTXT(num, "{\"STATUS\":\"Connected\"}");
+            int ile=webSocket->connectedClients(true);
+             USE_SERIAL.printf("Klientow: %d\n",ile);
+            IPAddress ip2;
+            for(int i=0;i<ile;i++)
+            {
+              IPAddress ip2 = webSocket->remoteIP(i);
+              USE_SERIAL.printf("[%u] Connected from %d.%d.%d.%d url: %s\n", num, ip[0], ip[1], ip[2], ip[3], payload);
+            
+              if(ip2==ip&&num!=i)
+              {
+                webSocket->disconnect(i);
+              }
+            }
         }
             break;
         case WStype_TEXT:
             USE_SERIAL.printf("[%u] get Text: %s\n", num, payload);
 
             break;
+        default:
+        break;
     }
 
 }

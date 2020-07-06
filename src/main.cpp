@@ -17,13 +17,14 @@
 #include <WebSocketsServer.h>
 #include <ESP8266WebServer.h>
 #include <ESP8266mDNS.h>
-
-#include <pcf8574_esp.h>
+#include <Adafruit_PWMServoDriver.h>
+//#include <pcf8574_esp.h>
 #include <ArduinoJson.h>
 #include <Time.h>
+#include <ArduinoTrace.h>
 //#include <TimeLib.h>
 #include "Defy.h"
-#include "CWifi.h" 
+#include "CWifiManager.h" 
 #include "Config.h"
 #include "CWebSerwer.h"
 
@@ -32,10 +33,13 @@ bool isNumber(char * tmp);
 void parsujRozkaz(char *topic, char *msg);
 void wylaczWszystko();
 ////////////pcf
-PCF857x pcf8574(0b00111000, &Wire);
+//PCF857x pcf8574(0b00111000, &Wire);
 ////////////////
+/////// pca9685
+Adafruit_PWMServoDriver hardwareOut = Adafruit_PWMServoDriver(0x40);
+/////////
 
-CWifi wifi;
+CWifiManager wifi;
 PubSubClient *mqtt;
 
 CConfig conf;
@@ -180,12 +184,21 @@ void setup()
   digitalWrite(LED,ON);
  
   //Setup PCF8574
-  Wire.pins(PIN_SDA, PIN_SCL);//SDA - D1, SCL - D2
-  Wire.begin();
-  
+  //Wire.pins(PIN_SDA, PIN_SCL);//SDA - D1, SCL - D2
+  //Wire.begin();
+  hardwareOut.setPWMFreq(60); 
+  hardwareOut.begin();
+  hardwareOut.setOutputMode(true);
+ /*  for(uint8_t i=0;i<8;i++)
+        {
+         if(i<4)
+         hardwareOut.setPin(i,0);
+         else
+         hardwareOut.setPin(i,4095);
+        }*/
   pinMode(PIN_WILGOC, INPUT_PULLUP); //czujnik wilgoci
 
-  pcf8574.begin( 0x00 ); //8 pin output
+  //pcf8574.begin( 0x00 ); //8 pin output
  // pcf8574.resetInterruptPin();
   wylaczWszystko();
   //
@@ -234,10 +247,10 @@ conf.publishAllProg();
 //////////////// odczyt WiFi
 String wifiJson=conf.loadJsonStr(PLIK_WIFI);
 DPRINT("Konfig wifi:");DPRINTLN(wifiJson);
-wifi.zmianaAP(wifiJson);
+wifi.zmianaAP(wifiJson.c_str());
 String mqttJson=conf.loadJsonStr(PLIK_MQTT);
 DPRINT("Konfig mqtt:");DPRINTLN(mqttJson);
-wifi.setupMqtt(mqttJson);
+wifi.setupMqtt(mqttJson.c_str());
 
 web.begin();
 WebSocketsServer * webSocket=web.getWebSocket();
@@ -405,7 +418,7 @@ void publikujStanSekcjiMQTT()
     ind=strstr(topic,"NTP");
     if(ind!=NULL)
     {
-      String host=json["host"];
+      const char* host=json["host"];
       unsigned long offset=json["offset"];
       wifi.setNTP(host,offset);
       // zapisz do pliku
@@ -415,10 +428,10 @@ void publikujStanSekcjiMQTT()
     ind=strstr(topic,"Wifi");
     if(ind!=NULL)
     {
-     String tryb=json["tryb"];
-      String ssid=json["ssid"];
-       String pass=json["pass"];
-      if(tryb=="STA")
+     const char* tryb=json["tryb"];
+      const char* ssid=json["ssid"];
+       const char* pass=json["pass"];
+      if(strcmp(tryb,"STA")==0)
       {
         wifi.zmianaAP(ssid,pass);
         conf.saveConfigStr(PLIK_WIFI,jsonStr.c_str());
@@ -432,7 +445,7 @@ void publikujStanSekcjiMQTT()
     ind=strstr(topic,"Mqtt");
     if(ind!=NULL)
     {     
-     String host=json["host"];
+     const char* host=json["host"];
       uint16_t port=json["port"];
        String user="";
        String pwd="";
@@ -444,7 +457,7 @@ void publikujStanSekcjiMQTT()
       {
         pwd=String((const char*)json["pwd"]);
       }
-      wifi.setupMqtt(host,port,user,pwd);
+      wifi.setupMqtt(host,port,user.c_str(),pwd.c_str());
       // zapisz do pliku
       conf.saveConfigStr(PLIK_MQTT,jsonStr.c_str());
       czekaNaPublikacjeKONF=true;
@@ -512,10 +525,10 @@ void createStatusJson(char* bufJson)
 {
  //// przygotowanie ogólnego statusu
     DynamicJsonDocument root(1024);
-     Serial.print(F(", jsonDocument: ")); Serial.print(system_get_free_heap_size());
+    // Serial.print(F(", jsonDocument: ")); Serial.print(system_get_free_heap_size());
 
    //JsonObject root = doc.as<JsonObject>();
-     Serial.print(F(", parse: ")); Serial.print(system_get_free_heap_size());
+   //  Serial.print(F(", parse: ")); Serial.print(system_get_free_heap_size());
 
      /*
     *  1 styczen 2010 to
@@ -534,8 +547,10 @@ void createStatusJson(char* bufJson)
     root["GEO"]="Duchnice";
     root["TEMP"]=20.1f;
     root["CISN"]=1023.34f;
-    root["DESZCZ"]=1;//stanCzujnikaWilgoci;
-    root["SYSTIME"]=wifi.TimeToString(millis()/1000);
+    root["DESZCZ"]=stanCzujnikaWilgoci;
+    char t[20];
+    root["SYSTIME"]=wifi.TimeToString(t,millis()/1000);
+    root["Mem"]=ESP.getFreeHeap();
     String tmpStr;
     
     serializeJson(root,tmpStr);
@@ -569,21 +584,20 @@ void loop()
     czasLokalnyMillis=millis();
     czasLokalny++;
   //  millisTimeStr=String(wifi.TimeToString(millis()/1000));
-    Serial.print(F("Heap size: ")); Serial.print(system_get_free_heap_size());
- //   Serial.print(F(" Flash size map: ")); Serial.println( system_get_flash_size_map());
+
     createStatusJson(tmpTxt);
     
     char tmpTopic[MAX_TOPIC_LENGHT];
     sprintf(tmpTopic,"%s/INFO/",wifi.getOutTopic());
-    Serial.println(tmpTxt);
+   /// Serial.println(tmpTxt);
     wifi.RSpisz(String(tmpTopic),String(tmpTxt),true);
-     Serial.print(F(", end: ")); Serial.println(system_get_free_heap_size());
+
 
   ////////////
   }
- delay(5);
+ yield();
   wifi.loop();
- delay(5);
+ yield();
 
     web.loop(czasLokalny, String(tmpTxt));
   
@@ -597,13 +611,13 @@ void loop()
    {
      sLEDmillis=millis();
      wifi.getWifiStatusString(tmpTxt);
-     Serial.print(tmpTxt);
+     
     // DPRINT( "[");DPRINT(wifi.getTimeString());DPRINT("] ");DPRINTLN(wifi.getEpochTime());
      if(conf.getTryb()==TRYB_AUTO) // test czy programator każe wlączyć
      {
       uint8_t sekcjaProg=conf.wlaczoneSekcje(wifi.getEpochTime());
-      Serial.print(F("Tryb: "));
-      Serial.println(sekcjaProg,BIN);
+      //Serial.print(F("Tryb: "));
+      //Serial.println(sekcjaProg,BIN);
       zmienStanSekcjiAll(sekcjaProg);
      }
     if(stanCzujnikaWilgoci==LOW);
@@ -616,7 +630,14 @@ void loop()
     if(czekaNaPublikacjeStanuHW)
     {
       
-        pcf8574.write8(~stanSekcji);
+        //pcf8574.write8(~stanSekcji);
+        for(uint8_t i=0;i<8;i++)
+        {
+          uint8_t x=bitRead(stanSekcji,i);
+          if(x==1)
+            hardwareOut.setPWM(i,4096,0);
+          else hardwareOut.setPWM(i,0,4096);
+        }
         czekaNaPublikacjeStanuMQTT=true;
         czekaNaPublikacjeStanuWS=true;
         czekaNaPublikacjeStanuHW=false;
@@ -681,24 +702,26 @@ void loop()
    if(czekaNaPublikacjeKONF)
    {
     //ntp
-    String tStr=wifi.getNTPjsonStr();
+    char konf_json[30];
+    char konf_msg[MAX_MSG_LENGHT];
+    wifi.getNTPjsonStr(konf_json);
     char tmpTopic[MAX_TOPIC_LENGHT];
     sprintf(tmpTopic,"%s/NTP/",wifi.getOutTopic());
-    wifi.RSpisz((const char*) tmpTopic,(char*)tStr.c_str());
-    String js=String("{\"NTP\":")+tStr+"}";
-    web.sendWebSocket((const char*)js.c_str());
+    wifi.RSpisz((const char*) tmpTopic,konf_json);
+    sprintf(konf_msg,"{\"NTP\":%s}",konf_json);
+    web.sendWebSocket(konf_msg);
     //Wifi
-    tStr=wifi.getWifijsonStr(); 
+    wifi.getWifijsonStr(konf_json); 
     sprintf(tmpTopic,"%s/Wifi/",wifi.getOutTopic());
-    wifi.RSpisz((const char*) tmpTopic,(char*)tStr.c_str());
-    js=String("{\"Wifi\":")+tStr+"}";
-    web.sendWebSocket((const char*)js.c_str());
+    wifi.RSpisz((const char*) tmpTopic,konf_json);
+    sprintf(konf_msg,"{\"Wifi\":%s}",konf_json);
+    web.sendWebSocket(konf_msg);
     //Mqtt
-    tStr=wifi.getMQTTjsonStr(); 
+    wifi.getMQTTjsonStr(konf_json); 
     sprintf(tmpTopic,"%s/Mqtt/",wifi.getOutTopic());
-    wifi.RSpisz((const char*) tmpTopic,(char*)tStr.c_str());
-    js=String("{\"Mqtt\":")+tStr+"}";
-    web.sendWebSocket((const char*)js.c_str());
+    wifi.RSpisz((const char*) tmpTopic,konf_json);
+    sprintf(konf_msg,"{\"Mqtt\":%s}",konf_json);
+    web.sendWebSocket(konf_msg);
 
     czekaNaPublikacjeKONF=false;
     delay(10);
@@ -781,7 +804,7 @@ bool isFloatChars(char * ctab) {
   
   bool isIntChars(char * ctab) {
   
-  bool decPt = false;
+  //bool decPt = false;
   uint8_t startInd=0;
   if(ctab[0] == '+' || ctab[0] == '-') startInd=1;
 
@@ -803,4 +826,10 @@ bool isNumber(char * tmp)
     j++;
   }
  return true; 
+}
+void PrintMEM()
+{ 
+  char m[30];
+  sprintf(m,"Free Heap: %d bytes.",ESP.getFreeHeap());
+  Serial.println(m);
 }

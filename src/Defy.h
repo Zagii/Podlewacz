@@ -38,5 +38,6 @@
 bool isFloatChars(char * ctab);
 bool isFloatString(String tString);
 bool isIntChars(char * ctab) ;
+void PrintMEM();
  
 #endif

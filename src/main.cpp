@@ -203,11 +203,6 @@ void setup()
   wylaczWszystko();
   //
 
-//////////////// wifi i mqtt init ///////////
-  wifi.begin();
-  mqtt=wifi.getMQTTClient();
-  mqtt->setCallback(callback);
-///////////// koniec wifi i mqtt init /////////
 
 conf.begin();
 conf.setTryb(TRYB_AUTO);
@@ -251,6 +246,13 @@ wifi.zmianaAP(wifiJson.c_str());
 String mqttJson=conf.loadJsonStr(PLIK_MQTT);
 DPRINT("Konfig mqtt:");DPRINTLN(mqttJson);
 wifi.setupMqtt(mqttJson.c_str());
+
+
+//////////////// wifi i mqtt init ///////////
+  wifi.begin();
+  mqtt=wifi.getMQTTClient();
+  mqtt->setCallback(callback);
+///////////// koniec wifi i mqtt init /////////
 
 web.begin();
 WebSocketsServer * webSocket=web.getWebSocket();

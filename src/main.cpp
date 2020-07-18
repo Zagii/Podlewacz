@@ -256,6 +256,13 @@ DPRINTLN("TRACE 2");
   mqtt=wifi.getMQTTClient();
   mqtt->setCallback(callback);
 ///////////// koniec wifi i mqtt init /////////
+
+//////////////// wifi i mqtt init ///////////
+  wifi.begin();
+  mqtt=wifi.getMQTTClient();
+  mqtt->setCallback(callback);
+///////////// koniec wifi i mqtt init /////////
+
 web.begin();
 WebSocketsServer * webSocket=web.getWebSocket();
 webSocket->onEvent(wse);

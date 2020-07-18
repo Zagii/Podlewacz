@@ -8,6 +8,11 @@
 #include <PubSubClient.h>
 #include <NTPClient.h>
 #include <WiFiUdp.h>
+#include <DoubleResetDetector.h>
+#define DRD_TIMEOUT 10
+// RTC Memory Address for the DoubleResetDetector to use
+#define DRD_ADDRESS 0
+
 //#include <ArduinoTrace.h>
 #include "Defy.h"
 
@@ -49,6 +54,8 @@ typedef enum {
 
 class CWifiManager
 {
+DoubleResetDetector drd(DRD_TIMEOUT, DRD_ADDRESS);
+bool resetWifiConfig = false;
 
 //// wifi udp  ntp
 WiFiUDP ntpUDP;
@@ -87,7 +94,7 @@ char buforChar[3*MAX_URL_LENGTH];
   unsigned long WDmillis=0;
 
  // ESP8266WiFiMulti *wifiMulti;
-  WiFiManager wifiManager;
+  //WiFiManager wifiManager;
   WiFiClient espClient;
   PubSubClient client;
   
@@ -98,7 +105,7 @@ char buforChar[3*MAX_URL_LENGTH];
     strcpy(mqtt_pass,"");
     strcpy(wifi_ssid,"");
     strcpy(wifi_pwd,"");
-    strcpy(wifi_ip,"");
+    strcpy(wifi_ip,""); 
   };
   void begin();
   void loop();

@@ -65,12 +65,68 @@ int CWifiManager::zmianaAP(const char* ssid,const char* pwd)
   delay(10);
   return 0;
 }
+
 void CWifiManager::begin()
 {
   DPRINTLN("Debug CWifiManager::begin start"); 
  
+<<<<<<< .mine
 
  // WiFi.mode(WIFI_STA);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+=======
+
+ resetWifiConfig = false;
+ if (drd.detectDoubleReset()) {
+    Serial.println("Double Reset Detected");
+    digitalWrite(LED, LOW);   // Turn the LED on (Note that LOW is the voltage level
+    resetWifiConfig = true;
+    drd.stop();
+  } else {
+    Serial.println("No Double Reset Detected");
+    //digitalWrite(LED_BUILTIN, HIGH);
+  }
+
+
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(wifi_ssid,wifi_pwd);
+  // Wait for connection
+    int timeout = 0;
+    while ((WiFi.status() != WL_CONNECTED) && (timeout < 100)) { //connect or 10s
+      Serial.print(".");
+      delay(100);
+      digitalToggle(LED);
+      timeout++;
+    }
+  if (WiFi.status() != WL_CONNECTED)  changed_data = true;
+  drd.stop(); // Wifi is going to be connected, so double reset click is timeout... max 10s
+
+
+>>>>>>> .theirs
   //wifiReconnect();
  // wifiMulti=new ESP8266WiFiMulti();
   //wifiMulti->addAP("DOrangeFreeDom", "KZagaw01_ruter_key");
@@ -79,17 +135,35 @@ void CWifiManager::begin()
  //wifiManager.setBreakAfterConfig(true);
 // wifiManager.resetSettings();
  char ssid[20]; 
+WiFiManager wifiManager;
 
- sprintf(ssid,"AquaTouch_%d",ESP.getChipId());
+sprintf(ssid,"AquaTouch_%d",ESP.getChipId());
+ 
+if (resetWifiConfig)
+    wifiManager.startConfigPortal("ssid");
+else
+{
+
  if (!wifiManager.autoConnect(ssid/*, "password"*/)) {
     Serial.println("failed to connect, we should reset as see if it connects");
     delay(3000);
     ESP.reset();
     delay(5000);
   }
+}
+WiFi.setAutoReconnect(true);
+WiFi.hostname(ssid);
 
-  client.setClient(espClient);
-  client.setServer(mqtt_server, mqtt_port);
+if(strcmp(wifi_ssid ,WiFi.SSID())!=0 || strcmp(wifi_pwd,WiFi.psk().c_str())!=0)
+{
+  strncpy(new_data.WIFI_SSID, WiFi.SSID().c_str(), 20);
+  strncpy(new_data.WIFI_PASS, WiFi.psk().c_str(), 20);
+////////////todo zapis konfigu do pliku wifi.json///////////////////////////////////
+}
+
+
+client.setClient(espClient);
+client.setServer(mqtt_server, mqtt_port);
 
   //setNTP("europe.pool.ntp.org",2*3600);
   timeClient=new NTPClient(ntpUDP, "europe.pool.ntp.org", 2*3600, 60000);// new NTPClient(ntpUDP);
@@ -183,19 +257,19 @@ int CWifiManager::setupMqtt(const char* host, uint16_t port,const char* usr,cons
   if(strlen(host)>=MAX_URL_LENGTH)return -1;
   if(strlen(usr)>=MAX_URL_LENGTH)return -2;
   if(strlen(pwd)>=MAX_URL_LENGTH)return -3;
-  client.disconnect();
+
   strcpy(mqtt_server,host); 
   mqtt_port=port; 
   strcpy(mqtt_user, usr);
   strcpy(mqtt_pass, pwd);
-  client.setServer(mqtt_server, mqtt_port);
-  reconnectMQTT();
-  delay(10);
+
   return 0;
 }
 
 bool CWifiManager::reconnectMQTT()
 {
+  client.disconnect();
+  client.setServer(mqtt_server, mqtt_port);
   if (client.connect(nodeMCUid,mqtt_user,mqtt_pass)) 
   {
     char s[MAX_TOPIC_LENGHT];

@@ -92,7 +92,14 @@ char buforChar[3*MAX_URL_LENGTH];
   PubSubClient client;
   
   public:
-  CWifiManager(){};
+  CWifiManager(){
+    strcpy(mqtt_server,"broker.hivemq.com");
+    strcpy(mqtt_user,"");
+    strcpy(mqtt_pass,"");
+    strcpy(wifi_ssid,"");
+    strcpy(wifi_pwd,"");
+    strcpy(wifi_ip,"");
+  };
   void begin();
   void loop();
   PubSubClient *getMQTTClient(){return &client;};

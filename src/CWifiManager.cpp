@@ -69,12 +69,7 @@ void CWifiManager::begin()
 {
   DPRINTLN("Debug CWifiManager::begin start"); 
  
- strcpy(mqtt_server,"broker.hivemq.com");
-strcpy(mqtt_user,"");
-strcpy(mqtt_pass,"");
-strcpy(wifi_ssid,"");
-strcpy(wifi_pwd,"");
-strcpy(wifi_ip,"");
+
  // WiFi.mode(WIFI_STA);
   //wifiReconnect();
  // wifiMulti=new ESP8266WiFiMulti();
@@ -155,8 +150,11 @@ bool CWifiManager::wifiConnected()
 }
 int CWifiManager::setupMqtt(const char* mqttJsonStr)
 {
+   Serial.println(mqttJsonStr);
+   
   DynamicJsonDocument doc(2048);
   DeserializationError error= deserializeJson(doc,mqttJsonStr);
+   Serial.print(doc.memoryUsage());Serial.print(F(" bytes. "));
  if (error) 
   {
     DPRINTLN("Blad parsowania zmianyMQTT");

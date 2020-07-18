@@ -178,11 +178,11 @@ void setup()
  
   Serial.begin(115200);
    
-  DPRINTLN("");
+  DPRINTLN("AquaTouch Init");
   DPRINTLN("Setup Serial");
   pinMode(LED, OUTPUT);     // Initialize the BUILTIN_LED pin as an output
   digitalWrite(LED,ON);
- 
+  delay(500); // delay na zabezpieczajacy seriala
   //Setup PCF8574
   //Wire.pins(PIN_SDA, PIN_SCL);//SDA - D1, SCL - D2
   //Wire.begin();
@@ -203,11 +203,6 @@ void setup()
   wylaczWszystko();
   //
 
-//////////////// wifi i mqtt init ///////////
-  wifi.begin();
-  mqtt=wifi.getMQTTClient();
-  mqtt->setCallback(callback);
-///////////// koniec wifi i mqtt init /////////
 
 conf.begin();
 conf.setTryb(TRYB_AUTO);
@@ -250,8 +245,17 @@ DPRINT("Konfig wifi:");DPRINTLN(wifiJson);
 wifi.zmianaAP(wifiJson.c_str());
 String mqttJson=conf.loadJsonStr(PLIK_MQTT);
 DPRINT("Konfig mqtt:");DPRINTLN(mqttJson);
+DPRINTLN("TRACE 1");
 wifi.setupMqtt(mqttJson.c_str());
-
+//String NTPJson=conf.loadJsonStr(PLIK_NTP);  TODO: odczyt NTP z konfiguracji przy inicjalizacji
+//wifi.setNTP()
+//////////////// wifi i mqtt init ///////////
+DPRINTLN("TRACE 2");
+  wifi.begin();
+  DPRINTLN("TRACE 3");
+  mqtt=wifi.getMQTTClient();
+  mqtt->setCallback(callback);
+///////////// koniec wifi i mqtt init /////////
 web.begin();
 WebSocketsServer * webSocket=web.getWebSocket();
 webSocket->onEvent(wse);
